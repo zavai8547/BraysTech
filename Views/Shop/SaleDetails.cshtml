@@ -1,0 +1,102 @@
+﻿@model SplashCityCarwash.Models.ShopSale
+@{
+    ViewData["Title"] = "Sale Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">🛒 Sale #@Model.SaleID</h4>
+    <a href="/Shop/Sales" class="btn btn-outline-dark">← Back</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                Items Sold
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Subtotal</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@item.Product.Name</td>
+                                <td>@item.Quantity</td>
+                                <td>KES @item.UnitPrice.ToString("N0")</td>
+                                <td>KES @item.Subtotal.ToString("N0")</td>
+                                <td class="text-success">
+                                    KES @item.Profit.ToString("N0")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-dark">
+                            <th colspan="3">Total</th>
+                            <th>KES @Model.TotalAmount.ToString("N0")</th>
+                            <th class="text-success">
+                                KES @Model.TotalProfit.ToString("N0")
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Sale Info</h6>
+                <p class="mb-1">
+                    <strong>Date:</strong>
+                    @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                </p>
+                <p class="mb-1">
+                    <strong>Staff:</strong> @Model.Staff.FullName
+                </p>
+                <p class="mb-1">
+                    <strong>Payment:</strong>
+                    <span class="badge bg-success">@Model.PaymentMethod</span>
+                </p>
+                @if (!string.IsNullOrEmpty(Model.MpesaCode))
+                {
+                    <p class="mb-1">
+                        <strong>M-Pesa:</strong>
+                        <span class="badge bg-success">@Model.MpesaCode</span>
+                    </p>
+                }
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <p class="mb-0">
+                        <strong>Notes:</strong> @Model.Notes
+                    </p>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm bg-success text-white mb-3">
+            <div class="card-body text-center">
+                <p class="mb-1 opacity-75">Total Revenue</p>
+                <h2 class="fw-bold">KES @Model.TotalAmount.ToString("N0")</h2>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body text-center">
+                <p class="mb-1 opacity-75">Total Profit</p>
+                <h2 class="fw-bold">KES @Model.TotalProfit.ToString("N0")</h2>
+            </div>
+        </div>
+    </div>
+</div>

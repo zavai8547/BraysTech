@@ -1,0 +1,59 @@
+name: Deploy to SmarterASP
+
+on:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Build and Publish
+      run: dotnet publish SplashCityCarwash.csproj -c Release -o ./publish
+
+    - name: Create offline folder and app_offline
+      run: |
+        mkdir ./offline-upload
+        echo "Deploying updates, please wait..." > ./offline-upload/app_offline.htm
+
+    - name: Upload app_offline FIRST to stop the site
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./offline-upload/
+        server-dir: /site1/
+
+    - name: Wait for app to stop
+      run: sleep 8
+
+    - name: Deploy all files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./publish/
+        server-dir: /site1/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/appsettings.Production.json
+          **/appsettings.Development.json
+          **/app_offline.htm
+
+    - name: Remove app_offline to bring site back online
+      run: |
+        curl -s \
+          --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+          -Q "DELE /site1/app_offline.htm" \
+          "ftp://${{ secrets.FTP_SERVER }}/" || true

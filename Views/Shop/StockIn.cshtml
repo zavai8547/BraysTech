@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Stock In";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">📥 Receive Stock</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/Shop/StockIn">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Product *</label>
+                        <select name="productID" class="form-select" required>
+                            <option value="">-- Select Product --</option>
+                            @if (ViewBag.Products != null)
+                            {
+                                foreach (var p in (List<SplashCityCarwash.Models.Product>)ViewBag.Products)
+                                {
+                                    <option value="@p.ProductID">
+                                        @p.Name
+                                        (Current: @p.CurrentStock @p.Unit)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Quantity Received *
+                        </label>
+                        <input name="quantity" type="number"
+                               class="form-control" min="1"
+                               placeholder="e.g. 10" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Buying Price per Unit (KES)
+                        </label>
+                        <input name="unitPrice" type="number"
+                               class="form-control" step="0.01"
+                               placeholder="Leave blank to keep existing price" />
+                        <small class="text-muted">
+                            Only fill if price has changed from last order
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input name="notes" class="form-control"
+                               placeholder="e.g. Bought from supplier X" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">
+                            ✅ Add to Stock
+                        </button>
+                        <a href="/Shop/Products"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,87 @@
+﻿@model IEnumerable<SplashCityCarwash.Models.Expense>
+@{
+    ViewData["Title"] = "Expenses";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"> Expenses</h4>
+    <a href="/Expenses/Create" class="btn btn-success rounded-pill px-4">+ Add Expense</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-danger text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75">Total Expenses</p>
+                <h3 class="fw-bold">KES @ViewBag.TotalExpenses.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <form method="get" class="d-flex gap-2 align-items-end h-100">
+            <div class="w-100">
+                <label class="form-label small text-muted">Filter by Month</label>
+                <input type="month" name="month" value="@ViewBag.Month"
+                       class="form-control" onchange="this.form.submit()" />
+            </div>
+            @if (!string.IsNullOrEmpty(ViewBag.Month as string))
+            {
+                <a href="/Expenses/Index" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Recorded By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No expenses recorded yet
+                        </td>
+                    </tr>
+                }
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td>@e.ExpenseDate.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <span class="badge bg-secondary">@e.Category</span>
+                        </td>
+                        <td>@(e.Description ?? "—")</td>
+                        <td class="fw-semibold text-danger">
+                            KES @e.Amount.ToString("N0")
+                        </td>
+                        <td>@(e.RecordedBy?.FullName ?? "—")</td>
+                        <td>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <form asp-action="Delete" method="post" style="display:inline"
+                                      onsubmit="return confirm('Delete this expense?')">
+                                    <input type="hidden" name="id" value="@e.ExpenseID" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

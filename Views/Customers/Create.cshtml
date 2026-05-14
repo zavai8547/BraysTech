@@ -1,0 +1,44 @@
+﻿@model SplashCityCarwash.Models.Customer
+@{
+    ViewData["Title"] = "Add Customer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">➕ Add New Customer</h5>
+            </div>S
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold">Full Name *</label>
+                        <input asp-for="FullName" class="form-control" placeholder="John Doe" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Phone" class="form-label fw-semibold">Phone Number *</label>
+                        <input asp-for="Phone" class="form-control" placeholder="0712345678" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">Email <small class="text-muted">(optional)</small></label>
+                        <input asp-for="Email" class="form-control" placeholder="john@email.com" />
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold">Notes <small class="text-muted">(optional)</small></label>
+                        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any special notes..."></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">Save Customer</button>
+                        <a href="/Customers" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,170 @@
+﻿@model SplashCityCarwash.Models.ShopReportsViewModel
+@{
+    ViewData["Title"] = "Shop Reports";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h4 class="fw-bold mb-4">📊 Shop & Business Reports</h4>
+
+<!-- Shop Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75 small">Shop Revenue Today</p>
+                <h4 class="fw-bold">KES @Model.RevenueToday.ToString("N0")</h4>
+                <small>@Model.TotalSalesToday sales</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75 small">Shop Profit Today</p>
+                <h4 class="fw-bold">KES @Model.ProfitToday.ToString("N0")</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-dark text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75 small">Shop Revenue This Month</p>
+                <h4 class="fw-bold">KES @Model.RevenueThisMonth.ToString("N0")</h4>
+                <small>@Model.TotalSalesMonth sales</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-left:4px solid #10b981 !important;">
+            <div class="card-body">
+                <p class="mb-1 text-muted small">Shop Profit This Month</p>
+                <h4 class="fw-bold text-success">
+                    KES @Model.ProfitThisMonth.ToString("N0")
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Combined Business View -->
+<div class="card border-0 shadow-sm mb-4"
+     style="border-top:4px solid #FFD600;">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0 fw-bold">
+            🏆 Total Business Performance This Month
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4 text-center">
+                <p class="text-muted small mb-1">Carwash Revenue</p>
+                <h4 class="fw-bold">
+                    KES @Model.CarwashRevenueThisMonth.ToString("N0")
+                </h4>
+            </div>
+            <div class="col-md-4 text-center">
+                <p class="text-muted small mb-1">Shop Revenue</p>
+                <h4 class="fw-bold">
+                    KES @Model.RevenueThisMonth.ToString("N0")
+                </h4>
+            </div>
+            <div class="col-md-4 text-center border-start">
+                <p class="text-muted small mb-1">Total Business Profit</p>
+                <h3 class="fw-bold text-success">
+                    KES @Model.TotalBusinessProfitThisMonth.ToString("N0")
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Top Products -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                🏆 Top Selling Products
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.TopProducts.Any())
+                {
+                    <div class="text-center text-muted py-4">No sales yet</div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Units</th>
+                                <th>Revenue</th>
+                                <th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.TopProducts)
+                            {
+                                <tr>
+                                    <td>@p.ProductName</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            @p.UnitsSold
+                                        </span>
+                                    </td>
+                                    <td>KES @p.Revenue.ToString("N0")</td>
+                                    <td class="text-success">
+                                        KES @p.Profit.ToString("N0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3 text-danger">
+                ⚠️ Low Stock (@Model.LowStockCount products)
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.LowStockProducts.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        ✅ All stock levels OK
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Stock</th>
+                                <th>Sell Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.LowStockProducts)
+                            {
+                                <tr>
+                                    <td>@p.Name</td>
+                                    <td>
+                                        <span class="badge bg-@(p.CurrentStock <= 0 ? "danger" : "warning text-dark")">
+                                            @p.CurrentStock @p.Unit
+                                        </span>
+                                    </td>
+                                    <td>KES @p.SellingPrice.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,459 @@
+﻿@{
+    ViewData["Title"] = "Reports & Analytics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">📈 Reports & Analytics</h4>
+    <span class="badge bg-dark fs-6">@ViewBag.SelectedMonthName</span>
+</div>
+
+<!-- MONTH PICKER -->
+<form method="get" class="card border-0 shadow-sm p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small text-muted">Month</label>
+            <select name="month" class="form-select">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    if (m == ViewBag.SelectedMonth)
+                    {
+                        <option value="@m" selected>
+                            @(new DateTime(2026, m, 1).ToString("MMMM"))
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@m">
+                            @(new DateTime(2026, m, 1).ToString("MMMM"))
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-muted">Year</label>
+            <select name="year" class="form-select">
+                @for (int y = 2025; y <= DateTime.Now.Year + 1; y++)
+                {
+                    if (y == ViewBag.SelectedYear)
+                    {
+                        <option value="@y" selected>@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-dark w-100">View</button>
+        </div>
+    </div>
+</form>
+
+<!-- ROW 1 — TODAY STATS -->
+<div class="row g-3 mb-3">
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #10b981 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Carwash Today</p>
+                <h5 class="fw-bold mb-0">
+                    KES @(ViewBag.CarwashRevenueToday?.ToString("N0") ?? "0")
+                </h5>
+                <small class="text-muted">@(ViewBag.WashesToday ?? 0) washes</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #3b82f6 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Shop Today</p>
+                <h5 class="fw-bold mb-0">
+                    KES @(ViewBag.ShopRevenueToday?.ToString("N0") ?? "0")
+                </h5>
+                <small class="text-muted">Shop sales</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #f59e0b !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Today</p>
+                <h5 class="fw-bold mb-0">
+                    KES @(((ViewBag.CarwashRevenueToday ?? 0) + (ViewBag.ShopRevenueToday ?? 0)).ToString("N0"))
+                </h5>
+                <small class="text-muted">All revenue</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #8b5cf6 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Washes This Month</p>
+                <h5 class="fw-bold mb-0">@(ViewBag.WashesMonth ?? 0)</h5>
+                <small class="text-muted">Completed & paid</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #6366f1 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Customers</p>
+                <h5 class="fw-bold mb-0">@(ViewBag.TotalCustomers ?? 0)</h5>
+                <small class="text-muted">All time</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-left:4px solid #ec4899 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Vehicles</p>
+                <h5 class="fw-bold mb-0">@(ViewBag.TotalVehicles ?? 0)</h5>
+                <small class="text-muted">Registered</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ROW 2 — MONTHLY BREAKDOWN: CARWASH | SHOP | COMBINED -->
+<div class="row g-3 mb-4">
+    <!-- CARWASH -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 pb-0">
+                <h6 class="fw-bold mb-0">
+                    🚗 Carwash — @ViewBag.SelectedMonthName
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Revenue</span>
+                    <strong class="text-success">
+                        KES @(ViewBag.CarwashRevenueMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Expenses</span>
+                    <strong class="text-danger">
+                        KES @(ViewBag.ExpensesMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Washes Done</span>
+                    <strong>@(ViewBag.WashesMonth ?? 0)</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Revenue This Year</span>
+                    <strong>
+                        KES @(ViewBag.CarwashRevenueYear?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-3 mt-2 rounded px-2"
+                     style="background:@((ViewBag.CarwashProfitMonth ?? 0) >= 0 ? "#f0fdf4" : "#fef2f2")">
+                    <span class="fw-bold">Net Profit / Loss</span>
+                    <strong style="color:@((ViewBag.CarwashProfitMonth ?? 0) >= 0 ? "#10b981" : "#ef4444");font-size:1.1rem;">
+                        @((ViewBag.CarwashProfitMonth ?? 0) >= 0 ? "+" : "")KES @((ViewBag.CarwashProfitMonth ?? 0).ToString("N0"))
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHOP -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 pb-0">
+                <h6 class="fw-bold mb-0">
+                    🏪 Shop — @ViewBag.SelectedMonthName
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Revenue</span>
+                    <strong class="text-success">
+                        KES @(ViewBag.ShopRevenueMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Cost of Goods</span>
+                    <strong class="text-danger">
+                        KES @(ViewBag.ShopCostMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Revenue This Year</span>
+                    <strong>
+                        KES @(ViewBag.ShopRevenueYear?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-3 mt-2 rounded px-2"
+                     style="background:@((ViewBag.ShopProfitMonth ?? 0) >= 0 ? "#f0fdf4" : "#fef2f2")">
+                    <span class="fw-bold">Net Profit / Loss</span>
+                    <strong style="color:@((ViewBag.ShopProfitMonth ?? 0) >= 0 ? "#10b981" : "#ef4444");font-size:1.1rem;">
+                        @((ViewBag.ShopProfitMonth ?? 0) >= 0 ? "+" : "")KES @((ViewBag.ShopProfitMonth ?? 0).ToString("N0"))
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMBINED -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100"
+             style="border:2px solid #1565C0 !important;">
+            <div class="card-header border-0 pt-3 pb-0"
+                 style="background:#f0f7ff;">
+                <h6 class="fw-bold mb-0" style="color:#1565C0;">
+                    🏆 Combined — @ViewBag.SelectedMonthName
+                </h6>
+            </div>
+            <div class="card-body" style="background:#f0f7ff;">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Total Revenue</span>
+                    <strong class="text-success">
+                        KES @(ViewBag.TotalRevenueMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Total Costs</span>
+                    <strong class="text-danger">
+                        KES @(ViewBag.TotalCostsMonth?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Revenue This Year</span>
+                    <strong>
+                        KES @(ViewBag.TotalRevenueYear?.ToString("N0") ?? "0")
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between py-3 mt-2 rounded px-2"
+                     style="background:@((ViewBag.TotalProfitMonth ?? 0) >= 0 ? "#dcfce7" : "#fef2f2")">
+                    <span class="fw-bold" style="color:#1565C0;">
+                        NET PROFIT / LOSS
+                    </span>
+                    <strong style="color:@((ViewBag.TotalProfitMonth ?? 0) >= 0 ? "#10b981" : "#ef4444");font-size:1.3rem;">
+                        @((ViewBag.TotalProfitMonth ?? 0) >= 0 ? "+" : "")KES @((ViewBag.TotalProfitMonth ?? 0).ToString("N0"))
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ROW 3 — 6 MONTH TREND TABLE -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-0 pt-3">
+        📅 Last 6 Months Performance
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Month</th>
+                        <th>Carwash Revenue</th>
+                        <th>Shop Revenue</th>
+                        <th>Total Revenue</th>
+                        <th>Expenses</th>
+                        <th>Net Profit / Loss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.MonthlyData != null && ((IEnumerable<dynamic>)ViewBag.MonthlyData).Any())
+                    {
+                        foreach (var m in ViewBag.MonthlyData)
+                        {
+                            var profit = ((dynamic)m).profit;
+                            <tr>
+                                <td class="fw-semibold">
+                                    @(((dynamic)m).month)
+                                </td>
+                                <td>
+                                    KES @(((decimal)((dynamic)m).carwashRevenue).ToString("N0"))
+                                </td>
+                                <td>
+                                    KES @(((decimal)((dynamic)m).shopRevenue).ToString("N0"))
+                                </td>
+                                <td class="fw-bold">
+                                    KES @(((decimal)((dynamic)m).totalRevenue).ToString("N0"))
+                                </td>
+                                <td class="text-danger">
+                                    KES @(((decimal)((dynamic)m).expenses).ToString("N0"))
+                                </td>
+                                <td>
+                                    <span class="fw-bold"
+                                          style="color:@(profit >= 0 ? "#10b981" : "#ef4444")">
+                                        @(profit >= 0 ? "+" : "")KES @(((decimal)profit).ToString("N0"))
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No monthly data available
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ROW 4 — SERVICE POPULARITY + PAYMENT METHODS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                🏆 Service Popularity — @ViewBag.SelectedMonthName
+            </div>
+            <div class="card-body p-0">
+                @if (ViewBag.ServiceStats != null && ((IEnumerable<dynamic>)ViewBag.ServiceStats).Any())
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>Times Used</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (dynamic s in ViewBag.ServiceStats)
+                            {
+                                <tr>
+                                    <td>@s.ServiceName</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            @s.TimesUsed
+                                        </span>
+                                    </td>
+                                    <td>
+                                        KES @(((decimal)s.Revenue).ToString("N0"))
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">
+                        No data for this month
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                💳 Payment Methods — @ViewBag.SelectedMonthName
+            </div>
+            <div class="card-body p-0">
+                @if (ViewBag.PaymentStats != null && ((IEnumerable<dynamic>)ViewBag.PaymentStats).Any())
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Method</th>
+                                <th>Transactions</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (dynamic p in ViewBag.PaymentStats)
+                            {
+                                // FIXED: Convert PaymentMethod enum to string
+                                string method = p.Method.ToString();
+                                string badge = method == "Cash" ? "success" : method == "MPesa" ? "warning text-dark" : "primary";
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-@badge">
+                                            @method
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @p.Count
+                                    </td>
+                                    <td class="fw-bold">
+                                        KES @(((decimal)p.Total).ToString("N0"))
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">
+                        No data for this month
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ROW 5 — TOP 5 CUSTOMERS -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold border-0 pt-3">
+        ⭐ Top 5 Customers — All Time
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Total Visits</th>
+                    <th>Total Spent</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ViewBag.TopCustomers != null && ((IEnumerable<dynamic>)ViewBag.TopCustomers).Any())
+                {
+                    int rank = 1;
+                    foreach (dynamic c in ViewBag.TopCustomers)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge @(rank == 1 ? "bg-warning text-dark" : rank == 2 ? "bg-secondary" : "bg-light text-dark")">
+                                    #@rank
+                                </span>
+                            </td>
+                            <td class="fw-semibold">@c.FullName</td>
+                            <td>@c.Phone</td>
+                            <td>@c.TotalVisits</td>
+                            <td class="fw-bold text-success">
+                                KES @(((decimal)c.TotalSpent).ToString("N0"))
+                            </td>
+                        </tr>
+                        rank++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No customer data available
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

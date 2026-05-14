@@ -1,0 +1,123 @@
+﻿@model SplashCityCarwash.Models.Product
+@{
+    ViewData["Title"] = "Add Product";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"> Add New Product</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateProduct" method="post">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Product Name *</label>
+                        <input asp-for="Name" class="form-control"
+                               placeholder="e.g. Turtle Wax 500ml" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <input asp-for="Category" class="form-control"
+                               placeholder="e.g. Car Care, Accessories" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        <input asp-for="Description" class="form-control"
+                               placeholder="Brief description" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label fw-semibold">
+                                Buying Price (KES) *
+                            </label>
+                            <input asp-for="BuyingPrice" type="number"
+                                   class="form-control" placeholder="0"
+                                   step="0.01" required />
+                        </div>
+                        <div class="col mb-3">
+                            <label class="form-label fw-semibold">
+                                Selling Price (KES) *
+                            </label>
+                            <input asp-for="SellingPrice" type="number"
+                                   class="form-control" placeholder="0"
+                                   step="0.01" required
+                                   id="sellPrice" oninput="calcMargin()" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-light rounded" id="marginBox">
+                        <small class="text-muted">Profit margin: </small>
+                        <strong id="marginDisplay">—</strong>
+                    </div>
+
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label fw-semibold">
+                                Initial Stock
+                            </label>
+                            <input asp-for="CurrentStock" type="number"
+                                   class="form-control" value="0" min="0" />
+                        </div>
+                        <div class="col mb-3">
+                            <label class="form-label fw-semibold">Unit</label>
+                            <select asp-for="Unit" class="form-select">
+                                <option value="piece">Piece</option>
+                                <option value="litre">Litre</option>
+                                <option value="kg">KG</option>
+                                <option value="bottle">Bottle</option>
+                                <option value="tin">Tin</option>
+                                <option value="set">Set</option>
+                                <option value="pair">Pair</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Low Stock Alert
+                            <small class="text-muted fw-normal">
+                                (optional — warn when stock falls to this level)
+                            </small>
+                        </label>
+                        <input asp-for="LowStockAlert" type="number"
+                               class="form-control" placeholder="e.g. 5"
+                               min="0" />
+                        <small class="text-muted">
+                            Leave blank or set to 0 to disable low stock alerts
+                            for this product.
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">
+                            Save Product
+                        </button>
+                        <a href="/Shop/Products"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcMargin() {
+        const buy = parseFloat(document.querySelector('[name="BuyingPrice"]').value) || 0;
+        const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
+        if (sell > 0) {
+            const margin = ((sell - buy) / sell * 100).toFixed(1);
+            const profit = (sell - buy).toFixed(0);
+            document.getElementById('marginDisplay').textContent =
+                `${margin}% — Profit per unit: KES ${Number(profit).toLocaleString()}`;
+            document.getElementById('marginDisplay').style.color =
+                margin > 20 ? '#10b981' : margin > 0 ? '#f59e0b' : '#ef4444';
+        }
+    }
+</script>

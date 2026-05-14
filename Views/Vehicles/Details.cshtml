@@ -1,0 +1,104 @@
+﻿@model SplashCityCarwash.Models.Vehicle
+@{
+    ViewData["Title"] = "Vehicle Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"> @Model.LicensePlate</h4>
+    <div class="d-flex gap-2">
+        <a href="/Vehicles/Edit/@Model.VehicleID" class="btn btn-outline-secondary">Edit</a>
+        <a href="/Vehicles/Index" class="btn btn-outline-dark">← Back</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Vehicle Info</h6>
+                <p class="mb-1">
+                    <strong> Plate:</strong>
+                    <span class="badge bg-dark fs-6">@Model.LicensePlate</span>
+                </p>
+                <p class="mb-1"><strong>Type:</strong> @Model.VehicleType</p>
+                <p class="mb-1"><strong>Make:</strong> @(Model.Make ?? "—")</p>
+                <p class="mb-1"><strong>Model:</strong> @(Model.CarModel ?? "—")</p>
+                <p class="mb-0"><strong>Color:</strong> @(Model.Color ?? "—")</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Owner</h6>
+                <p class="mb-1">
+                    <strong> Name:</strong>
+                    <a href="/Customers/Details/@Model.CustomerID">
+                        @Model.Customer.FullName
+                    </a>
+                </p>
+                <p class="mb-1"><strong> Phone:</strong> @Model.Customer.Phone</p>
+                <p class="mb-0">
+                    <strong> Email:</strong>
+                    @(Model.Customer.Email ?? "—")
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold border-0 pt-3">
+         Wash History (@Model.Transactions.Count)
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Transactions.Any())
+        {
+            <div class="text-center text-muted py-4">No wash history yet</div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Services</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Transactions.OrderByDescending(t => t.CreatedAt))
+                    {
+                        <tr>
+                            <td>
+                                <small>@t.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+                            </td>
+                            <td>
+                                <small>
+                                    @string.Join(", ",
+                                             t.TransactionServices.Select(s => s.Service.ServiceName))
+                                </small>
+                            </td>
+                            <td>KES @t.TotalAmount.ToString("N0")</td>
+                            <td>@t.PaymentMethod</td>
+                            <td>
+                                @{
+                                    var badge = t.Status ==
+                                    SplashCityCarwash.Models.WashStatus.Completed
+                                    ? "success"
+                                    : t.Status ==
+                                    SplashCityCarwash.Models.WashStatus.Washing
+                                    ? "primary" : "warning text-dark";
+                                }
+                                <span class="badge bg-@badge">@t.Status</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

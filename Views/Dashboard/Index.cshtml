@@ -1,0 +1,188 @@
+﻿@model SplashCityCarwash.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #f59e0b !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1">Cars Waiting</p>
+                        <h2 class="fw-bold mb-0">@Model.CarsWaiting</h2>
+                    </div>
+                    <div style="font-size:2.5rem;">⏳</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #3b82f6 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1">Being Washed</p>
+                        <h2 class="fw-bold mb-0">@Model.CarsBeingWashed</h2>
+                    </div>
+                    <div style="font-size:2.5rem;">🚿</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1">Completed Today</p>
+                        <h2 class="fw-bold mb-0">@Model.CarsCompletedToday</h2>
+                    </div>
+                    <div style="font-size:2.5rem;">✅</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #8b5cf6 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1">Total Customers</p>
+                        <h2 class="fw-bold mb-0">@Model.TotalCustomers</h2>
+                    </div>
+                    <div style="font-size:2.5rem;">👥</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- REVENUE CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-success text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75">Revenue Today</p>
+                <h3 class="fw-bold">KES @Model.RevenueToday.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75">Revenue This Month</p>
+                <h3 class="fw-bold">KES @Model.RevenueThisMonth.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-dark text-white">
+            <div class="card-body">
+                <p class="mb-1 opacity-75">Most Popular Service</p>
+                <h3 class="fw-bold">@Model.MostPopularService</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK ACTION -->
+<div class="mb-4">
+    <a href="/Wash/New" class="btn btn-success btn-lg px-5 rounded-pill shadow">
+        🚗 Start New Wash
+    </a>
+</div>
+
+<!-- ACTIVE QUEUE + RECENT TRANSACTIONS -->
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                🚦 Active Queue
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.ActiveQueue.Any())
+                {
+                    <div class="text-center text-muted py-4">No active washes right now</div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Customer</th>
+                                <th>Plate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var q in Model.ActiveQueue)
+                            {
+                                <tr>
+                                    <td>@q.QueuePosition</td>
+                                    <td>@q.Transaction.Customer.FullName</td>
+                                    <td><span class="badge bg-secondary">@q.Transaction.Vehicle.LicensePlate</span></td>
+                                    <td>
+                                        @if (q.Status == SplashCityCarwash.Models.WashStatus.Washing)
+                                        {
+                                            <span class="badge bg-primary">Washing</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Waiting</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold border-0 pt-3">
+                🧾 Recent Transactions
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentTransactions.Any())
+                {
+                    <div class="text-center text-muted py-4">No transactions yet today</div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Services</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.RecentTransactions)
+                            {
+                                <tr>
+                                    <td>@t.Customer.FullName</td>
+                                    <td><small>@string.Join(", ", t.TransactionServices.Select(s => s.Service.ServiceName))</small></td>
+                                    <td>KES @t.TotalAmount.ToString("N0")</td>
+                                    <td>
+                                        <span class="badge bg-@(t.Status == SplashCityCarwash.Models.WashStatus.Completed ? "success" : t.Status == SplashCityCarwash.Models.WashStatus.Washing ? "primary" : "warning text-dark")">
+                                            @t.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

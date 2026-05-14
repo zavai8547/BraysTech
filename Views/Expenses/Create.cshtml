@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Add Expense";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"> Record Expense</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/Expenses/Create">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category *</label>
+                        <select name="Category" class="form-select" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Soap & Chemicals">Soap & Chemicals</option>
+                            <option value="Water Bill">Water Bill</option>
+                            <option value="Staff Wages">Staff Wages</option>
+                            <option value="Equipment">Equipment</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Electricity">Electricity</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        <input name="Description" class="form-control"
+                               placeholder="Brief description..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Amount (KES) *</label>
+                        <input name="Amount" type="number" step="0.01"
+                               class="form-control" placeholder="0.00" required />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Date *</label>
+                        <input name="ExpenseDate" type="date" class="form-control"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">
+                            Save Expense
+                        </button>
+                        <a href="/Expenses/Index" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,172 @@
+﻿@model IEnumerable<SplashCityCarwash.Models.Product>
+@{
+    ViewData["Title"] = "Products";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"> Products</h4>
+    <div class="d-flex gap-2">
+        <a href="/Shop/Index" class="btn btn-outline-secondary rounded-pill px-3">
+            ← Back to Shop
+        </a>
+        <a href="/Shop/StockIn" class="btn btn-outline-primary rounded-pill px-3">
+            Stock In
+        </a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a href="/Shop/CreateProduct"
+               class="btn btn-success rounded-pill px-4">
+                + Add Product
+            </a>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Buy Price</th>
+                        <th>Sell Price</th>
+                        <th>Margin</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No products yet.
+                                <a href="/Shop/CreateProduct">Add your first product</a>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var p in Model)
+                    {
+                        var margin = p.SellingPrice > 0
+                        ? ((p.SellingPrice - p.BuyingPrice) / p.SellingPrice * 100)
+                        : 0;
+                        var stockBadge = p.CurrentStock <= 0 ? "danger"
+                        : p.LowStockAlert > 0 && p.CurrentStock <= p.LowStockAlert
+                        ? "warning text-dark"
+                        : "success";
+                        <tr>
+                            <td>
+                                <strong>@p.Name</strong>
+                                @if (!string.IsNullOrEmpty(p.Description))
+                                {
+                                    <br />
+                                    <small class="text-muted">@p.Description</small>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    @(p.Category ?? "—")
+                                </span>
+                            </td>
+                            <td>KES @p.BuyingPrice.ToString("N0")</td>
+                            <td>KES @p.SellingPrice.ToString("N0")</td>
+                            <td>
+                                <span class="text-success fw-bold">
+                                    @margin.ToString("N0")%
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-@stockBadge">
+                                    @p.CurrentStock @p.Unit
+                                </span>
+                            </td>
+                            <td>
+                                @if (p.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    @if (User.IsInRole("Admin") ||
+                                   User.IsInRole("Manager"))
+                                    {
+                                        <a href="/Shop/EditProduct/@p.ProductID"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            Edit
+                                        </a>
+
+                                        <!-- Delete Button -->
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal_@p.ProductID">
+                                            🗑️
+                                        </button>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade"
+                                             id="deleteModal_@p.ProductID"
+                                             tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">
+                                                            🗑 Delete Product
+                                                        </h5>
+                                                        <button type="button"
+                                                                class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal">
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <p class="mb-1">
+                                                            Are you sure you want to delete
+                                                        </p>
+                                                        <h5 class="fw-bold">@p.Name</h5>
+                                                        <p class="text-muted small">
+                                                            This cannot be undone.
+                                                            Any sales history for this
+                                                            product will be affected.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <form method="post"
+                                                              action="/Shop/DeleteProduct"
+                                                              style="display:inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden"
+                                                                   name="id"
+                                                                   value="@p.ProductID" />
+                                                            <button type="submit"
+                                                                    class="btn btn-danger">
+                                                                Yes, Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

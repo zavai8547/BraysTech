@@ -1,0 +1,157 @@
+﻿@model IEnumerable<SplashCityCarwash.Models.ShopSale>
+@{
+    ViewData["Title"] = "Shop Sales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">📋 Shop Sales History</h4>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success fs-6 d-flex align-items-center">
+            Rev: KES @ViewBag.TotalRevenue.ToString("N0")
+        </span>
+        <span class="badge bg-primary fs-6 d-flex align-items-center">
+            Profit: KES @ViewBag.TotalProfit.ToString("N0")
+        </span>
+        <a href="/Shop/Export@(!string.IsNullOrEmpty(ViewBag.Date as string) ? "?date=" + ViewBag.Date : "")"
+           class="btn btn-success rounded-pill px-3">
+            ⬇️ Export
+        </a>
+        <a href="/Shop/NewSale" class="btn btn-dark rounded-pill px-3">
+            + New Sale
+        </a>
+    </div>
+</div>
+
+<form method="get" class="card border-0 shadow-sm p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small text-muted">Filter by Date</label>
+            <input type="date" name="date" value="@ViewBag.Date"
+                   class="form-control" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-dark btn-sm">Filter</button>
+            <a href="/Shop/Sales"
+               class="btn btn-outline-secondary btn-sm">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Profit</th>
+                        <th>Payment</th>
+                        <th>M-Pesa</th>
+                        <th>Staff</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                No sales yet
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td><small>#@s.SaleID</small></td>
+                            <td>
+                                <small>@s.CreatedAt.ToString("dd MMM HH:mm")</small>
+                            </td>
+                            <td>
+                                <small>
+                                    @string.Join(", ",
+                                             s.Items.Select(i =>
+                                             $"{i.Product.Name} x{i.Quantity}"))
+                                </small>
+                            </td>
+                            <td class="fw-bold">
+                                KES @s.TotalAmount.ToString("N0")
+                            </td>
+                            <td class="text-success fw-bold">
+                                KES @s.TotalProfit.ToString("N0")
+                            </td>
+                            <td>
+                                <span class="badge bg-@(s.PaymentMethod == SplashCityCarwash.Models.PaymentMethod.Cash ? "success" : s.PaymentMethod == SplashCityCarwash.Models.PaymentMethod.MPesa ? "warning text-dark" : "primary")">
+                                    @s.PaymentMethod
+                                </span>
+                            </td>
+                            <td>
+                                <small>@(s.MpesaCode ?? "—")</small>
+                            </td>
+                            <td>
+                                <small>@s.Staff.FullName</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="/Shop/SaleDetails/@s.SaleID"
+                                       class="btn btn-sm btn-outline-primary">View</a>
+
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteSaleModal_@s.SaleID">
+                                            🗑️
+                                        </button>
+
+                                        <div class="modal fade" id="deleteSaleModal_@s.SaleID"
+                                             tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">🗑️ Delete Sale #@s.SaleID</h5>
+                                                        <button type="button"
+                                                                class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <p class="mb-1">Delete this sale?</p>
+                                                        <h5 class="fw-bold">KES @s.TotalAmount.ToString("N0")</h5>
+                                                        <p class="text-muted small">
+                                                            Stock will be restored automatically.
+                                                            This cannot be undone.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <form method="post" action="/Shop/DeleteSale"
+                                                              style="display:inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@s.SaleID" />
+                                                            <button type="submit" class="btn btn-danger">
+                                                                Yes, Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

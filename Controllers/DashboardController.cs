@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SplashCityCarwash.Data;
-using SplashCityCarwash.Models;
+using BraysTech.Data;
+using BraysTech.Models;
 
-namespace SplashCityCarwash.Controllers
+namespace BraysTech.Controllers
 {
     [Authorize]
     public class DashboardController : Controller
@@ -21,57 +21,72 @@ namespace SplashCityCarwash.Controllers
             var today = DateTime.Today;
             var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
 
+            // 1. Fetch Top-Level Stats
+            var totalBranches = await _db.Branches.CountAsync();
+            var totalStaff = await _db.Users.CountAsync();
+
+            // Fix: Changed 'IsSold' to 'Status == PhoneStatus.InStock'
+            var totalPhonesInStock = await _db.IMEIStock
+                .CountAsync(i => i.Status == PhoneStatus.InStock);
+
+            var salesToday = await _db.PhoneSales
+                .CountAsync(s => s.CreatedAt.Date == today);
+
+            var revenueTodayAll = await _db.PhoneSales
+                .Where(s => s.CreatedAt.Date == today)
+                .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
+
+            var salesThisMonth = await _db.PhoneSales
+                .CountAsync(s => s.CreatedAt >= firstDayOfMonth);
+
+            var revenueThisMonthAll = await _db.PhoneSales
+                .Where(s => s.CreatedAt >= firstDayOfMonth)
+                .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
+
+            // Profit calculation using your model's 'TotalProfit' field
+            var profitThisMonth = await _db.PhoneSales
+                .Where(s => s.CreatedAt >= firstDayOfMonth)
+                .SumAsync(s => (decimal?)s.TotalProfit) ?? 0;
+
+            // 2. Fetch Branches and calculate summaries manually to avoid SQL translation issues
+            var branches = await _db.Branches.ToListAsync();
+            var branchSummaries = new List<BranchSummary>();
+
+            foreach (var b in branches)
+            {
+                branchSummaries.Add(new BranchSummary
+                {
+                    BranchName = b.Name,
+
+                    // FIXED HERE: Changed u.BranchId == b.Id  →  u.BranchID == b.BranchID
+                    StaffCount = await _db.Users.CountAsync(u => u.BranchID == b.BranchID),
+
+                    // Fix: Check Status enum instead of IsSold
+                    PhonesInStock = await _db.IMEIStock
+                        .CountAsync(i => i.BranchID == b.BranchID && i.Status == PhoneStatus.InStock),
+
+                    RevenueToday = await _db.PhoneSales
+                        .Where(s => s.BranchID == b.BranchID && s.CreatedAt.Date == today)
+                        .SumAsync(s => (decimal?)s.TotalAmount) ?? 0,
+
+                    RevenueThisMonth = await _db.PhoneSales
+                        .Where(s => s.BranchID == b.BranchID && s.CreatedAt >= firstDayOfMonth)
+                        .SumAsync(s => (decimal?)s.TotalAmount) ?? 0
+                });
+            }
+
+            // 3. Bind to ViewModel
             var vm = new DashboardViewModel
             {
-                CarsWaiting = await _db.WashQueues
-                    .CountAsync(q => q.Status == WashStatus.Waiting),
-
-                CarsBeingWashed = await _db.WashQueues
-                    .CountAsync(q => q.Status == WashStatus.Washing),
-
-                CarsCompletedToday = await _db.Transactions
-                    .CountAsync(t => (t.Status == WashStatus.Completed ||
-                                      t.Status == WashStatus.Paid)
-                                  && t.CreatedAt.Date == today),
-
-                RevenueToday = await _db.Transactions
-                    .Where(t => t.CreatedAt.Date == today &&
-                               (t.Status == WashStatus.Completed ||
-                                t.Status == WashStatus.Paid))
-                    .SumAsync(t => (decimal?)t.TotalAmount) ?? 0,
-
-                RevenueThisMonth = await _db.Transactions
-                    .Where(t => t.CreatedAt >= firstDayOfMonth &&
-                               (t.Status == WashStatus.Completed ||
-                                t.Status == WashStatus.Paid))
-                    .SumAsync(t => (decimal?)t.TotalAmount) ?? 0,
-
-                TotalCustomers = await _db.Customers.CountAsync(),
-
-                MostPopularService = await _db.TransactionServices
-                    .GroupBy(ts => ts.Service.ServiceName)
-                    .OrderByDescending(g => g.Count())
-                    .Select(g => g.Key)
-                    .FirstOrDefaultAsync() ?? "N/A",
-
-                RecentTransactions = await _db.Transactions
-                    .Include(t => t.Customer)
-                    .Include(t => t.Vehicle)
-                    .Include(t => t.TransactionServices)
-                        .ThenInclude(ts => ts.Service)
-                    .OrderByDescending(t => t.CreatedAt)
-                    .Take(5)
-                    .ToListAsync(),
-
-                ActiveQueue = await _db.WashQueues
-                    .Include(q => q.Transaction)
-                        .ThenInclude(t => t.Customer)
-                    .Include(q => q.Transaction)
-                        .ThenInclude(t => t.Vehicle)
-                    .Where(q => q.Status == WashStatus.Waiting
-                             || q.Status == WashStatus.Washing)
-                    .OrderBy(q => q.QueuePosition)
-                    .ToListAsync()
+                TotalBranches = totalBranches,
+                TotalStaff = totalStaff,
+                TotalPhonesInStock = totalPhonesInStock,
+                SalesToday = salesToday,
+                RevenueTodayAll = revenueTodayAll,
+                SalesThisMonth = salesThisMonth,
+                RevenueThisMonthAll = revenueThisMonthAll,
+                ProfitThisMonth = profitThisMonth,
+                BranchSummaries = branchSummaries
             };
 
             return View(vm);

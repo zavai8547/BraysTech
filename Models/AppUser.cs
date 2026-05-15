@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using BraysTech.Models;
+using Microsoft.AspNetCore.Identity;
 
-namespace SplashCityCarwash.Models
+namespace BraysTech.Models
 {
     public class AppUser : IdentityUser
     {
@@ -9,8 +9,7 @@ namespace SplashCityCarwash.Models
         public string? Phone { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-        public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
+        public int? BranchID { get; set; }
+        public Branch? Branch { get; set; }
     }
 }

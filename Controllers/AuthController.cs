@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SplashCityCarwash.Models;
+using BraysTech.Models;
 
-namespace SplashCityCarwash.Controllers
+namespace BraysTech.Controllers
 {
     public class AuthController : Controller
     {

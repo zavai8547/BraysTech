@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SplashCityCarwash.Models;
+using BraysTech.Models;
 
-namespace SplashCityCarwash.Controllers
+namespace BraysTech.Controllers
 {
     [Authorize(Roles = "Admin,Manager")]
     public class StaffController : Controller

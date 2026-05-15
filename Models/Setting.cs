@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SplashCityCarwash.Models
+namespace BraysTech.Models
 {
     public class Setting
     {

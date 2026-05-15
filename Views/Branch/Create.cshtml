@@ -1,0 +1,156 @@
+﻿@model BraysTech.Models.Branch
+@{
+    ViewData["Title"] = "Add Branch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .form-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 24px rgba(0,122,61,0.1);
+        overflow: hidden;
+    }
+
+        .form-card .card-header {
+            background: linear-gradient(135deg, #007A3D, #005C2E);
+            padding: 24px 28px;
+        }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #007A3D;
+        box-shadow: 0 0 0 3px rgba(0,122,61,0.1);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #007A3D, #005C2E);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+        .btn-save:hover {
+            background: linear-gradient(135deg, #005C2E, #003d1e);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .field-icon {
+        background: #f0fdf4;
+        border-right: none;
+        color: #007A3D;
+    }
+
+    .input-group .form-control {
+        border-left: none;
+    }
+
+        .input-group .form-control:focus {
+            border-color: #007A3D;
+            box-shadow: none;
+        }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Branch/Index"
+               class="btn btn-outline-secondary rounded-pill px-3">
+                ← Back
+            </a>
+            <h4 class="fw-bold mb-0">Add New Branch</h4>
+        </div>
+
+        <div class="form-card card">
+            <div class="card-header">
+                <h5 class="mb-0 text-white fw-bold">🏪 Branch Details</h5>
+                <small style="color:rgba(255,255,255,0.7);">
+                    Fill in the details for the new branch
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/Branch/Create">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Branch Name <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text field-icon">🏪</span>
+                            <input name="Name"
+                                   class="form-control form-control-lg"
+                                   placeholder="e.g. CBD Branch, Westlands Branch"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Location / Area <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text field-icon">📍</span>
+                            <input name="Location"
+                                   class="form-control form-control-lg"
+                                   placeholder="e.g. Tom Mboya Street, Nairobi CBD"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Branch Phone
+                            <span class="text-muted fw-normal">
+                                (optional)
+                            </span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text field-icon">📞</span>
+                            <input name="Phone"
+                                   class="form-control form-control-lg"
+                                   placeholder="e.g. 0712 345 678" />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Notes
+                            <span class="text-muted fw-normal">
+                                (optional)
+                            </span>
+                        </label>
+                        <textarea name="Notes"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Any additional info about this branch...">
+                        </textarea>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn-save flex-grow-1">
+                            💾 Save Branch
+                        </button>
+                        <a href="/Branch/Index"
+                           class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                You can add staff to this branch from the Staff page
+                after creating it.
+            </small>
+        </div>
+
+    </div>
+</div>

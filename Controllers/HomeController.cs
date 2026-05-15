@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SplashCityCarwash.Models;
+using BraysTech.Models;
 using System.Diagnostics;
 
-namespace SplashCityCarwash.Controllers
+namespace BraysTech.Controllers
 {
     public class HomeController : Controller
     {

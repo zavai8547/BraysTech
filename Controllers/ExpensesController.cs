@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SplashCityCarwash.Data;
-using SplashCityCarwash.Models;
+using BraysTech.Data;
+using BraysTech.Models;
 using System.Security.Claims;
 
-namespace SplashCityCarwash.Controllers
+namespace BraysTech.Controllers
 {
     [Authorize(Roles = "Admin,Manager")]
     public class ExpensesController : Controller

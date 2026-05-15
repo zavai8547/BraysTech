@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SplashCityCarwash.Data;
-using SplashCityCarwash.Models;
+using BraysTech.Data;
+using BraysTech.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

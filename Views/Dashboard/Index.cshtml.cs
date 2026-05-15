@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace SplashCityCarwash.Views.Dashboard
+namespace BraysTech.Views.Dashboard
 {
     public class IndexModel : PageModel
     {

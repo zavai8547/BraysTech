@@ -1,0 +1,88 @@
+﻿@model BraysTech.Models.Branch
+@{
+    ViewData["Title"] = "Edit Branch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Branch/Index"
+               class="btn btn-outline-secondary rounded-pill px-3">
+                ← Back
+            </a>
+            <h4 class="fw-bold mb-0">Edit Branch</h4>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header"
+                 style="background:linear-gradient(135deg,#007A3D,#005C2E);
+                        padding:24px 28px;">
+                <h5 class="mb-0 text-white fw-bold">
+                    ✏️ Edit — @Model.Name
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/Branch/Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="BranchID"
+                           value="@Model.BranchID" />
+                    <input type="hidden" name="CreatedAt"
+                           value="@Model.CreatedAt" />
+                    <input type="hidden" name="IsActive"
+                           value="@Model.IsActive" />
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Branch Name *
+                        </label>
+                        <input name="Name" value="@Model.Name"
+                               class="form-control form-control-lg"
+                               required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Location / Area *
+                        </label>
+                        <input name="Location" value="@Model.Location"
+                               class="form-control form-control-lg"
+                               required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Branch Phone (optional)
+                        </label>
+                        <input name="Phone" value="@Model.Phone"
+                               class="form-control form-control-lg" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Notes (optional)
+                        </label>
+                        <textarea name="Notes" class="form-control"
+                                  rows="3">@Model.Notes</textarea>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit"
+                                class="btn btn-lg flex-grow-1 fw-bold"
+                                style="background:#007A3D;color:white;
+                                       border-radius:12px;">
+                            💾 Save Changes
+                        </button>
+                        <a href="/Branch/Index"
+                           class="btn btn-outline-secondary btn-lg
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

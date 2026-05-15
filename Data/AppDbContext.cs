@@ -1,44 +1,26 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using BraysTech.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SplashCityCarwash.Models;
 
-namespace SplashCityCarwash.Data
+namespace BraysTech.Data
 {
     public class AppDbContext : IdentityDbContext<AppUser>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options) { }
 
-        public DbSet<Customer> Customers { get; set; }
-        public DbSet<Vehicle> Vehicles { get; set; }
-        public DbSet<ServicePackage> ServicePackages { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<TransactionService> TransactionServices { get; set; }
-        public DbSet<TransactionWasher> TransactionWashers { get; set; }
-        public DbSet<WashQueue> WashQueues { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Setting> Settings { get; set; }
-        public DbSet<Receipt> Receipts { get; set; }
-
-        public DbSet<Product> Products { get; set; }
-        public DbSet<StockMovement> StockMovements { get; set; }
-        public DbSet<ShopSale> ShopSales { get; set; }
-        public DbSet<ShopSaleItem> ShopSaleItems { get; set; }
+        public DbSet<Branch> Branches { get; set; }
+        public DbSet<IMEIStock> IMEIStock { get; set; }
+        public DbSet<PhoneSale> PhoneSales { get; set; }
+        // Note: Make sure AppUser has a BranchId property if you want per-branch stats
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            builder.Entity<TransactionService>()
-                .HasIndex(ts => new { ts.TransactionID, ts.ServiceID });
-
-            builder.Entity<Customer>()
-                .HasIndex(c => c.Phone).IsUnique();
-
-            builder.Entity<Vehicle>()
-                .HasIndex(v => v.LicensePlate).IsUnique();
-
-            builder.Entity<Setting>()
-                .HasIndex(s => s.SettingKey).IsUnique();
+            builder.Entity<IMEIStock>().HasIndex(i => i.IMEI).IsUnique();
+            builder.Entity<Setting>().HasIndex(s => s.SettingKey).IsUnique();
         }
     }
 }

@@ -1,0 +1,190 @@
+﻿@model BraysTech.Models.Branch
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Branch/Index"
+           class="btn btn-outline-secondary rounded-pill px-3">
+            ← Back
+        </a>
+        <div>
+            <h4 class="fw-bold mb-0">🏪 @Model.Name</h4>
+            <small class="text-muted">
+                📍 @Model.Location
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                <span> • 📞 @Model.Phone</span>
+                }
+            </small>
+        </div>
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+    <div class="d-flex gap-2">
+        <a href="/Branch/Edit/@Model.BranchID"
+           class="btn btn-outline-secondary rounded-pill px-3">
+            ✏️ Edit
+        </a>
+        <form method="post" action="/Branch/ToggleActive">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.BranchID" />
+            <button type="submit"
+                    class="btn rounded-pill px-3 @(Model.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                @(Model.IsActive ? "⏸ Deactivate" : "▶ Activate")
+            </button>
+        </form>
+    </div>
+    }
+</div>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Phones in Stock</p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    @ViewBag.PhonesInStock
+                </h4>
+                <small class="text-muted">Available to sell</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-left:4px solid #3b82f6 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Staff Assigned</p>
+                <h4 class="fw-bold mb-0">@Model.Staff.Count()</h4>
+                <small class="text-muted">Active staff</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-left:4px solid #f59e0b !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Sales Today</p>
+                <h4 class="fw-bold mb-0">
+                    KES @ViewBag.SalesToday.ToString("N0")
+                </h4>
+                <small class="text-muted">Today's revenue</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-left:4px solid #8b5cf6 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">This Month</p>
+                <h4 class="fw-bold mb-0">
+                    KES @ViewBag.SalesMonth.ToString("N0")
+                </h4>
+                <small class="text-muted">Monthly revenue</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STAFF TABLE -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 pt-3 fw-semibold">
+        👤 Staff at this Branch
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Staff.Any())
+        {
+        <div class="text-center text-muted py-4">
+            No staff assigned to this branch yet.
+            <a href="/Staff/Index">Assign staff from Staff page.</a>
+        </div>
+        }
+        else
+        {
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Staff)
+                    {
+                <tr>
+                    <td class="fw-semibold">@s.FullName</td>
+                    <td>@s.Email</td>
+                    <td>@(s.Phone ?? "—")</td>
+                    <td>
+                        <span class="badge @(s.IsActive ? "bg-success" : "bg-danger")">
+                            @(s.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                </tr>
+                    }
+            </tbody>
+        </table>
+        }
+    </div>
+</div>
+
+<!-- RECENT SALES -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 pt-3 fw-semibold">
+        📱 Recent Sales
+    </div>
+    <div class="card-body p-0">
+        @if (ViewBag.RecentSales == null ||
+             ((IEnumerable<BraysTech.Models.PhoneSale>)
+              ViewBag.RecentSales).Count() == 0)
+        {
+        <div class="text-center text-muted py-4">
+            No sales recorded yet for this branch.
+        </div>
+        }
+        else
+        {
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Staff</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in (IEnumerable<BraysTech.Models.PhoneSale>)
+                              ViewBag.RecentSales)
+                    {
+                <tr>
+                    <td>
+                        <small>
+                            @s.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                        </small>
+                    </td>
+                    <td>@(s.CustomerName ?? "Walk-in")</td>
+                    <td>@(s.Staff?.FullName ?? "—")</td>
+                    <td class="fw-bold">
+                        KES @s.TotalAmount.ToString("N0")
+                    </td>
+                    <td>
+                        <span class="badge @(s.PaymentMethod.ToString() == "Cash" ? "bg-success" : s.PaymentMethod.ToString() == "MPesa" ? "bg-warning text-dark" : "bg-info")">
+                            @s.PaymentMethod
+                        </span>
+                    </td>
+                </tr>
+                    }
+            </tbody>
+        </table>
+        }
+    </div>
+</div>

@@ -20,12 +20,12 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1565C0 0%, #42A5F5 100%);
+            background: linear-gradient(135deg, #007A3D 0%, #005C2E 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
 
         .login-wrapper {
@@ -41,7 +41,7 @@
 
         .login-left {
             flex: 1;
-            background: linear-gradient(160deg, #1565C0, #0D47A1);
+            background: linear-gradient(160deg, #007A3D, #005C2E);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -62,32 +62,32 @@
                 left: -100px;
             }
 
-            .login-left img {
-                width: 100%;
-                max-width: 260px;
-                object-fit: contain;
-                position: relative;
-                z-index: 1;
-                filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
-            }
-
             .login-left h2 {
                 color: white;
-                font-size: 1.4rem;
+                font-size: 2rem;
                 font-weight: 800;
                 text-align: center;
-                margin-top: 20px;
                 position: relative;
                 z-index: 1;
                 text-transform: uppercase;
-                letter-spacing: 1px;
+                letter-spacing: 2px;
+                margin-bottom: 12px;
             }
 
             .login-left p {
                 color: #FFD600;
-                font-size: 0.9rem;
+                font-size: 1rem;
                 text-align: center;
-                margin-top: 6px;
+                position: relative;
+                z-index: 1;
+                font-weight: 500;
+                letter-spacing: 0.5px;
+            }
+
+            .login-left .tagline {
+                color: rgba(255,255,255,0.85);
+                font-size: 0.85rem;
+                margin-top: 20px;
                 position: relative;
                 z-index: 1;
             }
@@ -101,7 +101,7 @@
         }
 
             .login-right h3 {
-                color: #1565C0;
+                color: #007A3D;
                 font-weight: 800;
                 font-size: 1.8rem;
                 margin-bottom: 6px;
@@ -128,14 +128,27 @@
             transition: border-color 0.2s;
         }
 
+            .form-control:focus {
+                border-color: #007A3D;
+                box-shadow: 0 0 0 0.2rem rgba(0,122,61,0.25);
+                outline: none;
+            }
+
         .btn-login {
-            background: linear-gradient(135deg, #1565C0, #42A5F5);
+            background: linear-gradient(135deg, #007A3D, #005C2E);
             border: none;
             border-radius: 12px;
             padding: 14px;
             font-weight: 700;
             color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+
+            .btn-login:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 14px rgba(0,122,61,0.3);
+                background: linear-gradient(135deg, #008c46, #006835);
+            }
 
         .password-wrapper {
             position: relative;
@@ -149,13 +162,43 @@
             background: none;
             border: none;
             cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0.6;
         }
+
+            .toggle-pw:hover {
+                opacity: 1;
+            }
 
         .setup-link {
             text-align: center;
             margin-top: 16px;
             font-size: 0.85rem;
             color: #aaa;
+        }
+
+            .setup-link a {
+                color: #007A3D;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+                .setup-link a:hover {
+                    text-decoration: underline;
+                }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            border-radius: 10px;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            border-radius: 10px;
         }
 
         @@media (max-width: 650px) {
@@ -166,20 +209,25 @@
             .login-left {
                 min-height: 220px;
             }
+
+                .login-left h2 {
+                    font-size: 1.5rem;
+                }
         }
     </style>
 </head>
 <body>
     <div class="login-wrapper">
         <div class="login-left">
-            <img src="/images/logo.png" alt="Brays Technologies Logo" />
-            <h2>Brays Technologies</h2>
-            <p>Advanced Tech Solutions</p>
+            <!-- Removed image logo -->
+            <h2>BRAYS TECHNOLOGIES</h2>
+            <p>ERP System</p>
+            <div class="tagline">Smart Retail · Multi-Branch · Real-time</div>
         </div>
 
         <div class="login-right">
             <h3>Staff Login</h3>
-            <p class="subtitle">Access your sales and inventory dashboard</p>
+            <p class="subtitle">Access your sales, inventory & branch dashboard</p>
             <div class="yellow-line"></div>
 
             @if (TempData["Success"] != null)

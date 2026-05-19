@@ -20,6 +20,11 @@ namespace BraysTech.Models
         public Branch? Branch { get; set; }
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
+
+        // ADD THESE TWO LINES:
+        public int? CustomerID { get; set; }
+        public Customer? Customer { get; set; }
+
         public decimal TotalAmount { get; set; }
         public decimal TotalProfit { get; set; }
         public SalePaymentMethod PaymentMethod { get; set; }
@@ -44,5 +49,9 @@ namespace BraysTech.Models
         public decimal SellingPrice { get; set; }
         public decimal BuyingPrice { get; set; }
         public decimal Profit { get; set; }
+
+        // REMOVE these if they exist:
+        // public int? CustomerID { get; set; }
+        // public Customer? Customer { get; set; }
     }
 }

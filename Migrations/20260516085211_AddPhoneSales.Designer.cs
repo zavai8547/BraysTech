@@ -4,6 +4,7 @@ using BraysTech.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BraysTech.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260516085211_AddPhoneSales")]
+    partial class AddPhoneSales
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,45 +139,6 @@ namespace BraysTech.Migrations
                     b.ToTable("Branches");
                 });
 
-            modelBuilder.Entity("BraysTech.Models.Customer", b =>
-                {
-                    b.Property<int>("CustomerID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("CustomerID"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("TotalPurchases")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalSpent")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.HasKey("CustomerID");
-
-                    b.HasIndex("Phone")
-                        .IsUnique();
-
-                    b.ToTable("Customers");
-                });
-
             modelBuilder.Entity("BraysTech.Models.Expense", b =>
                 {
                     b.Property<int>("ExpenseID")
@@ -184,40 +148,27 @@ namespace BraysTech.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ExpenseID"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("BranchID")
-                        .HasColumnType("int");
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("ExpenseDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("RecordedBy")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("RecordedByID")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("ExpenseID");
 
-                    b.HasIndex("BranchID");
+                    b.HasIndex("RecordedByID");
 
                     b.ToTable("Expenses");
                 });
@@ -245,14 +196,8 @@ namespace BraysTech.Migrations
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime?>("DateMarkedFaulty")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<DateTime?>("DateSold")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("FaultReason")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("IMEI")
                         .IsRequired()
@@ -268,9 +213,6 @@ namespace BraysTech.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("RepairStatus")
-                        .HasColumnType("longtext");
-
                     b.Property<decimal>("SellingPrice")
                         .HasColumnType("decimal(65,30)");
 
@@ -282,12 +224,6 @@ namespace BraysTech.Migrations
 
                     b.Property<string>("SupplierName")
                         .HasColumnType("longtext");
-
-                    b.Property<string>("TechnicianNotes")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("WarrantyClaim")
-                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("StockID");
 
@@ -312,9 +248,6 @@ namespace BraysTech.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("CustomerID")
-                        .HasColumnType("int");
 
                     b.Property<string>("CustomerName")
                         .HasColumnType("longtext");
@@ -344,8 +277,6 @@ namespace BraysTech.Migrations
                     b.HasKey("SaleID");
 
                     b.HasIndex("BranchID");
-
-                    b.HasIndex("CustomerID");
 
                     b.HasIndex("StaffID");
 
@@ -564,11 +495,11 @@ namespace BraysTech.Migrations
 
             modelBuilder.Entity("BraysTech.Models.Expense", b =>
                 {
-                    b.HasOne("BraysTech.Models.Branch", "Branch")
+                    b.HasOne("BraysTech.Models.AppUser", "RecordedBy")
                         .WithMany()
-                        .HasForeignKey("BranchID");
+                        .HasForeignKey("RecordedByID");
 
-                    b.Navigation("Branch");
+                    b.Navigation("RecordedBy");
                 });
 
             modelBuilder.Entity("BraysTech.Models.IMEIStock", b =>
@@ -590,10 +521,6 @@ namespace BraysTech.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BraysTech.Models.Customer", "Customer")
-                        .WithMany("Sales")
-                        .HasForeignKey("CustomerID");
-
                     b.HasOne("BraysTech.Models.AppUser", "Staff")
                         .WithMany()
                         .HasForeignKey("StaffID")
@@ -601,8 +528,6 @@ namespace BraysTech.Migrations
                         .IsRequired();
 
                     b.Navigation("Branch");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("Staff");
                 });
@@ -682,11 +607,6 @@ namespace BraysTech.Migrations
                     b.Navigation("Staff");
 
                     b.Navigation("Stock");
-                });
-
-            modelBuilder.Entity("BraysTech.Models.Customer", b =>
-                {
-                    b.Navigation("Sales");
                 });
 
             modelBuilder.Entity("BraysTech.Models.PhoneSale", b =>

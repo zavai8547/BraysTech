@@ -4,6 +4,7 @@ using BraysTech.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BraysTech.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517110115_AddFaultTracking")]
+    partial class AddFaultTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -184,40 +187,27 @@ namespace BraysTech.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ExpenseID"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("BranchID")
-                        .HasColumnType("int");
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("ExpenseDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("RecordedBy")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("RecordedByID")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("ExpenseID");
 
-                    b.HasIndex("BranchID");
+                    b.HasIndex("RecordedByID");
 
                     b.ToTable("Expenses");
                 });
@@ -564,11 +554,11 @@ namespace BraysTech.Migrations
 
             modelBuilder.Entity("BraysTech.Models.Expense", b =>
                 {
-                    b.HasOne("BraysTech.Models.Branch", "Branch")
+                    b.HasOne("BraysTech.Models.AppUser", "RecordedBy")
                         .WithMany()
-                        .HasForeignKey("BranchID");
+                        .HasForeignKey("RecordedByID");
 
-                    b.Navigation("Branch");
+                    b.Navigation("RecordedBy");
                 });
 
             modelBuilder.Entity("BraysTech.Models.IMEIStock", b =>

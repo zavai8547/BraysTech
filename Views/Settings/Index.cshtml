@@ -1,0 +1,416 @@
+﻿@model Dictionary<string, string>
+@{
+    ViewData["Title"] = "System Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string Get(string key, string fallback = "") =>
+        Model != null && Model.ContainsKey(key)
+            ? Model[key] : fallback;
+}
+
+<style>
+    .settings-card {
+        background: white;
+        border-radius: 18px;
+        border: none;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .settings-header {
+        background: linear-gradient(135deg, #007A3D, #005C2E);
+        color: white;
+        padding: 18px 24px;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .settings-body {
+        padding: 24px;
+    }
+
+    .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0;
+        border-bottom: 1px solid #f0f7f3;
+        gap: 20px;
+    }
+
+        .setting-row:last-child {
+            border: none;
+        }
+
+    .setting-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #222;
+        min-width: 200px;
+    }
+
+    .setting-desc {
+        font-size: 0.78rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .setting-control {
+        flex: 1;
+        max-width: 360px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #007A3D;
+        box-shadow: 0 0 0 3px rgba(0,122,61,0.1);
+    }
+
+    /* THEME TOGGLE */
+    .theme-toggle {
+        display: flex;
+        gap: 10px;
+    }
+
+    .theme-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.2s;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+    }
+
+        .theme-btn:hover {
+            border-color: #007A3D;
+        }
+
+        .theme-btn.selected {
+            border-color: #007A3D;
+            background: #f0f7f3;
+            color: #007A3D;
+        }
+
+        .theme-btn .icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+    /* DARK MODE PREVIEW */
+    body.dark-mode {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+    }
+
+        body.dark-mode .settings-card {
+            background: #1e293b !important;
+        }
+
+        body.dark-mode .settings-header {
+            background: linear-gradient(135deg,#005C2E,#003d1e) !important;
+        }
+
+        body.dark-mode .setting-label {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .setting-desc {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .setting-row {
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-color: #334155;
+        }
+
+        body.dark-mode .topbar {
+            background: #1e293b !important;
+            border-color: #007A3D !important;
+        }
+
+            body.dark-mode .topbar h5 {
+                color: #34d399 !important;
+            }
+
+        body.dark-mode .main-content {
+            background: #0f172a !important;
+        }
+
+        body.dark-mode .theme-btn {
+            background: #1e293b;
+            color: #94a3b8;
+            border-color: #334155;
+        }
+
+            body.dark-mode .theme-btn.selected {
+                background: #0f3d24;
+                color: #34d399;
+                border-color: #007A3D;
+            }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">⚙️ System Settings</h4>
+        <small class="text-muted">
+            Configure system preferences for Brays Technologies
+        </small>
+    </div>
+    @if (!Model.Any())
+    {
+        <a href="/Settings/SeedDefaults"
+           class="btn btn-outline-secondary rounded-pill px-4">
+            Load Defaults
+        </a>
+    }
+</div>
+
+<form method="post" action="/Settings/Save">
+    @Html.AntiForgeryToken()
+
+    <!-- APPEARANCE -->
+    <div class="settings-card">
+        <div class="settings-header">🎨 Appearance</div>
+        <div class="settings-body">
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Theme Mode</div>
+                    <div class="setting-desc">
+                        Switch between light and dark mode
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="hidden"
+                           name="theme"
+                           id="themeInput"
+                           value="@Get("theme","light")" />
+                    <div class="theme-toggle">
+                        <div class="theme-btn @(Get("theme","light") == "light" ? "selected" : "")"
+                             id="btnLight"
+                             onclick="setTheme('light')">
+                            <span class="icon">☀️</span>
+                            Light
+                        </div>
+                        <div class="theme-btn @(Get("theme","light") == "dark" ? "selected" : "")"
+                             id="btnDark"
+                             onclick="setTheme('dark')">
+                            <span class="icon">🌙</span>
+                            Dark
+                        </div>
+                        <div class="theme-btn @(Get("theme","light") == "system" ? "selected" : "")"
+                             id="btnSystem"
+                             onclick="setTheme('system')">
+                            <span class="icon">💻</span>
+                            System
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- BUSINESS INFO -->
+    <div class="settings-card">
+        <div class="settings-header">🏪 Business Information</div>
+        <div class="settings-body">
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Business Name</div>
+                    <div class="setting-desc">
+                        Shown on receipts and reports
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="text"
+                           name="business_name"
+                           class="form-control"
+                           style="border-radius:10px;"
+                           value="@Get("business_name",
+                               "Brays Technologies Systems")" />
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Business Phone</div>
+                    <div class="setting-desc">
+                        Printed on receipts
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="text"
+                           name="business_phone"
+                           class="form-control"
+                           style="border-radius:10px;"
+                           value="@Get("business_phone")" />
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Business Email</div>
+                    <div class="setting-desc">
+                        Contact email for support
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="email"
+                           name="business_email"
+                           class="form-control"
+                           style="border-radius:10px;"
+                           value="@Get("business_email")" />
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Receipt Footer</div>
+                    <div class="setting-desc">
+                        Message shown at bottom of every receipt
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="text"
+                           name="receipt_footer"
+                           class="form-control"
+                           style="border-radius:10px;"
+                           value="@Get("receipt_footer",
+                               "Thank you for choosing Brays Technologies!")" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="settings-card">
+        <div class="settings-header">🔧 System Preferences</div>
+        <div class="settings-body">
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">Currency</div>
+                    <div class="setting-desc">
+                        Currency symbol used throughout
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <select name="currency"
+                            class="form-select"
+                            style="border-radius:10px;">
+                        @foreach (var c in new[]
+                        {
+                        ("KES","KES — Kenyan Shilling"),
+                        ("USD","USD — US Dollar"),
+                        ("UGX","UGX — Ugandan Shilling"),
+                        ("TZS","TZS — Tanzanian Shilling")
+                        })
+                        {
+                            if (Get("currency", "KES") == c.Item1)
+                            {
+                                <option value="@c.Item1" selected>
+                                    @c.Item2
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@c.Item1">@c.Item2</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">
+                        Low Stock Alert Threshold
+                    </div>
+                    <div class="setting-desc">
+                        Alert when branch stock falls below this number
+                    </div>
+                </div>
+                <div class="setting-control">
+                    <input type="number"
+                           name="low_stock_threshold"
+                           class="form-control"
+                           style="border-radius:10px;"
+                           min="1" max="100"
+                           value="@Get("low_stock_threshold","5")" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SAVE BUTTON -->
+    <div class="d-flex gap-3">
+        <button type="submit"
+                class="btn btn-lg px-5 fw-bold"
+                style="background:#007A3D;color:white;
+                       border-radius:12px;">
+            💾 Save All Settings
+        </button>
+        <a href="/Dashboard/Index"
+           class="btn btn-lg btn-outline-secondary rounded-pill px-4">
+            Cancel
+        </a>
+    </div>
+
+</form>
+
+<script>
+    // Apply theme on load
+    const savedTheme = '@Get("theme", "light")';
+    applyTheme(savedTheme);
+
+    function setTheme(theme) {
+        document.getElementById('themeInput').value = theme;
+        ['btnLight', 'btnDark', 'btnSystem'].forEach(id => {
+            document.getElementById(id)
+                .classList.remove('selected');
+        });
+        document.getElementById(
+            theme === 'light' ? 'btnLight' :
+                theme === 'dark' ? 'btnDark' : 'btnSystem'
+        ).classList.add('selected');
+        applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+        const body = document.body;
+        if (theme === 'dark') {
+            body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else if (theme === 'system') {
+            const prefersDark = window.matchMedia(
+                '(prefers-color-scheme: dark)').matches;
+            if (prefersDark) body.classList.add('dark-mode');
+            else body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'system');
+        } else {
+            body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    // Apply saved theme from localStorage on every page load
+    // (Add this to _Layout.cshtml <head> for persistence)
+    const stored = localStorage.getItem('theme');
+    if (stored) applyTheme(stored);
+</script>

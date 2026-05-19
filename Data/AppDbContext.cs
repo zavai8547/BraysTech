@@ -14,13 +14,25 @@ namespace BraysTech.Data
         public DbSet<Branch> Branches { get; set; }
         public DbSet<IMEIStock> IMEIStock { get; set; }
         public DbSet<PhoneSale> PhoneSales { get; set; }
-        // Note: Make sure AppUser has a BranchId property if you want per-branch stats
+        public DbSet<PhoneSaleItem> PhoneSaleItems { get; set; }
+        public DbSet<Customer> Customers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<IMEIStock>().HasIndex(i => i.IMEI).IsUnique();
-            builder.Entity<Setting>().HasIndex(s => s.SettingKey).IsUnique();
+
+            builder.Entity<IMEIStock>()
+                .HasIndex(i => i.IMEI)
+                .IsUnique();
+
+            builder.Entity<Setting>()
+                .HasIndex(s => s.SettingKey)
+                .IsUnique();
+
+            // Unique index for Customer phone number
+            builder.Entity<Customer>()
+                .HasIndex(c => c.Phone)
+                .IsUnique();
         }
     }
 }

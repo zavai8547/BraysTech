@@ -1,6 +1,6 @@
-﻿@model BraysTech.Models.Branch
+﻿@model BraysTech.Models.Customer
 @{
-    ViewData["Title"] = "Edit Branch";
+    ViewData["Title"] = "Edit Customer";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -8,48 +8,38 @@
     <div class="col-md-6">
 
         <div class="d-flex align-items-center gap-3 mb-4">
-            <a href="/Branch/Index"
+            <a href="/Customers/Index"
                class="btn btn-outline-secondary rounded-pill px-3">
-                Back
+                ← Back
             </a>
-            <h4 class="fw-bold mb-0">Edit Branch</h4>
+            <h4 class="fw-bold mb-0">Edit Customer</h4>
         </div>
 
         <div class="card border-0 shadow-sm"
              style="border-radius:20px;overflow:hidden;">
             <div class="card-header border-0 p-4"
-                 style="background:linear-gradient(
-                            135deg,#007A3D,#005C2E);">
+                 style="background:linear-gradient(135deg,#007A3D,#005C2E);">
                 <h5 class="text-white fw-bold mb-0">
-                    @Model.Name
+                    ✏️ @Model.FullName
                 </h5>
-                <small style="color:rgba(255,255,255,0.7);">
-                    Update branch details
-                </small>
             </div>
             <div class="card-body p-4">
-                <form method="post" action="/Branch/Edit">
+                <form method="post" action="/Customers/Edit">
                     @Html.AntiForgeryToken()
-
-                    <input type="hidden"
-                           name="BranchID"
-                           value="@Model.BranchID" />
-                    <input type="hidden"
-                           name="CreatedAt"
-                           value="@Model.CreatedAt
-                               .ToString(" o")" />
-                    <input type="hidden"
-                           name="IsActive"
-                           value="@Model.IsActive
-                               .ToString().ToLower()" />
+                    <input type="hidden" name="CustomerID"
+                           value="@Model.CustomerID" />
+                    <input type="hidden" name="TotalPurchases"
+                           value="@Model.TotalPurchases" />
+                    <input type="hidden" name="TotalSpent"
+                           value="@Model.TotalSpent" />
+                    <input type="hidden" name="CreatedAt"
+                           value="@Model.CreatedAt" />
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
-                            Branch Name
-                            <span class="text-danger">*</span>
+                            Full Name *
                         </label>
-                        <input name="Name"
-                               value="@Model.Name"
+                        <input name="FullName" value="@Model.FullName"
                                class="form-control form-control-lg"
                                style="border-radius:10px;"
                                required />
@@ -57,11 +47,9 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
-                            Location / Area
-                            <span class="text-danger">*</span>
+                            Phone Number *
                         </label>
-                        <input name="Location"
-                               value="@Model.Location"
+                        <input name="Phone" value="@Model.Phone"
                                class="form-control form-control-lg"
                                style="border-radius:10px;"
                                required />
@@ -69,23 +57,17 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
-                            Branch Phone
-                            <span class="text-muted fw-normal">
-                                (optional)
-                            </span>
+                            Email (optional)
                         </label>
-                        <input name="Phone"
-                               value="@Model.Phone"
+                        <input name="Email" value="@Model.Email"
+                               type="email"
                                class="form-control form-control-lg"
                                style="border-radius:10px;" />
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold">
-                            Notes
-                            <span class="text-muted fw-normal">
-                                (optional)
-                            </span>
+                            Notes (optional)
                         </label>
                         <textarea name="Notes"
                                   class="form-control"
@@ -95,16 +77,13 @@
 
                     <div class="d-flex gap-3">
                         <button type="submit"
-                                class="btn btn-lg flex-grow-1
-                                       fw-bold"
-                                style="background:#007A3D;
-                                       color:white;
+                                class="btn btn-lg flex-grow-1 fw-bold"
+                                style="background:#007A3D;color:white;
                                        border-radius:12px;">
-                            Save Changes
+                            💾 Save Changes
                         </button>
-                        <a href="/Branch/Index"
-                           class="btn btn-lg btn-outline-secondary
-                                  rounded-pill px-4">
+                        <a href="/Customers/Index"
+                           class="btn btn-lg btn-outline-secondary rounded-pill px-4">
                             Cancel
                         </a>
                     </div>

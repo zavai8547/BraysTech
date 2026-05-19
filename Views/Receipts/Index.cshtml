@@ -1,0 +1,247 @@
+﻿@model IEnumerable<BraysTech.Models.PhoneSale>
+@{
+    ViewData["Title"] = "Receipts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .receipts-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .receipts-table thead th {
+        background: #007A3D;
+        color: white;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 13px 16px;
+        border: none;
+    }
+
+    .receipts-table tbody td {
+        padding: 13px 16px;
+        vertical-align: middle;
+        border-color: #f0f7f3;
+        font-size: 0.88rem;
+    }
+
+    .receipts-table tbody tr:hover {
+        background: #f9fef9;
+    }
+
+    .receipt-num {
+        font-family: monospace;
+        font-weight: 700;
+        color: #007A3D;
+        background: #f0f7f3;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+    }
+</style>
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Receipts</h4>
+        <small class="text-muted">
+            @ViewBag.TotalReceipts receipt(s) found
+        </small>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="receipts-card mb-3 p-3">
+    <form method="get" action="/Receipts/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <input name="search"
+                       class="form-control"
+                       placeholder="Customer name, phone or IMEI..."
+                       value="@ViewBag.Search" />
+            </div>
+            @if ((bool)ViewBag.IsAdmin || (bool)ViewBag.IsManager)
+            {
+                <div class="col-md-2">
+                    <select name="branchID" class="form-select">
+                        <option value="">All Branches</option>
+                        @foreach (var b in ViewBag.Branches)
+                        {
+                            if (b.BranchID == ViewBag.SelectedBranch)
+                            {
+                                <option value="@b.BranchID" selected>
+                                    @b.Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-2">
+                <input type="date" name="from"
+                       class="form-control"
+                       value="@ViewBag.From" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="to"
+                       class="form-control"
+                       value="@ViewBag.To" />
+            </div>
+            <div class="col-md-1">
+                <button type="submit"
+                        class="btn w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    Search
+                </button>
+            </div>
+            <div class="col-md-1">
+                <a href="/Receipts/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- TABLE -->
+<div class="receipts-card">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <h5 class="fw-bold">No receipts found</h5>
+            <p>Receipts appear here after sales are recorded.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover
+                          receipts-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Receipt No.</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        @if ((bool)ViewBag.IsAdmin ||
+                       (bool)ViewBag.IsManager)
+                        {
+                            <th>Branch</th>
+                            <th>Served By</th>
+                        }
+                        <th>Devices</th>
+                        <th>Payment</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var payStyle = s.PaymentMethod
+                        .ToString() switch
+                        {
+                            "Cash" =>
+                            "background:#dcfce7;color:#16a34a;",
+                            "MPesa" =>
+                            "background:#fef9c3;color:#ca8a04;",
+                            "MKOPA" =>
+                            "background:#dbeafe;color:#2563eb;",
+                            _ =>
+                            "background:#f3f4f6;color:#374151;"
+                        };
+                        <tr>
+                            <td>
+                                <span class="receipt-num">
+                                    RCP-@s.SaleID.ToString("D5")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold"
+                                     style="font-size:0.85rem;">
+                                    @s.CreatedAt.ToString("dd MMM yyyy")
+                                </div>
+                                <small class="text-muted">
+                                    @s.CreatedAt.ToString("HH:mm")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">
+                                    @(s.CustomerName ??
+                                        "Walk-in Customer")
+                                </div>
+                                @if (!string.IsNullOrEmpty(
+                               s.CustomerPhone))
+                                {
+                                    <small class="text-muted">
+                                        @s.CustomerPhone
+                                    </small>
+                                }
+                            </td>
+                            @if ((bool)ViewBag.IsAdmin ||
+                           (bool)ViewBag.IsManager)
+                            {
+                                <td>
+                                    <small>
+                                        @(s.Branch?.Name ?? "—")
+                                    </small>
+                                </td>
+                                <td>
+                                    <small>
+                                        @(s.Staff?.FullName ?? "—")
+                                    </small>
+                                </td>
+                            }
+                            <td>
+                                @foreach (var item in s.Items)
+                                {
+                                    <div style="font-size:0.78rem;
+                                                 font-weight:600;
+                                                 color:#007A3D;">
+                                        @item.PhoneName
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <span style="padding:3px 10px;
+                                              border-radius:20px;
+                                              font-size:0.75rem;
+                                              font-weight:700;
+                                              @payStyle">
+                                    @s.PaymentMethod
+                                </span>
+                            </td>
+                            <td>
+                                <strong style="color:#007A3D;">
+                                    KES @s.TotalAmount.ToString("N0")
+                                </strong>
+                            </td>
+                            <td>
+                                <a href="/Receipts/View/@s.SaleID"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background:#007A3D;
+                                          color:white;
+                                          border-radius:8px;
+                                          font-size:0.78rem;">
+                                    View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

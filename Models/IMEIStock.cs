@@ -6,8 +6,8 @@ namespace BraysTech.Models
     {
         InStock = 0,
         Sold = 1,
-        OnDisplay = 2,
-        Faulty = 3
+        Faulty = 2,
+        DisplayUnit = 3
     }
 
     public class IMEIStock
@@ -29,5 +29,20 @@ namespace BraysTech.Models
         public string? Notes { get; set; }
         public DateTime DateAdded { get; set; } = DateTime.Now;
         public DateTime? DateSold { get; set; }
+
+        // Fault tracking fields
+        public string? FaultReason { get; set; }
+        public DateTime? DateMarkedFaulty { get; set; }
+        public string? TechnicianNotes { get; set; }
+        public string? RepairStatus { get; set; }
+        public bool WarrantyClaim { get; set; } = false;
+
+        // Computed properties
+        public decimal Margin =>
+            SellingPrice > 0
+                ? ((SellingPrice - BuyingPrice) / SellingPrice * 100)
+                : 0;
+
+        public decimal Profit => SellingPrice - BuyingPrice;
     }
 }

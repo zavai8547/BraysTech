@@ -1,63 +1,65 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BraysTech.Data;
 using BraysTech.Models;
-using System.Security.Claims;
 
 namespace BraysTech.Controllers
 {
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize]
     public class ExpensesController : Controller
     {
         private readonly AppDbContext _db;
-        public ExpensesController(AppDbContext db) { _db = db; }
+        private readonly UserManager<AppUser> _userManager;
 
-        public async Task<IActionResult> Index(string? month)
+        public ExpensesController(AppDbContext db, UserManager<AppUser> userManager)
         {
-            var query = _db.Expenses
-                .Include(e => e.RecordedBy)
-                .AsQueryable();
+            _db = db;
+            _userManager = userManager;
+        }
 
-            if (!string.IsNullOrEmpty(month) &&
-                DateTime.TryParse(month + "-01", out var monthDate))
-            {
-                query = query.Where(e =>
-                    e.ExpenseDate.Year == monthDate.Year &&
-                    e.ExpenseDate.Month == monthDate.Month);
-            }
-
-            var expenses = await query
+        public async Task<IActionResult> Index()
+        {
+            var expenses = await _db.Expenses
+                .Include(e => e.Branch)
                 .OrderByDescending(e => e.ExpenseDate)
                 .ToListAsync();
 
-            ViewBag.TotalExpenses = expenses.Sum(e => e.Amount);
-            ViewBag.Month = month;
+            ViewBag.Branches = await _db.Branches.Where(b => b.IsActive).ToListAsync();
             return View(expenses);
         }
 
-        [HttpGet]
-        public IActionResult Create() => View();
-
         [HttpPost]
-        public async Task<IActionResult> Create(Expense model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            string category, string description, decimal amount,
+            DateTime expenseDate, int? branchID, string? notes)
         {
-            ModelState.Remove("RecordedBy");
-            ModelState.Remove("RecordedByID");
+            var user = await _userManager.GetUserAsync(User);
 
-            if (!ModelState.IsValid) return View(model);
+            var expense = new Expense
+            {
+                Category = category,
+                Description = description,
+                Amount = amount,
+                ExpenseDate = expenseDate,
+                BranchID = branchID,
+                Notes = notes,
+                RecordedBy = user?.FullName ?? User.Identity?.Name,
+                RecordedByID = user?.Id,
+                CreatedAt = DateTime.Now
+            };
 
-            model.RecordedByID = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            model.CreatedAt = DateTime.Now;
-
-            _db.Expenses.Add(model);
+            _db.Expenses.Add(expense);
             await _db.SaveChangesAsync();
-            TempData["Success"] = "✅ Expense recorded!";
+
+            TempData["Success"] = "Expense recorded successfully.";
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var expense = await _db.Expenses.FindAsync(id);
@@ -65,7 +67,7 @@ namespace BraysTech.Controllers
             {
                 _db.Expenses.Remove(expense);
                 await _db.SaveChangesAsync();
-                TempData["Success"] = "✅ Expense deleted.";
+                TempData["Success"] = "Expense deleted successfully.";
             }
             return RedirectToAction("Index");
         }

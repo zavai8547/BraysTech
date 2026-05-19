@@ -1,0 +1,384 @@
+﻿@model BraysTech.Models.IMEIStock
+@{
+    ViewData["Title"] = "Add IMEI Device";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .add-card {
+        background: white;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .add-card-header {
+        background: linear-gradient(135deg,#007A3D,#005C2E);
+        padding: 22px 28px;
+        color: white;
+    }
+
+    .add-card-body {
+        padding: 28px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #007A3D;
+        box-shadow: 0 0 0 3px rgba(0,122,61,0.1);
+    }
+
+    .field-group {
+        margin-bottom: 20px;
+    }
+
+    .field-label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        margin-bottom: 6px;
+        display: block;
+        color: #333;
+    }
+
+    .profit-preview {
+        background: #f0f7f3;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+        .profit-preview .label {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .profit-preview .value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #007A3D;
+        }
+
+    .section-divider {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #007A3D;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin: 24px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e5f0e8;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Stock/Index"
+               class="btn btn-outline-secondary rounded-pill px-3">
+                ← Back
+            </a>
+            <h4 class="fw-bold mb-0">➕ Add IMEI Device</h4>
+        </div>
+
+        <div class="add-card">
+            <div class="add-card-header">
+                <h5 class="fw-bold mb-1">📱 Register New Device</h5>
+                <small style="opacity:0.8;">
+                    Device becomes sellable immediately after saving
+                </small>
+            </div>
+            <div class="add-card-body">
+                <form method="post" action="/Stock/Add">
+                    @Html.AntiForgeryToken()
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            IMEI Number
+                            <span class="text-danger">*</span>
+                            <span class="text-muted fw-normal">
+                                (must be unique)
+                            </span>
+                        </label>
+                        <input name="IMEI"
+                               class="form-control form-control-lg"
+                               style="font-family:monospace;font-weight:700;
+                                      border-radius:10px;letter-spacing:1px;"
+                               placeholder="e.g. 356938035643809"
+                               maxlength="20"
+                               required />
+                        <small class="text-muted">
+                            15-digit number found in Settings or
+                            *#06# on the phone
+                        </small>
+                    </div>
+
+                    <div class="section-divider">Device Information</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="field-group mb-0">
+                                <label class="field-label">
+                                    Brand *
+                                </label>
+                                <input name="Brand"
+                                       class="form-control"
+                                       style="border-radius:10px;"
+                                       placeholder="e.g. Samsung, Apple, Tecno"
+                                       list="brandList"
+                                       required />
+                                <datalist id="brandList">
+                                    <option value="Samsung" />
+                                    <option value="Apple" />
+                                    <option value="Tecno" />
+                                    <option value="Infinix" />
+                                    <option value="Itel" />
+                                    <option value="Xiaomi" />
+                                    <option value="Oppo" />
+                                    <option value="Vivo" />
+                                    <option value="Huawei" />
+                                    <option value="Nokia" />
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-group mb-0">
+                                <label class="field-label">
+                                    Model *
+                                </label>
+                                <input name="Model"
+                                       class="form-control"
+                                       style="border-radius:10px;"
+                                       placeholder="e.g. Galaxy A15, iPhone 13"
+                                       required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="field-label">Color</label>
+                            <input name="Color"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   placeholder="e.g. Black, Blue, Gold"
+                                   list="colorList" />
+                            <datalist id="colorList">
+                                <option value="Black" />
+                                <option value="White" />
+                                <option value="Blue" />
+                                <option value="Gold" />
+                                <option value="Silver" />
+                                <option value="Red" />
+                                <option value="Green" />
+                                <option value="Purple" />
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="field-label">Storage</label>
+                            <input name="Storage"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   placeholder="e.g. 64GB, 128GB, 256GB"
+                                   list="storageList" />
+                            <datalist id="storageList">
+                                <option value="32GB" />
+                                <option value="64GB" />
+                                <option value="128GB" />
+                                <option value="256GB" />
+                                <option value="512GB" />
+                                <option value="1TB" />
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="field-group mt-3">
+                        <label class="field-label">
+                            Display Name
+                            <span class="text-muted fw-normal">
+                                (auto-filled from brand + model)
+                            </span>
+                        </label>
+                        <input name="PhoneName"
+                               id="phoneName"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="Will auto-fill..." />
+                    </div>
+
+                    <div class="section-divider">Pricing</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="field-label">
+                                Buying Price (KES) *
+                            </label>
+                            <input name="BuyingPrice"
+                                   id="buyingPrice"
+                                   type="number"
+                                   class="form-control form-control-lg"
+                                   style="border-radius:10px;font-weight:700;"
+                                   placeholder="0"
+                                   min="0"
+                                   oninput="calcProfit()"
+                                   required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="field-label">
+                                Selling Price (KES) *
+                            </label>
+                            <input name="SellingPrice"
+                                   id="sellingPrice"
+                                   type="number"
+                                   class="form-control form-control-lg"
+                                   style="border-radius:10px;font-weight:700;
+                                          color:#007A3D;"
+                                   placeholder="0"
+                                   min="0"
+                                   oninput="calcProfit()"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="profit-preview mt-3">
+                        <div>
+                            <div class="label">Expected Profit</div>
+                            <div class="value" id="profitPreview">
+                                KES 0
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="label">Margin</div>
+                            <div class="value" id="marginPreview">
+                                0%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider">
+                        Supplier & Branch
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="field-label">
+                                Supplier Name
+                                <span class="text-muted fw-normal">
+                                    (optional)
+                                </span>
+                            </label>
+                            <input name="SupplierName"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   placeholder="e.g. Jumia, Supplier XYZ" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="field-label">
+                                Branch <span class="text-danger">*</span>
+                            </label>
+                            <select name="BranchID"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                <option value="0">-- Select Branch --</option>
+                                @if (ViewBag.Branches != null)
+                                {
+                                    foreach (var b in (IEnumerable<BraysTech.Models.Branch>)ViewBag.Branches)
+                                    {
+                                        <option value="@b.BranchID">
+                                            @b.Name (@b.Location)
+                                        </option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled>No branches found — add one first</option>
+                                }
+                            </select>
+                            @if (ViewBag.Branches == null ||
+                            !((IEnumerable<BraysTech.Models.Branch>)ViewBag.Branches).Any())
+                            {
+                                <small class="text-danger fw-semibold">
+                                    ⚠️ No active branches found.
+                                    <a href="/Branch/Create">Add a branch first →</a>
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">
+                                    @((IEnumerable<BraysTech.Models.Branch>)ViewBag.Branches).Count()
+                                    branch(es) available
+                                </small>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="field-group mt-3">
+                        <label class="field-label">
+                            Notes (optional)
+                        </label>
+                        <textarea name="Notes"
+                                  class="form-control"
+                                  style="border-radius:10px;"
+                                  rows="2"
+                                  placeholder="Any additional info...">
+                        </textarea>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit"
+                                class="btn btn-lg flex-grow-1 fw-bold"
+                                style="background:#007A3D;color:white;
+                                       border-radius:12px;">
+                            💾 Add to Stock
+                        </button>
+                        <a href="/Stock/Index"
+                           class="btn btn-lg btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-fill phone name from brand + model
+    const brandInput = document.querySelector('[name="Brand"]');
+    const modelInput = document.querySelector('[name="Model"]');
+    const phoneNameInput = document.getElementById('phoneName');
+
+    function updatePhoneName() {
+        const brand = brandInput.value.trim();
+        const model = modelInput.value.trim();
+        if (brand || model) {
+            phoneNameInput.value = `${brand} ${model}`.trim();
+        }
+    }
+
+    brandInput.addEventListener('input', updatePhoneName);
+    modelInput.addEventListener('input', updatePhoneName);
+
+    // Profit calculator
+    function calcProfit() {
+        const buy = parseFloat(
+            document.getElementById('buyingPrice').value) || 0;
+        const sell = parseFloat(
+            document.getElementById('sellingPrice').value) || 0;
+        const profit = sell - buy;
+        const margin = sell > 0 ? (profit / sell * 100) : 0;
+
+        const profitEl = document.getElementById('profitPreview');
+        const marginEl = document.getElementById('marginPreview');
+
+        profitEl.textContent = `KES ${profit.toLocaleString()}`;
+        profitEl.style.color = profit >= 0 ? '#007A3D' : '#dc2626';
+        marginEl.textContent = `${margin.toFixed(1)}%`;
+        marginEl.style.color = margin >= 0 ? '#007A3D' : '#dc2626';
+    }
+</script>

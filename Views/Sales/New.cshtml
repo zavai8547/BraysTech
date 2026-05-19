@@ -1,0 +1,836 @@
+﻿@{
+    ViewData["Title"] = "New Sale";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .pos-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .pos-card {
+        background: white;
+        border-radius: 18px;
+        border: none;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+        overflow: hidden;
+    }
+
+    .pos-card-header {
+        background: linear-gradient(135deg, #007A3D, #005C2E);
+        color: white;
+        padding: 18px 22px;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .pos-card-body {
+        padding: 22px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: 0.2s;
+        outline: none;
+    }
+
+        .search-input:focus {
+            border-color: #007A3D;
+        }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        z-index: 100;
+        max-height: 320px;
+        overflow-y: auto;
+        margin-top: 6px;
+    }
+
+    .device-result {
+        padding: 14px 18px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: 0.15s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .device-result:last-child {
+            border: none;
+        }
+
+        .device-result:hover {
+            background: #f0f7f3;
+        }
+
+        .device-result .name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #111;
+        }
+
+        .device-result .imei {
+            font-size: 0.75rem;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .device-result .price {
+            font-weight: 800;
+            color: #007A3D;
+            font-size: 0.95rem;
+        }
+
+    .cart-item {
+        background: #f9fef9;
+        border: 1px solid #e5f0e8;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+
+        .cart-item .phone-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #111;
+            margin-bottom: 4px;
+        }
+
+        .cart-item .imei-tag {
+            background: #e8f5e9;
+            color: #007A3D;
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+    .price-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .price-label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 3px;
+    }
+
+    .price-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+        .price-input:focus {
+            border-color: #007A3D;
+            outline: none;
+        }
+
+    .profit-tag {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #dc2626;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 4px;
+        border-radius: 6px;
+        transition: 0.15s;
+    }
+
+        .remove-btn:hover {
+            background: #fef2f2;
+        }
+
+    .empty-cart {
+        text-align: center;
+        padding: 40px 20px;
+        color: #aaa;
+    }
+
+        .empty-cart .icon {
+            font-size: 3rem;
+        }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+
+        .summary-row:last-child {
+            border: none;
+        }
+
+        .summary-row .label {
+            color: #666;
+        }
+
+        .summary-row .value {
+            font-weight: 700;
+        }
+
+    .total-row {
+        background: linear-gradient(135deg, #007A3D, #005C2E);
+        color: white;
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+    }
+
+        .total-row .label {
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        .total-row .amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+    .payment-option {
+        flex: 1;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #555;
+        user-select: none;
+    }
+
+        .payment-option:hover {
+            border-color: #007A3D;
+        }
+
+        .payment-option.selected {
+            border-color: #007A3D;
+            background: #f0f7f3;
+            color: #007A3D;
+        }
+
+    .btn-complete {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #007A3D, #005C2E);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 16px;
+    }
+
+        .btn-complete:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .btn-complete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .customer-search-result {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: 0.15s;
+    }
+
+        .customer-search-result:hover {
+            background: #f0f7f3;
+        }
+
+    @@media(max-width:1024px) {
+        .pos-wrapper {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">📱 New Sale</h4>
+        <small class="text-muted">
+            Search device, add customer, complete sale
+        </small>
+    </div>
+    <a href="/Sales/Index"
+       class="btn btn-outline-secondary rounded-pill px-3">
+        ← Sales History
+    </a>
+</div>
+
+<form method="post" action="/Sales/New" id="saleForm">
+    @Html.AntiForgeryToken()
+
+    <div class="pos-wrapper">
+
+        <!-- LEFT — DEVICE SEARCH + CART -->
+        <div>
+
+            <!-- DEVICE SEARCH -->
+            <div class="pos-card mb-4">
+                <div class="pos-card-header">
+                    📱 Search & Add Device
+                </div>
+                <div class="pos-card-body">
+                    <div style="position:relative;">
+                        <input type="text"
+                               id="deviceSearch"
+                               class="search-input"
+                               placeholder="Search by IMEI, brand, model..."
+                               autocomplete="off" />
+                        <div id="deviceResults"
+                             class="search-results"
+                             style="display:none;">
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        Only in-stock devices appear in search results
+                    </small>
+                </div>
+            </div>
+
+            <!-- CART -->
+            <div class="pos-card">
+                <div class="pos-card-header">
+                    🛒 Cart
+                    <span id="cartCount"
+                          style="background:rgba(255,255,255,0.2);
+                                 border-radius:20px;padding:2px 10px;
+                                 font-size:0.8rem;margin-left:8px;">
+                        0 items
+                    </span>
+                </div>
+                <div class="pos-card-body">
+                    <div id="cartItems">
+                        <div class="empty-cart">
+                            <div class="icon">📱</div>
+                            <p class="mt-2 mb-0">
+                                Search for a device above to add it
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT — CUSTOMER + PAYMENT + SUMMARY -->
+        <div>
+
+            <!-- CUSTOMER -->
+            <div class="pos-card mb-4">
+                <div class="pos-card-header">👥 Customer</div>
+                <div class="pos-card-body">
+
+                    <!-- Customer search -->
+                    <div style="position:relative;" class="mb-3">
+                        <input type="text"
+                               id="customerSearch"
+                               class="search-input"
+                               placeholder="Search by name or phone..."
+                               autocomplete="off" />
+                        <div id="customerResults"
+                             class="search-results"
+                             style="display:none;">
+                        </div>
+                    </div>
+
+                    <input type="hidden"
+                           name="customerID" id="customerID" />
+
+                    <div id="customerFields">
+                        <div class="mb-3">
+                            <label class="price-label fw-semibold">
+                                Customer Name
+                            </label>
+                            <input type="text"
+                                   name="customerName"
+                                   id="customerName"
+                                   class="search-input"
+                                   style="font-size:0.9rem;padding:10px 14px;"
+                                   placeholder="Walk-in or enter name" />
+                        </div>
+                        <div>
+                            <label class="price-label fw-semibold">
+                                Phone Number
+                            </label>
+                            <input type="text"
+                                   name="customerPhone"
+                                   id="customerPhone"
+                                   class="search-input"
+                                   style="font-size:0.9rem;padding:10px 14px;"
+                                   placeholder="e.g. 0712 345 678" />
+                        </div>
+                    </div>
+
+                    <div id="selectedCustomer"
+                         style="display:none;"
+                         class="mt-2 p-3 rounded-3"
+                         style="background:#f0f7f3;">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- BRANCH -->
+            <div class="pos-card mb-4">
+                <div class="pos-card-header">🏪 Branch</div>
+                <div class="pos-card-body">
+                    <select name="branchID"
+                            class="form-select"
+                            style="border-radius:10px;"
+                            required>
+                        <option value="">-- Select Branch --</option>
+                        @foreach (var b in ViewBag.Branches)
+                        {
+                            <option value="@b.BranchID">
+                                @b.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- PAYMENT -->
+            <div class="pos-card mb-4">
+                <div class="pos-card-header">💳 Payment Method</div>
+                <div class="pos-card-body">
+                    <div class="d-flex gap-2 mb-3">
+                        @foreach (var m in new[] {
+                        ("Cash","💵","0"),
+                        ("MPesa","📱","1"),
+                        ("MKOPA","🏦","2"),
+                        ("Card","💳","3")
+                        })
+                        {
+                            <div class="payment-option @(m.Item3 == "0" ? "selected" : "")"
+                                 onclick="selectPayment('@m.Item1', '@m.Item3', this)">
+                                <div style="font-size:1.3rem;margin-bottom:4px;">
+                                    @m.Item2
+                                </div>
+                                @m.Item1
+                            </div>
+                        }
+                    </div>
+                    <input type="hidden"
+                           name="paymentMethod"
+                           id="paymentMethod" value="0" />
+
+                    <div id="mpesaDiv" style="display:none;">
+                        <label class="price-label fw-semibold">
+                            M-Pesa Code
+                        </label>
+                        <input type="text"
+                               name="mpesaCode"
+                               class="search-input text-uppercase"
+                               style="font-size:0.9rem;padding:10px 14px;
+                                      font-family:monospace;font-weight:700;"
+                               placeholder="e.g. QHX4RT8K2P" />
+                        <small class="text-muted">
+                            Enter code from customer SMS
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOTES -->
+            <div class="pos-card mb-4">
+                <div class="pos-card-header">📝 Notes (optional)</div>
+                <div class="pos-card-body">
+                    <textarea name="notes"
+                              class="form-control"
+                              style="border-radius:10px;"
+                              rows="2"
+                              placeholder="Any notes about this sale...">
+                    </textarea>
+                </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="pos-card">
+                <div class="pos-card-header">📊 Sale Summary</div>
+                <div class="pos-card-body">
+                    <div class="summary-row">
+                        <span class="label">Devices</span>
+                        <span class="value" id="summaryCount">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Subtotal</span>
+                        <span class="value" id="summarySubtotal">
+                            KES 0
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Total Discount</span>
+                        <span class="value text-danger"
+                              id="summaryDiscount">
+                            - KES 0
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Est. Profit</span>
+                        <span class="value"
+                              id="summaryProfit"
+                              style="color:#b45309;">
+                            KES 0
+                        </span>
+                    </div>
+                    <div class="total-row">
+                        <span class="label">TOTAL</span>
+                        <span class="amount" id="summaryTotal">
+                            KES 0
+                        </span>
+                    </div>
+
+                    <button type="submit"
+                            class="btn-complete"
+                            id="completeBtn"
+                            disabled>
+                        ✅ Complete Sale
+                    </button>
+                    <a href="/Sales/Index"
+                       class="btn btn-outline-secondary w-100 mt-2 rounded-pill">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<script>
+    // ── STATE ──────────────────────────────────────────────
+    let cart = {};
+
+    // ── DEVICE SEARCH ──────────────────────────────────────
+    const deviceSearch = document.getElementById('deviceSearch');
+    const deviceResults = document.getElementById('deviceResults');
+
+    let deviceTimer;
+    deviceSearch.addEventListener('input', function () {
+        clearTimeout(deviceTimer);
+        const q = this.value.trim();
+        if (q.length < 2) {
+            deviceResults.style.display = 'none';
+            return;
+        }
+        deviceTimer = setTimeout(async () => {
+            const res = await fetch(`/Sales/SearchDevice?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            if (!data.length) {
+                deviceResults.innerHTML =
+                    '<div style="padding:16px;text-align:center;color:#aaa;">No devices found</div>';
+            } else {
+                deviceResults.innerHTML = data.map(d => `
+                        <div class="device-result"
+                             onclick="addToCart(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+                            <div>
+                                <div class="name">${d.brand} ${d.model} ${d.storage ?? ''} ${d.color ?? ''}</div>
+                                <div class="imei">IMEI: ${d.imei} &nbsp;•&nbsp; ${d.branchName}</div>
+                            </div>
+                            <div class="price">KES ${d.sellingPrice.toLocaleString()}</div>
+                        </div>`).join('');
+            }
+            deviceResults.style.display = 'block';
+        }, 300);
+    });
+
+    document.addEventListener('click', e => {
+        if (!deviceSearch.contains(e.target) &&
+            !deviceResults.contains(e.target))
+            deviceResults.style.display = 'none';
+    });
+
+    // ── ADD TO CART ────────────────────────────────────────
+    function addToCart(device) {
+        if (cart[device.stockID]) {
+            alert('This device is already in the cart.');
+            return;
+        }
+        cart[device.stockID] = {
+            ...device,
+            customPrice: device.sellingPrice,
+            discount: 0
+        };
+        deviceSearch.value = '';
+        deviceResults.style.display = 'none';
+        renderCart();
+    }
+
+    function removeFromCart(stockID) {
+        delete cart[stockID];
+        renderCart();
+    }
+
+    // ── RENDER CART ────────────────────────────────────────
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        const items = Object.values(cart);
+        const count = items.length;
+
+        document.getElementById('cartCount').textContent =
+            `${count} item${count !== 1 ? 's' : ''}`;
+
+        // Remove old hidden inputs
+        document.querySelectorAll('.cart-hidden').forEach(e => e.remove());
+
+        if (!count) {
+            container.innerHTML = `
+                    <div class="empty-cart">
+                        <div class="icon">📱</div>
+                        <p class="mt-2 mb-0">Search for a device above to add it</p>
+                    </div>`;
+            updateSummary();
+            return;
+        }
+
+        container.innerHTML = items.map(item => {
+            const profit = item.customPrice - item.discount - item.buyingPrice;
+            const profitColor = profit >= 0 ? '#16a34a' : '#dc2626';
+            return `
+                <div class="cart-item" id="cartItem_${item.stockID}">
+                    <button type="button" class="remove-btn"
+                            onclick="removeFromCart(${item.stockID})">✕</button>
+                    <div class="phone-name">
+                        ${item.brand} ${item.model}
+                        ${item.storage ? `· ${item.storage}` : ''}
+                        ${item.color ? `· ${item.color}` : ''}
+                    </div>
+                    <div class="imei-tag">IMEI: ${item.imei}</div>
+                    <div class="price-row">
+                        <div style="flex:1;">
+                            <div class="price-label">Selling Price (KES)</div>
+                            <input type="number"
+                                   class="price-input"
+                                   value="${item.customPrice}"
+                                   min="0"
+                                   onchange="updatePrice(${item.stockID}, this.value)"
+                                   oninput="updatePrice(${item.stockID}, this.value)" />
+                        </div>
+                        <div style="flex:1;">
+                            <div class="price-label">Discount (KES)</div>
+                            <input type="number"
+                                   class="price-input"
+                                   value="${item.discount}"
+                                   min="0"
+                                   onchange="updateDiscount(${item.stockID}, this.value)"
+                                   oninput="updateDiscount(${item.stockID}, this.value)" />
+                        </div>
+                        <div>
+                            <div class="price-label">Profit</div>
+                            <div class="profit-tag"
+                                 style="background:${profit >= 0 ? '#dcfce7' : '#fef2f2'};
+                                        color:${profitColor};"
+                                 id="profit_${item.stockID}">
+                                KES ${profit.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        // Add hidden inputs for form
+        const form = document.getElementById('saleForm');
+        items.forEach(item => {
+            const addHidden = (name, val) => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = name;
+                inp.value = val;
+                inp.className = 'cart-hidden';
+                form.appendChild(inp);
+            };
+            addHidden('stockIDs', item.stockID);
+            addHidden('customPrices', item.customPrice);
+            addHidden('discounts', item.discount);
+        });
+
+        updateSummary();
+    }
+
+    function updatePrice(stockID, val) {
+        cart[stockID].customPrice = parseFloat(val) || 0;
+        updateProfitTag(stockID);
+        updateSummary();
+        updateHiddens();
+    }
+
+    function updateDiscount(stockID, val) {
+        cart[stockID].discount = parseFloat(val) || 0;
+        updateProfitTag(stockID);
+        updateSummary();
+        updateHiddens();
+    }
+
+    function updateProfitTag(stockID) {
+        const item = cart[stockID];
+        const profit = item.customPrice - item.discount - item.buyingPrice;
+        const el = document.getElementById(`profit_${stockID}`);
+        if (el) {
+            el.textContent = `KES ${profit.toLocaleString()}`;
+            el.style.background = profit >= 0 ? '#dcfce7' : '#fef2f2';
+            el.style.color = profit >= 0 ? '#16a34a' : '#dc2626';
+        }
+    }
+
+    function updateHiddens() {
+        document.querySelectorAll('.cart-hidden').forEach(e => e.remove());
+        const form = document.getElementById('saleForm');
+        Object.values(cart).forEach(item => {
+            ['stockIDs', 'customPrices', 'discounts'].forEach((name, i) => {
+                const vals = [item.stockID, item.customPrice, item.discount];
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = name;
+                inp.value = vals[i];
+                inp.className = 'cart-hidden';
+                form.appendChild(inp);
+            });
+        });
+    }
+
+    // ── SUMMARY ────────────────────────────────────────────
+    function updateSummary() {
+        const items = Object.values(cart);
+        let subtotal = 0, totalDiscount = 0, totalProfit = 0;
+        items.forEach(item => {
+            subtotal += item.customPrice;
+            totalDiscount += item.discount;
+            totalProfit += (item.customPrice - item.discount - item.buyingPrice);
+        });
+        const total = subtotal - totalDiscount;
+
+        document.getElementById('summaryCount').textContent = items.length;
+        document.getElementById('summarySubtotal').textContent =
+            `KES ${subtotal.toLocaleString()}`;
+        document.getElementById('summaryDiscount').textContent =
+            `- KES ${totalDiscount.toLocaleString()}`;
+        document.getElementById('summaryProfit').textContent =
+            `KES ${totalProfit.toLocaleString()}`;
+        document.getElementById('summaryTotal').textContent =
+            `KES ${total.toLocaleString()}`;
+
+        document.getElementById('completeBtn').disabled = items.length === 0;
+    }
+
+    // ── PAYMENT METHOD ─────────────────────────────────────
+    function selectPayment(name, value, el) {
+        document.querySelectorAll('.payment-option')
+            .forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('paymentMethod').value = value;
+        document.getElementById('mpesaDiv').style.display =
+            name === 'MPesa' ? 'block' : 'none';
+    }
+
+    // ── CUSTOMER SEARCH ────────────────────────────────────
+    const customerSearch = document.getElementById('customerSearch');
+    const customerResults = document.getElementById('customerResults');
+
+    let custTimer;
+    customerSearch.addEventListener('input', function () {
+        clearTimeout(custTimer);
+        const q = this.value.trim();
+        document.getElementById('customerID').value = '';
+        if (q.length < 2) {
+            customerResults.style.display = 'none';
+            return;
+        }
+        custTimer = setTimeout(async () => {
+            const res = await fetch(
+                `/Customers/Search?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            if (!data.length) {
+                customerResults.innerHTML =
+                    '<div style="padding:14px;color:#aaa;text-align:center;">' +
+                    'No customer found — fill in details below</div>';
+            } else {
+                customerResults.innerHTML = data.map(c => `
+                        <div class="customer-search-result"
+                             onclick="selectCustomer(${c.customerID},'${c.fullName}','${c.phone}')">
+                            <div style="font-weight:700;font-size:0.9rem;">
+                                ${c.fullName}
+                            </div>
+                            <div style="font-size:0.78rem;color:#888;">
+                                ${c.phone} &nbsp;•&nbsp;
+                                ${c.totalPurchases} purchases &nbsp;•&nbsp;
+                                KES ${c.totalSpent.toLocaleString()} spent
+                            </div>
+                        </div>`).join('');
+            }
+            customerResults.style.display = 'block';
+        }, 300);
+    });
+
+    document.addEventListener('click', e => {
+        if (!customerSearch.contains(e.target) &&
+            !customerResults.contains(e.target))
+            customerResults.style.display = 'none';
+    });
+
+    function selectCustomer(id, name, phone) {
+        document.getElementById('customerID').value = id;
+        document.getElementById('customerName').value = name;
+        document.getElementById('customerPhone').value = phone;
+        customerSearch.value = name;
+        customerResults.style.display = 'none';
+
+        document.getElementById('selectedCustomer').style.display = 'block';
+        document.getElementById('selectedCustomer').innerHTML = `
+                <div style="background:#f0f7f3;padding:12px;border-radius:10px;
+                            border-left:3px solid #007A3D;">
+                    <div style="font-weight:700;color:#007A3D;">✓ ${name}</div>
+                    <div style="font-size:0.8rem;color:#555;">${phone}</div>
+                </div>`;
+    }
+</script>

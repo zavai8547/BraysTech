@@ -1,164 +1,636 @@
 ﻿@model IEnumerable<BraysTech.Models.StaffViewModel>
 @{
-    ViewData["Title"] = "Staff";
+    ViewData["Title"] = "Staff Accounts";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold mb-0"> Staff Management</h4>
-    @if (User.IsInRole("Admin"))
-    {
-        <a href="/Auth/Register" class="btn btn-success rounded-pill px-4">+ Add Staff</a>
+<style>
+    .staff-table thead th {
+        background: #007A3D;
+        color: white;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 13px 16px;
+        border: none;
     }
+
+    .staff-table tbody td {
+        padding: 13px 16px;
+        vertical-align: middle;
+        border-color: #f0f7f3;
+        font-size: 0.88rem;
+    }
+
+    .staff-table tbody tr:hover {
+        background: #f9fef9;
+    }
+
+    .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007A3D, #009648);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .role-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f7f3;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #007A3D;
+    }
+
+    .modal-header-green {
+        background: #007A3D;
+        color: white;
+    }
+
+    .btn-action {
+        padding: 5px 12px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: 0.2s;
+    }
+
+    .btn-green {
+        background: #007A3D;
+        color: white;
+    }
+
+        .btn-green:hover {
+            background: #005C2E;
+            color: white;
+        }
+
+    .btn-outline-green {
+        background: white;
+        color: #007A3D;
+        border: 1.5px solid #007A3D;
+    }
+
+        .btn-outline-green:hover {
+            background: #f0f7f3;
+            color: #007A3D;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Staff Accounts</h4>
+        <small class="text-muted">
+            Manage staff, roles and branch assignments
+        </small>
+    </div>
+    <button class="btn fw-semibold rounded-pill px-4"
+            style="background:#007A3D;color:white;"
+            data-bs-toggle="modal"
+            data-bs-target="#createStaffModal">
+        + Add Staff
+    </button>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-dark">
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var s in Model)
-                {
-                    <tr>
-                        <td class="fw-semibold">@s.User.FullName</td>
-                        <td>@s.User.Email</td>
-                        <td>@(s.User.Phone ?? "—")</td>
-                        <td>
-                            <span class="badge bg-@(s.Role == "Admin" ? "danger" :
-                                s.Role == "Manager" ? "warning text-dark" :
-                                s.Role == "Cashier" ? "primary" : "secondary")">
-                                @s.Role
-                            </span>
-                        </td>
-                        <td>
-                            @if (s.User.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Inactive</span>
-                            }
-                        </td>
-                        <td>
-                            <small>@s.User.CreatedAt.ToString("dd MMM yyyy")</small>
-                        </td>
-                        <td>
-                            @if (User.IsInRole("Admin"))
-                            {
-                                <form asp-action="ToggleActive" method="post"
-                                      style="display:inline">
-                                    <input type="hidden" name="id" value="@s.User.Id" />
-                                    <button type="submit"
-                                            class="btn btn-sm @(s.User.IsActive ? "btn-outline-warning" : "btn-outline-success")">
-                                        @(s.User.IsActive ? "Deactivate" : "Activate")
-                                    </button>
-                                </form>
-
-                                <form asp-action="ChangeRole" method="post"
-                                      style="display:inline">
-                                    <input type="hidden" name="id" value="@s.User.Id" />
-                                    <select name="newRole"
-                                            class="form-select form-select-sm d-inline w-auto"
-                                            onchange="this.form.submit()">
-                                        <option value="" selected disabled>Role...</option>
-                                        <option value="Admin">Admin</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Cashier">Cashier</option>
-                                        <option value="Washer">Washer</option>
-                                    </select>
-                                </form>
-
-                                @if (s.User.Email != User.Identity!.Name)
-                                {
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-warning"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#resetModal_@s.User.Id">
-                                        🔑 Reset
-                                    </button>
-
-                                    <div class="modal fade" id="resetModal_@s.User.Id"
-                                         tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-dark text-white">
-                                                    <h5 class="modal-title">
-                                                        🔑 Reset Password — @s.User.FullName
-                                                    </h5>
-                                                    <button type="button" class="btn-close btn-close-white"
-                                                            data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form method="post" action="/Staff/ResetPassword">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@s.User.Id" />
-                                                    <div class="modal-body">
-                                                        <p class="text-muted small mb-3">
-                                                            Enter a temporary password for
-                                                            <strong>@s.User.FullName</strong>.
-                                                            Tell them this password privately — they should
-                                                            change it after logging in.
-                                                        </p>
-                                                        <div class="mb-3 text-start">
-                                                            <label class="form-label fw-semibold">
-                                                                New Temporary Password
-                                                            </label>
-                                                            <div class="input-group">
-                                                                <input type="password"
-                                                                       name="newPassword"
-                                                                       class="form-control"
-                                                                       id="pw_@s.User.Id"
-                                                                       placeholder="Min 6 characters"
-                                                                       required />
-                                                                <button type="button"
-                                                                        class="btn btn-outline-secondary"
-                                                                        onclick="toggleResetPw('@s.User.Id')">
-                                                                    👁️
-                                                                </button>
-                                                            </div>
-                                                            <small class="text-muted">
-                                                                Example: Temp@123
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button"
-                                                                class="btn btn-outline-secondary"
-                                                                data-bs-dismiss="modal">
-                                                            Cancel
-                                                        </button>
-                                                        <button type="submit" class="btn btn-warning">
-                                                            🔑 Reset Password
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<!-- SUMMARY -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Staff</p>
+                <h4 class="fw-bold mb-0" style="color:#007A3D;">
+                    @Model.Count()
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #1d4ed8 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Active</p>
+                <h4 class="fw-bold mb-0" style="color:#1d4ed8;">
+                    @Model.Count(s => s.User.IsActive)
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Admins</p>
+                <h4 class="fw-bold mb-0" style="color:#b45309;">
+                    @Model.Count(s => s.Role == "Admin")
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #7c3aed !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Salespersons</p>
+                <h4 class="fw-bold mb-0" style="color:#7c3aed;">
+                    @Model.Count(s => s.Role == "Salesperson")
+                </h4>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-    function toggleResetPw(userId) {
-        const field = document.getElementById('pw_' + userId);
-        const isPassword = field.type === 'password';
-        field.type = isPassword ? 'text' : 'password';
+<!-- STAFF TABLE -->
+<div class="card-section">
+    <div class="section-header">All Staff Members</div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <h5 class="fw-bold">No staff accounts yet</h5>
+            <p>Add your first staff member to get started.</p>
+        </div>
     }
-</script>
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover staff-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Branch</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var initials = string.Join("",
+                        s.User.FullName.Split(' ')
+                        .Take(2)
+                        .Select(w => w.Length > 0
+                        ? w[0].ToString().ToUpper()
+                        : ""));
+
+                        var roleStyle = s.Role switch
+                        {
+                            "Admin" =>
+                            "background:#fee2e2;color:#dc2626;",
+                            "Manager" =>
+                            "background:#fef9c3;color:#ca8a04;",
+                            "Salesperson" =>
+                            "background:#dcfce7;color:#16a34a;",
+                            _ =>
+                            "background:#f3f4f6;color:#6b7280;"
+                        };
+
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar">@initials</div>
+                                    <div class="fw-semibold">
+                                        @s.User.FullName
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@s.User.Email</td>
+                            <td>@(s.User.Phone ?? "—")</td>
+                            <td>
+                                <span class="role-badge"
+                                      style="@roleStyle">
+                                    @s.Role
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold"
+                                      style="font-size:0.85rem;">
+                                    @(s.BranchName ?? "Unassigned")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="role-badge"
+                                      style="@(s.User.IsActive ?
+                                          "background:#dcfce7;color:#16a34a;" :
+                                          "background:#fee2e2;color:#dc2626;")">
+                                    @(s.User.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @s.User.CreatedAt.ToString("dd MMM yyyy")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <!-- Assign Branch -->
+                                    <button class="btn-action btn-outline-green"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#branchModal_@s.User.Id">
+                                        Branch
+                                    </button>
+
+                                    <!-- Change Role -->
+                                    <button class="btn-action btn-outline-green"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#roleModal_@s.User.Id">
+                                        Role
+                                    </button>
+
+                                    <!-- Reset Password -->
+                                    <button class="btn-action btn-outline-green"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#pwdModal_@s.User.Id">
+                                        Password
+                                    </button>
+
+                                    <!-- Toggle Active -->
+                                    <form method="post"
+                                          action="/Staff/ToggleActive"
+                                          style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@s.User.Id" />
+                                        <button type="submit"
+                                                class="btn-action"
+                                                style="@(s.User.IsActive ?
+                                                    "background:#fef9c3;color:#ca8a04;" :
+                                                    "background:#dcfce7;color:#16a34a;")">
+                                            @(s.User.IsActive
+                                                ? "Deactivate"
+                                                : "Activate")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- ASSIGN BRANCH MODAL -->
+                        <div class="modal fade"
+                             id="branchModal_@s.User.Id"
+                             tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header modal-header-green">
+                                        <h5 class="modal-title">
+                                            Assign Branch — @s.User.FullName
+                                        </h5>
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal">
+                                        </button>
+                                    </div>
+                                    <form method="post"
+                                          action="/Staff/AssignBranch">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@s.User.Id" />
+                                        <div class="modal-body">
+                                            <label class="form-label fw-semibold">
+                                                Select Branch
+                                            </label>
+                                            <select name="branchID"
+                                                    class="form-select">
+                                                <option value="0">
+                                                    -- No Branch Assigned --
+                                                </option>
+                                                @foreach (var b in ViewBag.Branches)
+                                                {
+                                                    if (b.BranchID == s.User.BranchID)
+                                                    {
+                                                        <option value="@b.BranchID"
+                                                                selected>
+                                                            @b.Name
+                                                            (@(b.Location ?? ""))
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@b.BranchID">
+                                                            @b.Name
+                                                            (@(b.Location ?? ""))
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                            <small class="text-muted mt-2 d-block">
+                                                Current:
+                                                <strong>
+                                                    @(s.BranchName ?? "Not assigned")
+                                                </strong>
+                                            </small>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                    class="btn fw-semibold"
+                                                    style="background:#007A3D;
+                                                           color:white;
+                                                           border-radius:8px;">
+                                                Save Assignment
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CHANGE ROLE MODAL -->
+                        <div class="modal fade"
+                             id="roleModal_@s.User.Id"
+                             tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header modal-header-green">
+                                        <h5 class="modal-title">
+                                            Change Role — @s.User.FullName
+                                        </h5>
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal">
+                                        </button>
+                                    </div>
+                                    <form method="post"
+                                          action="/Staff/ChangeRole">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@s.User.Id" />
+                                        <div class="modal-body">
+                                            <label class="form-label fw-semibold">
+                                                Select Role
+                                            </label>
+                                            <select name="newRole"
+                                                    class="form-select">
+                                                @foreach (var r in new[]
+                                               {
+                                        "Admin",
+                                        "Manager",
+                                        "Salesperson"
+                                        })
+                                                {
+                                                    if (r == s.Role)
+                                                    {
+                                                        <option value="@r"
+                                                                selected>
+                                                            @r
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@r">
+                                                            @r
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                            <small class="text-muted mt-2 d-block">
+                                                Current role:
+                                                <strong>@s.Role</strong>
+                                            </small>
+                                            <div class="mt-3 p-3 rounded"
+                                                 style="background:#f0f7f3;
+                                                        font-size:0.82rem;">
+                                                <strong>Admin:</strong>
+                                                Full access to all modules<br />
+                                                <strong>Manager:</strong>
+                                                Branch-level management,
+                                                no system settings<br />
+                                                <strong>Salesperson:</strong>
+                                                Sales and stock view only
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                    class="btn fw-semibold"
+                                                    style="background:#007A3D;
+                                                           color:white;
+                                                           border-radius:8px;">
+                                                Save Role
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RESET PASSWORD MODAL -->
+                        <div class="modal fade"
+                             id="pwdModal_@s.User.Id"
+                             tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header modal-header-green">
+                                        <h5 class="modal-title">
+                                            Reset Password — @s.User.FullName
+                                        </h5>
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal">
+                                        </button>
+                                    </div>
+                                    <form method="post"
+                                          action="/Staff/ResetPassword">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@s.User.Id" />
+                                        <div class="modal-body">
+                                            <label class="form-label fw-semibold">
+                                                New Password
+                                            </label>
+                                            <input type="password"
+                                                   name="newPassword"
+                                                   class="form-control"
+                                                   style="border-radius:10px;"
+                                                   placeholder="Minimum 6 characters"
+                                                   minlength="6"
+                                                   required />
+                                            <small class="text-muted mt-2 d-block">
+                                                Staff member will need this
+                                                password to log in.
+                                                Share it securely.
+                                            </small>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                    class="btn fw-semibold"
+                                                    style="background:#007A3D;
+                                                           color:white;
+                                                           border-radius:8px;">
+                                                Reset Password
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- CREATE STAFF MODAL -->
+<div class="modal fade" id="createStaffModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header modal-header-green">
+                <h5 class="modal-title">Add New Staff Member</h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+            <form method="post" action="/Staff/Create">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Full Name
+                        </label>
+                        <input type="text"
+                               name="fullName"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="e.g. John Kamau"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Email Address
+                        </label>
+                        <input type="email"
+                               name="email"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="e.g. john@brays.com"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Phone Number
+                        </label>
+                        <input type="text"
+                               name="phone"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="e.g. 0712345678" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Role
+                        </label>
+                        <select name="role" class="form-select"
+                                style="border-radius:10px;">
+                            <option value="Salesperson">Salesperson</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Assign Branch
+                        </label>
+                        <select name="branchID" class="form-select"
+                                style="border-radius:10px;">
+                            <option value="0">
+                                -- No Branch Yet --
+                            </option>
+                            @foreach (var b in ViewBag.Branches)
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Temporary Password
+                        </label>
+                        <input type="password"
+                               name="password"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="Minimum 6 characters"
+                               minlength="6"
+                               required />
+                        <small class="text-muted">
+                            Staff will use this to log in for the
+                            first time. They can change it later.
+                        </small>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="btn fw-semibold"
+                            style="background:#007A3D;color:white;
+                                   border-radius:8px;">
+                        Create Staff Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

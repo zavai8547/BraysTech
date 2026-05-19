@@ -1,0 +1,381 @@
+﻿@model IEnumerable<BraysTech.Models.StaffPerformance>
+@{
+    ViewData["Title"] = "Staff Performance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .perf-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .rank-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .avatar-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,#007A3D,#009648);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .perf-bar {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+
+    .perf-fill {
+        height: 100%;
+        background: linear-gradient(90deg,#007A3D,#34d399);
+        border-radius: 4px;
+        transition: width 0.8s ease;
+    }
+
+    .staff-row {
+        padding: 18px 20px;
+        border-bottom: 1px solid #f0f7f3;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: 0.15s;
+    }
+
+        .staff-row:last-child {
+            border: none;
+        }
+
+        .staff-row:hover {
+            background: #f9fef9;
+        }
+
+    .metric-box {
+        text-align: center;
+        min-width: 80px;
+    }
+
+        .metric-box .val {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #007A3D;
+        }
+
+        .metric-box .lbl {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+    .btn-view-perf {
+        background: #007A3D;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: 0.2s;
+    }
+
+        .btn-view-perf:hover {
+            background: #005C2E;
+            color: white;
+        }
+
+    .today-dot {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1)
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.3)
+        }
+    }
+</style>
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">📈 Staff Performance</h4>
+        <small class="text-muted">
+            <span class="today-dot"></span>
+            Live rankings — @ViewBag.SelectedMonthName
+        </small>
+    </div>
+</div>
+
+<!-- MONTH FILTER -->
+<div class="perf-card p-3 mb-4">
+    <form method="get" action="/Performance/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">
+                    Branch
+                </label>
+                <select name="branchID" class="form-select form-select-sm">
+                    <option value="">All Branches</option>
+                    @foreach (var b in ViewBag.Branches)
+                    {
+                        if (b.BranchID == ViewBag.SelectedBranch)
+                        {
+                            <option value="@b.BranchID" selected>
+                                @b.Name
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@b.BranchID">@b.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">
+                    Month
+                </label>
+                <select name="month" class="form-select form-select-sm">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        if (m == ViewBag.SelectedMonth)
+                        {
+                            <option value="@m" selected>
+                                @(new DateTime(2026, m, 1).ToString("MMMM"))
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@m">
+                                @(new DateTime(2026, m, 1).ToString("MMMM"))
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">
+                    Year
+                </label>
+                <select name="year" class="form-select form-select-sm">
+                    @for (int y = 2025; y <= DateTime.Now.Year + 1; y++)
+                    {
+                        if (y == ViewBag.SelectedYear)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn btn-sm w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    View
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="/Performance/Index"
+                   class="btn btn-sm btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Reset
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- SUMMARY STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="perf-card p-4"
+             style="border-left:4px solid #007A3D;">
+            <div class="text-muted small mb-1">Total Revenue</div>
+            <h4 class="fw-bold mb-0" style="color:#007A3D;">
+                KES @(((decimal)ViewBag.TotalRevenue).ToString("N0"))
+            </h4>
+            <small class="text-muted">all staff combined</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="perf-card p-4"
+             style="border-left:4px solid #b45309;">
+            <div class="text-muted small mb-1">Total Profit</div>
+            <h4 class="fw-bold mb-0" style="color:#b45309;">
+                KES @(((decimal)ViewBag.TotalProfit).ToString("N0"))
+            </h4>
+            <small class="text-muted">all staff combined</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="perf-card p-4"
+             style="border-left:4px solid #1d4ed8;">
+            <div class="text-muted small mb-1">Total Sales</div>
+            <h4 class="fw-bold mb-0" style="color:#1d4ed8;">
+                @ViewBag.TotalSales
+            </h4>
+            <small class="text-muted">transactions</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="perf-card p-4"
+             style="border-left:4px solid #7c3aed;">
+            <div class="text-muted small mb-1">Devices Sold</div>
+            <h4 class="fw-bold mb-0" style="color:#7c3aed;">
+                @ViewBag.TotalDevices
+            </h4>
+            <small class="text-muted">units</small>
+        </div>
+    </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="perf-card">
+    <div style="padding:18px 20px;border-bottom:1px solid #f0f7f3;">
+        <h6 class="fw-bold mb-0" style="color:#007A3D;">
+            🏆 Performance Leaderboard — @ViewBag.SelectedMonthName
+        </h6>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3rem;">📊</div>
+            <h5 class="mt-3 fw-bold">No data yet</h5>
+            <p>Staff performance appears here once sales are recorded.</p>
+        </div>
+    }
+    else
+    {
+        var maxRevenue = Model.Max(p => p.RevenueMonth);
+
+        @foreach (var p in Model)
+        {
+            var rankStyle = p.Rank switch
+            {
+                1 => "background:#fef9c3;color:#ca8a04;",
+                2 => "background:#f3f4f6;color:#6b7280;",
+                3 => "background:#fef3e2;color:#c2410c;",
+                _ => "background:#f0f7f3;color:#007A3D;"
+            };
+            var rankLabel = p.Rank switch
+            {
+                1 => "🥇",
+                2 => "🥈",
+                3 => "🥉",
+                _ => $"#{p.Rank}"
+            };
+            var barWidth = maxRevenue > 0
+            ? (double)(p.RevenueMonth / maxRevenue * 100)
+            : 0;
+            var initials = string.Join("",
+            p.StaffName.Split(' ')
+            .Take(2)
+            .Select(w => w.Length > 0
+            ? w[0].ToString().ToUpper()
+            : ""));
+
+            <div class="staff-row">
+                <!-- Rank -->
+                <div class="rank-badge" style="@rankStyle">
+                    @rankLabel
+                </div>
+
+                <!-- Avatar -->
+                <div class="avatar-circle">@initials</div>
+
+                <!-- Info -->
+                <div style="flex:1;min-width:0;">
+                    <div class="fw-bold"
+                         style="font-size:0.95rem;">
+                        @p.StaffName
+                    </div>
+                    <div style="font-size:0.78rem;color:#888;">
+                        @p.Role &nbsp;•&nbsp; @p.BranchName
+                    </div>
+                    <!-- Revenue bar -->
+                    <div class="perf-bar">
+                        <div class="perf-fill"
+                             style="width:@barWidth%">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metric-box">
+                    <div class="val">@p.SalesCountMonth</div>
+                    <div class="lbl">Sales</div>
+                </div>
+                <div class="metric-box">
+                    <div class="val">@p.DevicesSoldMonth</div>
+                    <div class="lbl">Devices</div>
+                </div>
+                <div class="metric-box">
+                    <div class="val">
+                        KES @p.RevenueMonth.ToString("N0")
+                    </div>
+                    <div class="lbl">Revenue</div>
+                </div>
+                <div class="metric-box">
+                    <div class="val"
+                         style="color:#b45309;">
+                        KES @p.ProfitMonth.ToString("N0")
+                    </div>
+                    <div class="lbl">Profit</div>
+                </div>
+                <div class="metric-box"
+                     style="border-left:1px solid #f0f0f0;
+                            padding-left:12px;">
+                    <div class="val"
+                         style="color:#1d4ed8;">
+                        @p.SalesToday
+                    </div>
+                    <div class="lbl">Today</div>
+                </div>
+
+                <!-- Action -->
+                <a href="/Performance/StaffDetails/@p.StaffID"
+                   class="btn-view-perf">
+                    Details
+                </a>
+            </div>
+        }
+    }
+</div>

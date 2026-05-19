@@ -1,0 +1,216 @@
+﻿@model BraysTech.Models.Customer
+@{
+    ViewData["Title"] = Model.FullName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var initials = string.Join("",
+        Model.FullName.Split(' ')
+            .Take(2)
+            .Select(w => w[0].ToString().ToUpper()));
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Customers/Index"
+           class="btn btn-outline-secondary rounded-pill px-3">
+            ← Back
+        </a>
+        <div style="width:52px;height:52px;border-radius:50%;
+                    background:linear-gradient(135deg,#007A3D,#009648);
+                    color:white;display:flex;align-items:center;
+                    justify-content:center;font-weight:800;font-size:1.2rem;">
+            @initials
+        </div>
+        <div>
+            <h4 class="fw-bold mb-0">@Model.FullName</h4>
+            <small class="text-muted">
+                Customer since @Model.CreatedAt.ToString("MMMM yyyy")
+            </small>
+        </div>
+    </div>
+    <a href="/Customers/Edit/@Model.CustomerID"
+       class="btn rounded-pill px-4 fw-semibold"
+       style="background:#007A3D;color:white;">
+        ✏️ Edit
+    </a>
+</div>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Phone</p>
+                <h6 class="fw-bold mb-0">@Model.Phone</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #1d4ed8 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Email</p>
+                <h6 class="fw-bold mb-0">
+                    @(Model.Email ?? "Not provided")
+                </h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Purchases</p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#b45309;">
+                    @Model.TotalPurchases
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Spent</p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    KES @Model.TotalSpent.ToString("N0")
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Notes))
+{
+    <div class="alert border-0 mb-4"
+         style="background:#f0f7f3;border-left:4px solid #007A3D !important;
+                border-radius:12px;">
+        <strong>📝 Notes:</strong> @Model.Notes
+    </div>
+}
+
+<!-- PURCHASE HISTORY -->
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+        <h6 class="fw-bold" style="color:#007A3D;">
+            📱 Purchase History (@Model.Sales.Count)
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Sales.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <div style="font-size:2.5rem;">📱</div>
+                <p class="mt-2">No purchases yet.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                            Date
+                        </th>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                            Phones
+                        </th>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                            Branch
+                        </th>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                            Payment
+                        </th>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                            Amount
+                        </th>
+                        <th style="color:white;padding:12px 16px;
+                                   border:none;font-weight:600;
+                                   font-size:0.85rem;">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Sales
+                   .OrderByDescending(s => s.CreatedAt))
+                    {
+                        <tr>
+                            <td style="padding:14px 16px;">
+                                <div class="fw-semibold"
+                                     style="font-size:0.85rem;">
+                                    @s.CreatedAt.ToString("dd MMM yyyy")
+                                </div>
+                                <small class="text-muted">
+                                    @s.CreatedAt.ToString("HH:mm")
+                                </small>
+                            </td>
+                            <td style="padding:14px 16px;">
+                                @foreach (var item in s.Items)
+                                {
+                                    <span style="background:#f0f7f3;
+                                                 color:#007A3D;
+                                                 padding:3px 10px;
+                                                 border-radius:8px;
+                                                 font-size:0.78rem;
+                                                 font-weight:600;
+                                                 display:inline-block;
+                                                 margin:2px;">
+                                        @item.PhoneName
+                                    </span>
+                                }
+                            </td>
+                            <td style="padding:14px 16px;
+                                       font-size:0.85rem;">
+                                @(s.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:14px 16px;">
+                                <span style="background:#fef9c3;
+                                             color:#ca8a04;
+                                             padding:3px 10px;
+                                             border-radius:20px;
+                                             font-size:0.78rem;
+                                             font-weight:600;">
+                                    @s.PaymentMethod
+                                </span>
+                            </td>
+                            <td style="padding:14px 16px;">
+                                <strong style="color:#007A3D;">
+                                    KES @s.TotalAmount.ToString("N0")
+                                </strong>
+                            </td>
+                            <td style="padding:14px 16px;">
+                                <a href="/Sales/Details/@s.SaleID"
+                                   style="background:#007A3D;
+                                          color:white;border:none;
+                                          border-radius:8px;
+                                          padding:5px 12px;
+                                          font-size:0.78rem;
+                                          font-weight:600;
+                                          text-decoration:none;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

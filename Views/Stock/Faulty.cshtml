@@ -1,0 +1,299 @@
+﻿@model IEnumerable<BraysTech.Models.IMEIStock>
+@{
+    ViewData["Title"] = "Faulty Devices";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .faulty-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .faulty-table thead th {
+        background: #dc2626;
+        color: white;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 13px 14px;
+        border: none;
+    }
+
+    .faulty-table tbody td {
+        padding: 13px 14px;
+        vertical-align: middle;
+        border-color: #fef2f2;
+        font-size: 0.88rem;
+    }
+
+    .faulty-table tbody tr:hover {
+        background: #fff5f5;
+    }
+
+    .repair-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">⚠️ Faulty Devices</h4>
+        <small class="text-muted">
+            Damaged, defective or under repair
+        </small>
+    </div>
+    <a href="/Stock/Index"
+       class="btn btn-outline-secondary rounded-pill px-3">
+        ← Back to Stock
+    </a>
+</div>
+
+<!-- STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #dc2626 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Faulty</p>
+                <h4 class="fw-bold mb-0" style="color:#dc2626;">
+                    @ViewBag.TotalFaulty
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #f59e0b !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Warranty Claims</p>
+                <h4 class="fw-bold mb-0" style="color:#f59e0b;">
+                    @ViewBag.WarrantyClaims
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #7c3aed !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Loss (Cost)</p>
+                <h4 class="fw-bold mb-0" style="color:#7c3aed;">
+                    KES @(((decimal)ViewBag.TotalLoss).ToString("N0"))
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="faulty-card">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3.5rem;">✅</div>
+            <h5 class="mt-3 fw-bold">No faulty devices</h5>
+            <p>All devices are in good condition.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover faulty-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>IMEI</th>
+                        <th>Branch</th>
+                        <th>Fault Reason</th>
+                        <th>Date Reported</th>
+                        <th>Warranty</th>
+                        <th>Repair Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model)
+                    {
+                        var repairColor = d.RepairStatus switch
+                        {
+                            "Repaired" =>
+                            "background:#dcfce7;color:#16a34a;",
+                            "In Repair" =>
+                            "background:#fef9c3;color:#ca8a04;",
+                            "Sent to Supplier" =>
+                            "background:#dbeafe;color:#2563eb;",
+                            _ =>
+                            "background:#fee2e2;color:#dc2626;"
+                        };
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@d.PhoneName</div>
+                                <small class="text-muted">
+                                    @(d.Color ?? "")
+                                    @(d.Storage ?? "")
+                                </small>
+                            </td>
+                            <td>
+                                <span style="font-family:monospace;
+                                             font-size:0.82rem;
+                                             font-weight:700;
+                                             background:#fee2e2;
+                                             color:#dc2626;
+                                             padding:2px 8px;
+                                             border-radius:6px;">
+                                    @d.IMEI
+                                </span>
+                            </td>
+                            <td>
+                                <small>@(d.Branch?.Name ?? "—")</small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-danger">
+                                    @(d.FaultReason ?? "—")
+                                </div>
+                                @if (!string.IsNullOrEmpty(d.TechnicianNotes))
+                                {
+                                    <small class="text-muted">
+                                        @d.TechnicianNotes
+                                    </small>
+                                }
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @(d.DateMarkedFaulty?.ToString(
+                                        "dd MMM yyyy") ?? "—")
+                                </small>
+                            </td>
+                            <td>
+                                @if (d.WarrantyClaim)
+                                {
+                                    <span class="repair-badge"
+                                          style="background:#fef9c3;
+                                                 color:#ca8a04;">
+                                        ✓ Claimed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:#aaa;
+                                                 font-size:0.8rem;">
+                                        No
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="repair-badge"
+                                      style="@repairColor">
+                                    @(d.RepairStatus ?? "Pending")
+                                </span>
+                            </td>
+                            <td>
+                                <!-- Update Status Modal -->
+                                <button type="button"
+                                        class="btn btn-sm fw-semibold"
+                                        style="background:#007A3D;
+                                               color:white;
+                                               border-radius:8px;
+                                               font-size:0.78rem;"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#update_@d.StockID">
+                                    Update
+                                </button>
+
+                                <div class="modal fade"
+                                     id="update_@d.StockID"
+                                     tabindex="-1">
+                                    <div class="modal-dialog
+                                                 modal-dialog-centered">
+                                        <div class="modal-content
+                                                     border-0 shadow">
+                                            <div class="modal-header"
+                                                 style="background:#007A3D;
+                                                        color:white;">
+                                                <h5 class="modal-title">
+                                                    Update Repair Status
+                                                </h5>
+                                                <button type="button"
+                                                        class="btn-close btn-close-white"
+                                                        data-bs-dismiss="modal">
+                                                </button>
+                                            </div>
+                                            <form method="post"
+                                                  action="/Stock/UpdateRepairStatus">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@d.StockID" />
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">
+                                                            @d.PhoneName
+                                                            — @d.IMEI
+                                                        </label>
+                                                        <select name="repairStatus"
+                                                                class="form-select">
+                                                            <option value="Pending">
+                                                                Pending
+                                                            </option>
+                                                            <option value="In Repair">
+                                                                In Repair
+                                                            </option>
+                                                            <option value="Repaired">
+                                                                Repaired ✅
+                                                            </option>
+                                                            <option value="Sent to Supplier">
+                                                                Sent to Supplier
+                                                            </option>
+                                                            <option value="Written Off">
+                                                                Written Off
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="form-label fw-semibold">
+                                                            Technician Notes
+                                                        </label>
+                                                        <textarea name="technicianNotes"
+                                                                  class="form-control"
+                                                                  rows="3"
+                                                                  placeholder="Update notes...">@d.TechnicianNotes</textarea>
+                                                        <small class="text-muted">
+                                                            Selecting "Repaired" will
+                                                            restore device to In Stock.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-0">
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary"
+                                                            data-bs-dismiss="modal">
+                                                        Cancel
+                                                    </button>
+                                                    <button type="submit"
+                                                            class="btn fw-semibold"
+                                                            style="background:#007A3D;
+                                                                   color:white;
+                                                                   border-radius:8px;">
+                                                        Save Update
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

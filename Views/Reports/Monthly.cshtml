@@ -1,0 +1,633 @@
+﻿@{
+    ViewData["Title"] = "Monthly Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .report-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .report-header {
+        background: #007A3D;
+        color: white;
+        padding: 14px 20px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .report-body {
+        padding: 20px;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f7f3;
+        font-size: 0.9rem;
+    }
+
+        .stat-row:last-child {
+            border: none;
+        }
+
+    .stat-label {
+        color: #666;
+    }
+
+    .stat-value {
+        font-weight: 700;
+    }
+
+    .net-profit-box {
+        background: #f0f7f3;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+    }
+
+    .report-table thead th {
+        background: #007A3D;
+        color: white;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 12px 14px;
+        border: none;
+    }
+
+    .report-table tbody td {
+        padding: 12px 14px;
+        font-size: 0.86rem;
+        border-color: #f0f7f3;
+        vertical-align: middle;
+    }
+
+    .report-table tbody tr:hover {
+        background: #f9fef9;
+    }
+
+    .trend-bar-wrap {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        height: 100px;
+    }
+
+    .trend-bar-col {
+        flex: 1;
+        text-align: center;
+    }
+
+    .trend-bar {
+        background: linear-gradient(180deg, #007A3D, #34d399);
+        border-radius: 4px 4px 0 0;
+        margin: 0 auto;
+        min-height: 4px;
+        transition: height 0.4s ease;
+    }
+
+    .trend-label {
+        font-size: 0.68rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .trend-count {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #007A3D;
+        margin-bottom: 2px;
+    }
+
+    .rank-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Monthly Report</h4>
+        <small class="text-muted">@ViewBag.SelectedMonthName</small>
+    </div>
+    <button onclick="window.print()"
+            class="btn btn-outline-secondary rounded-pill px-4"
+            style="font-size:0.85rem;">
+        Print Report
+    </button>
+</div>
+
+<!-- FILTER -->
+<div class="report-card">
+    <div class="report-body">
+        <form method="get" action="/Reports/Monthly">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted">
+                        Month
+                    </label>
+                    <select name="month" class="form-select">
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            if (m == (int)ViewBag.SelectedMonth)
+                            {
+                                <option value="@m" selected>
+                                    @(new DateTime(2026, m, 1)
+                                        .ToString("MMMM"))
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@m">
+                                    @(new DateTime(2026, m, 1)
+                                        .ToString("MMMM"))
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">
+                        Year
+                    </label>
+                    <select name="year" class="form-select">
+                        @for (int y = 2025;
+                        y <= DateTime.Now.Year + 1; y++)
+                        {
+                            if (y == (int)ViewBag.SelectedYear)
+                            {
+                                <option value="@y" selected>@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted">
+                        Branch
+                    </label>
+                    <select name="branchID" class="form-select">
+                        <option value="">All Branches</option>
+                        @foreach (var b in ViewBag.Branches)
+                        {
+                            if (b.BranchID == ViewBag.SelectedBranch)
+                            {
+                                <option value="@b.BranchID" selected>
+                                    @b.Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit"
+                            class="btn w-100 fw-semibold"
+                            style="background:#007A3D;color:white;
+                                   border-radius:8px;">
+                        View
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a href="/Reports/Monthly"
+                       class="btn btn-outline-secondary w-100"
+                       style="border-radius:8px;">
+                        This Month
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="report-card mb-0">
+            <div class="report-header">Financial Summary</div>
+            <div class="report-body">
+                <div class="stat-row">
+                    <span class="stat-label">Total Revenue</span>
+                    <span class="stat-value" style="color:#007A3D;">
+                        KES @((decimal)ViewBag.TotalRevenue).ToString("N0"))
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Gross Profit</span>
+                    <span class="stat-value">
+                        KES @((decimal)ViewBag.TotalProfit).ToString("N0"))
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Expenses</span>
+                    <span class="stat-value" style="color:#dc2626;">
+                        KES @((decimal)ViewBag.TotalExpenses).ToString("N0"))
+                    </span>
+                </div>
+                <div class="net-profit-box">
+                    <span class="fw-bold" style="color:#007A3D;">
+                        Net Profit / Loss
+                    </span>
+                    <span class="fw-bold"
+                          style="font-size:1.2rem;
+                                 color:@((decimal)ViewBag.NetProfit >= 0 ?
+                                     "#007A3D" : "#dc2626");">
+                        @((decimal)ViewBag.NetProfit >= 0 ? "+" : "")KES
+                        @((decimal)ViewBag.NetProfit).ToString("N0"))
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-card mb-0">
+            <div class="report-header">Volume Summary</div>
+            <div class="report-body">
+                <div class="stat-row">
+                    <span class="stat-label">Total Sales</span>
+                    <span class="stat-value">@ViewBag.TotalSales</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Devices Sold</span>
+                    <span class="stat-value">@ViewBag.TotalDevices</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Average Sale Value</span>
+                    <span class="stat-value">
+                        @if ((int)ViewBag.TotalSales > 0)
+                        {
+                            <text>
+                                KES @(((decimal)ViewBag.TotalRevenue /
+                                (int)ViewBag.TotalSales).ToString("N0"))
+                            </text>
+                        }
+                        else
+                        {
+                            <text>KES 0</text>
+                        }
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Daily Average Revenue</span>
+                    <span class="stat-value">
+                        KES @(((decimal)ViewBag.TotalRevenue / 30)
+                        .ToString("N0"))
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-card mb-0">
+            <div class="report-header">Payment Methods</div>
+            <div class="report-body">
+                @foreach (var p in ViewBag.PaymentBreakdown)
+                {
+                    var method = (string)p.GetType()
+                    .GetProperty("Method").GetValue(p);
+                    var count = (int)p.GetType()
+                    .GetProperty("Count").GetValue(p);
+                    var total = (decimal)p.GetType()
+                    .GetProperty("Total").GetValue(p);
+                    var badgeStyle = method switch
+                    {
+                        "Cash" => "background:#dcfce7;color:#16a34a;",
+                        "MPesa" => "background:#fef9c3;color:#ca8a04;",
+                        "MKOPA" => "background:#dbeafe;color:#2563eb;",
+                        _ => "background:#f3f4f6;color:#374151;"
+                    };
+                    <div class="stat-row">
+                        <span>
+                            <span style="padding:2px 8px;
+                                          border-radius:20px;
+                                          font-size:0.75rem;
+                                          font-weight:700;
+                                          @badgeStyle">
+                                @method
+                            </span>
+                            <small class="text-muted ms-1">
+                                @count txns
+                            </small>
+                        </span>
+                        <span class="stat-value">
+                            KES @total.ToString("N0")
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-card mb-0">
+            <div class="report-header">
+                Daily Trend — @ViewBag.SelectedMonthName
+            </div>
+            <div class="report-body">
+                <div class="trend-bar-wrap">
+                    @{
+                        var trend = ViewBag.DailyTrend as
+                        IEnumerable<dynamic>;
+                        decimal maxRev = 1m;
+                        if (trend != null && trend.Any())
+                            maxRev = Math.Max(
+                            (decimal)trend.Max(t =>
+                            (decimal)t.GetType()
+                            .GetProperty("Revenue")
+                            .GetValue(t)), 1m);
+
+                        if (trend != null)
+                        {
+                            foreach (var t in trend)
+                            {
+                                int day = (int)t.GetType()
+                                .GetProperty("Day").GetValue(t);
+                                decimal rev = (decimal)t.GetType()
+                                .GetProperty("Revenue").GetValue(t);
+                                int cnt = (int)t.GetType()
+                                .GetProperty("Count").GetValue(t);
+                                double pct = (double)(rev / maxRev * 90);
+                                <div class="trend-bar-col">
+                                    <div class="trend-count">@cnt</div>
+                                    <div class="trend-bar"
+                                         style="height:@pct%">
+                                    </div>
+                                    <div class="trend-label">@day</div>
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+                <small class="text-muted d-block text-center mt-2">
+                    Bars show daily sales count
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BRANCH BREAKDOWN -->
+<div class="report-card">
+    <div class="report-header">Branch Performance</div>
+    <div class="table-responsive">
+        <table class="table table-hover report-table mb-0">
+            <thead>
+                <tr>
+                    <th>Branch</th>
+                    <th>Sales</th>
+                    <th>Devices Sold</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in ViewBag.BranchBreakdown)
+                {
+                    var bName = (string)b.GetType()
+                    .GetProperty("BranchName").GetValue(b);
+                    var bCount = (int)b.GetType()
+                    .GetProperty("SalesCount").GetValue(b);
+                    var bDev = (int)b.GetType()
+                    .GetProperty("Devices").GetValue(b);
+                    var bRev = (decimal)b.GetType()
+                    .GetProperty("Revenue").GetValue(b);
+                    var bProf = (decimal)b.GetType()
+                    .GetProperty("Profit").GetValue(b);
+                    <tr>
+                        <td class="fw-semibold">@bName</td>
+                        <td>@bCount</td>
+                        <td>@bDev</td>
+                        <td style="color:#007A3D;font-weight:700;">
+                            KES @bRev.ToString("N0")
+                        </td>
+                        <td style="color:#b45309;font-weight:700;">
+                            KES @bProf.ToString("N0")
+                        </td>
+                    </tr>
+                }
+                @if (!(ViewBag.BranchBreakdown as IEnumerable<dynamic>)?
+                .Any() ?? true)
+                {
+                    <tr>
+                        <td colspan="5"
+                            class="text-center text-muted py-4">
+                            No data for this period
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- STAFF LEADERBOARD -->
+<div class="report-card">
+    <div class="report-header">Staff Leaderboard</div>
+    <div class="table-responsive">
+        <table class="table table-hover report-table mb-0">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Staff Member</th>
+                    <th>Sales</th>
+                    <th>Devices Sold</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int rank = 1;
+                }
+                @foreach (var s in ViewBag.StaffLeaderboard)
+                {
+                    var sName = (string)s.GetType()
+                    .GetProperty("StaffName").GetValue(s);
+                    var sCount = (int)s.GetType()
+                    .GetProperty("SalesCount").GetValue(s);
+                    var sDev = (int)s.GetType()
+                    .GetProperty("Devices").GetValue(s);
+                    var sRev = (decimal)s.GetType()
+                    .GetProperty("Revenue").GetValue(s);
+                    var sProf = (decimal)s.GetType()
+                    .GetProperty("Profit").GetValue(s);
+                    var rankStyle = rank switch
+                    {
+                        1 => "background:#fef9c3;color:#ca8a04;",
+                        2 => "background:#f3f4f6;color:#6b7280;",
+                        3 => "background:#fef3e2;color:#c2410c;",
+                        _ => "background:#f0f7f3;color:#007A3D;"
+                    };
+                    <tr>
+                        <td>
+                            <div class="rank-num" style="@rankStyle">
+                                @rank
+                            </div>
+                        </td>
+                        <td class="fw-semibold">@sName</td>
+                        <td>@sCount</td>
+                        <td>@sDev</td>
+                        <td style="color:#007A3D;font-weight:700;">
+                            KES @sRev.ToString("N0")
+                        </td>
+                        <td style="color:#b45309;font-weight:700;">
+                            KES @sProf.ToString("N0")
+                        </td>
+                    </tr>
+                    rank++;
+                }
+                @if (!(ViewBag.StaffLeaderboard as IEnumerable<dynamic>)?
+                .Any() ?? true)
+                {
+                    <tr>
+                        <td colspan="6"
+                            class="text-center text-muted py-4">
+                            No sales recorded this month
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TOP DEVICES -->
+<div class="report-card">
+    <div class="report-header">Top Selling Devices</div>
+    <div class="table-responsive">
+        <table class="table table-hover report-table mb-0">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Units Sold</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in ViewBag.TopDevices)
+                {
+                    var dName = (string)d.GetType()
+                    .GetProperty("PhoneName").GetValue(d);
+                    var dUnits = (int)d.GetType()
+                    .GetProperty("UnitsSold").GetValue(d);
+                    var dRev = (decimal)d.GetType()
+                    .GetProperty("Revenue").GetValue(d);
+                    var dProf = (decimal)d.GetType()
+                    .GetProperty("Profit").GetValue(d);
+                    <tr>
+                        <td class="fw-semibold">@dName</td>
+                        <td>
+                            <span style="background:#f0f7f3;
+                                          color:#007A3D;
+                                          padding:3px 10px;
+                                          border-radius:8px;
+                                          font-size:0.82rem;
+                                          font-weight:700;">
+                                @dUnits units
+                            </span>
+                        </td>
+                        <td style="color:#007A3D;font-weight:700;">
+                            KES @dRev.ToString("N0")
+                        </td>
+                        <td style="color:#b45309;font-weight:700;">
+                            KES @dProf.ToString("N0")
+                        </td>
+                    </tr>
+                }
+                @if (!(ViewBag.TopDevices as IEnumerable<dynamic>)?
+                .Any() ?? true)
+                {
+                    <tr>
+                        <td colspan="4"
+                            class="text-center text-muted py-4">
+                            No devices sold this month
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 6 MONTH COMPARISON -->
+<div class="report-card">
+    <div class="report-header">6 Month Comparison</div>
+    <div class="table-responsive">
+        <table class="table table-hover report-table mb-0">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Sales</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                    <th>Expenses</th>
+                    <th>Net</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in ViewBag.SixMonthTrend)
+                {
+                    var mName = (string)m.GetType()
+                    .GetProperty("month").GetValue(m);
+                    var mSales = (int)m.GetType()
+                    .GetProperty("sales").GetValue(m);
+                    var mRev = (decimal)m.GetType()
+                    .GetProperty("revenue").GetValue(m);
+                    var mProf = (decimal)m.GetType()
+                    .GetProperty("profit").GetValue(m);
+                    var mExp = (decimal)m.GetType()
+                    .GetProperty("expenses").GetValue(m);
+                    var mNet = mProf - mExp;
+                    var isSelected = mName ==
+                    ViewBag.SelectedMonthName.ToString()
+                    .Substring(0, 3) +
+                    " " + ViewBag.SelectedYear;
+                    <tr style="@(isSelected ?
+                        "background:#f0f7f3;font-weight:600;" : "")">
+                        <td class="fw-semibold">@mName</td>
+                        <td>@mSales</td>
+                        <td style="color:#007A3D;font-weight:700;">
+                            KES @mRev.ToString("N0")
+                        </td>
+                        <td style="color:#b45309;">
+                            KES @mProf.ToString("N0")
+                        </td>
+                        <td style="color:#dc2626;">
+                            KES @mExp.ToString("N0")
+                        </td>
+                        <td style="font-weight:800;
+                                   color:@(mNet >= 0 ? "#007A3D" :
+                                       "#dc2626");">
+                            @(mNet >= 0 ? "+" : "")KES
+                            @mNet.ToString("N0")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

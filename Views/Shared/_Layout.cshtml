@@ -4,202 +4,241 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brays Technologies — @ViewData["Title"]</title>
+
+    <!-- THEME PERSISTENCE SCRIPT - APPLIES THEME BEFORE PAGE RENDERS TO PREVENT FLASH -->
+    <script>
+        (function () {
+            const t = localStorage.getItem('theme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+            else if (t === 'system') {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+                    document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
     <style>
-        body {
-            background: #F0FBF4;
+        * {
+            box-sizing: border-box;
         }
 
+        body {
+            margin: 0;
+            background: #F3F8F5;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* SIDEBAR */
+
         .sidebar {
-            width: 220px;
+            width: 260px;
             height: 100vh;
-            background: linear-gradient(180deg, #007A3D, #005C2E);
+            background: linear-gradient(180deg, #007A3D 0%, #005C2E 100%);
             position: fixed;
-            top: 0;
             left: 0;
-            z-index: 100;
+            top: 0;
+            z-index: 200;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
             overflow-y: auto;
-            overflow-x: hidden;
+            transition: 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
         }
 
             .sidebar::-webkit-scrollbar {
                 width: 4px;
             }
 
-            .sidebar::-webkit-scrollbar-track {
-                background: rgba(0,0,0,0.1);
-            }
-
             .sidebar::-webkit-scrollbar-thumb {
-                background: rgba(255,255,255,0.3);
-                border-radius: 4px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 10px;
             }
 
-                .sidebar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255,255,255,0.6);
-                }
-
-            .sidebar .brand {
-                padding: 16px 20px;
-                color: white;
-                font-weight: 700;
-                font-size: 15px;
-                border-bottom: 1px solid rgba(255,255,255,0.2);
-                line-height: 1.3;
-                flex-shrink: 0;
-            }
-
-                .sidebar .brand span {
-                    color: rgba(255,255,255,0.7);
-                    font-size: 12px;
-                    display: block;
-                    font-weight: 400;
-                }
-
-            .sidebar .nav-link {
-                color: rgba(255,255,255,0.85);
-                padding: 8px 20px;
-                font-size: 13px;
-                border-radius: 0;
-                transition: all 0.2s;
-            }
-
-                .sidebar .nav-link:hover,
-                .sidebar .nav-link.active {
-                    color: #ffffff;
-                    background: rgba(255,255,255,0.15);
-                    padding-left: 28px;
-                    border-left: 3px solid #ffffff;
-                }
-
-            .sidebar .nav-section {
-                color: rgba(255,255,255,0.45);
-                font-size: 10px;
-                padding: 14px 20px 4px;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-            }
-
-        .sidebar-footer {
-            padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.15);
-            margin-top: auto;
-            flex-shrink: 0;
+        .brand {
+            padding: 22px 22px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-            .sidebar-footer a {
-                color: rgba(255,255,255,0.4);
-                font-size: 11px;
-                text-decoration: none;
-                transition: color 0.2s;
+            .brand h3 {
+                margin: 0;
+                color: white;
+                font-size: 20px;
+                font-weight: 800;
+                letter-spacing: .4px;
             }
 
-                .sidebar-footer a:hover {
-                    color: white;
-                }
+            .brand span {
+                color: rgba(255,255,255,0.7);
+                font-size: 12px;
+            }
+
+        .branch-badge {
+            margin-top: 12px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: white;
+            font-size: 13px;
+        }
+
+        .nav-wrapper {
+            padding-bottom: 20px;
+        }
+
+        .nav-section {
+            padding: 20px 20px 8px;
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            padding: 11px 20px;
+            font-size: 14px;
+            transition: 0.2s ease;
+            border-left: 3px solid transparent;
+            margin: 2px 0;
+        }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background: rgba(255,255,255,0.12);
+                color: white;
+                border-left: 3px solid #ffffff;
+                padding-left: 26px;
+            }
+
+        .nav-icon {
+            width: 22px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .coming-soon {
+            font-size: 10px;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 7px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 18px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.65);
+            font-size: 12px;
+        }
+
+            .sidebar-footer small {
+                display: block;
+                margin-top: 5px;
+                opacity: .7;
+            }
+
+        /* TOPBAR */
+
+        .topbar {
+            height: 72px;
+            background: white;
+            margin-left: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            border-bottom: 3px solid #007A3D;
+            position: sticky;
+            top: 0;
+            z-index: 150;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+        }
+
+        .page-title h5 {
+            margin: 0;
+            color: #007A3D;
+            font-weight: 800;
+        }
+
+        .page-title small {
+            color: #7b7b7b;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quick-btn {
+            border: none;
+            background: #EFF7F1;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            transition: .2s;
+        }
+
+            .quick-btn:hover {
+                background: #dff2e5;
+            }
+
+        .user-btn {
+            border-radius: 14px;
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            background: white;
+            font-weight: 600;
+        }
+
+        /* MAIN */
 
         .main-content {
-            margin-left: 220px;
+            margin-left: 260px;
             padding: 24px;
         }
 
-        .topbar {
-            background: white;
-            padding: 12px 24px;
-            margin-left: 220px;
-            border-bottom: 3px solid #007A3D;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 99;
-            box-shadow: 0 2px 8px rgba(0,122,61,0.08);
-        }
-
-            .topbar h6 {
-                color: #007A3D !important;
-            }
-
-        .hamburger {
-            display: none;
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 200;
-            background: #007A3D;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: white;
-            font-size: 20px;
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 99;
-        }
-
         /* TOAST */
-        .toast-container {
+
+        .toast-container-custom {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .toast-item {
-            min-width: 300px;
-            max-width: 400px;
+        .toast-box {
+            min-width: 320px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            padding: 14px 18px;
+            border-radius: 14px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            animation: slideIn .3s ease;
         }
 
-            .toast-item.success {
-                border-left: 4px solid #007A3D;
-            }
-
-            .toast-item.error {
-                border-left: 4px solid #ef4444;
-            }
-
-            .toast-item span {
-                font-size: 0.9rem;
-                flex: 1;
-            }
-
-        .toast-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #999;
-            flex-shrink: 0;
-            padding: 0;
-            line-height: 1;
+        .toast-success {
+            border-left: 5px solid #16A34A;
         }
 
-            .toast-close:hover {
-                color: #333;
-            }
+        .toast-error {
+            border-left: 5px solid #DC2626;
+        }
 
         @@keyframes slideIn {
             from {
@@ -213,194 +252,363 @@
             }
         }
 
-        /* RESPONSIVE */
-        @@media (max-width: 1024px) {
+        /* MOBILE */
+
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 999;
+            border: none;
+            background: #007A3D;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 13px;
+            font-size: 20px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 180;
+        }
+
+        @@media(max-width: 1024px) {
+
             .hamburger {
                 display: block;
             }
 
             .sidebar {
                 transform: translateX(-100%);
-                z-index: 150;
             }
 
                 .sidebar.open {
                     transform: translateX(0);
                 }
 
-            .sidebar-overlay.open {
+            .overlay.open {
                 display: block;
             }
 
+            .topbar,
             .main-content {
                 margin-left: 0;
-                padding: 16px;
             }
 
             .topbar {
-                margin-left: 0;
-                padding-left: 56px;
+                padding-left: 60px;
             }
 
-            .table-responsive {
-                overflow-x: auto;
+            .main-content {
+                padding: 16px;
             }
 
-            h4 {
-                font-size: 1.1rem;
+            .topbar-right {
+                gap: 8px;
+            }
+
+            .user-btn {
+                font-size: 12px;
             }
         }
     </style>
 </head>
+
 <body>
 
-    <!-- HAMBURGER -->
+    <!-- MOBILE BUTTON -->
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <!-- TOAST NOTIFICATIONS -->
-    <div class="toast-container">
+    <!-- TOASTS -->
+
+    <div class="toast-container-custom">
+
         @if (TempData["Success"] != null)
         {
-        <div class="toast-item success" id="toastSuccess">
-            <span style="color:#007A3D;font-size:1.1rem;flex-shrink:0;">✅</span>
-            <span>@TempData["Success"]</span>
-            <button class="toast-close"
-                    onclick="this.parentElement.remove()">
-                ✕
-            </button>
-        </div>
+            <div class="toast-box toast-success" id="toastSuccess">
+                <div style="font-size:20px;">✅</div>
+                <div style="flex:1;">
+                    @TempData["Success"]
+                </div>
+                <button onclick="this.parentElement.remove()"
+                        style="border:none;background:none;font-size:18px;color:#999;">
+                    ×
+                </button>
+            </div>
         }
+
         @if (TempData["Error"] != null)
         {
-        <div class="toast-item error" id="toastError">
-            <span style="color:#ef4444;font-size:1.1rem;flex-shrink:0;">❌</span>
-            <span>@TempData["Error"]</span>
-            <button class="toast-close"
-                    onclick="this.parentElement.remove()">
-                ✕
-            </button>
-        </div>
+            <div class="toast-box toast-error" id="toastError">
+                <div style="font-size:20px;">❌</div>
+                <div style="flex:1;">
+                    @TempData["Error"]
+                </div>
+                <button onclick="this.parentElement.remove()"
+                        style="border:none;background:none;font-size:18px;color:#999;">
+                    ×
+                </button>
+            </div>
         }
+
     </div>
 
     <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
+
+    <aside class="sidebar" id="sidebar">
+
         <div class="brand">
-            Brays Technologies
-            <span>Systems</span>
+            <h3>Brays Technologies</h3>
+            <span>Smart Retail ERP System</span>
+
+            <div class="branch-badge">
+                🏪 Active Branch:
+                <strong>Nairobi Main</strong>
+            </div>
         </div>
 
-        <nav class="nav flex-column mt-2">
+        <div class="nav-wrapper">
 
-            <span class="nav-section">Main</span>
-            <a class="nav-link @(ViewData["Title"]?.ToString() == "Dashboard" ? "active" : "")"
-               href="/Dashboard/Index">
-                📊 Dashboard
-            </a>
+            <!-- MAIN -->
 
-            <span class="nav-section">Operations</span>
-            <a class="nav-link" href="/Sales/New">
-                📱 New Sale
-            </a>
-            <a class="nav-link" href="/Sales/Index">
-                🧾 Sales History
-            </a>
-            <a class="nav-link" href="/Stock/Index">
-                📦 Phone Stock
-            </a>
-            <a class="nav-link" href="/Stock/Add">
-                ➕ Add Phone (IMEI)
+            <div class="nav-section">Main</div>
+
+            <a href="/Dashboard/Index"
+               class="nav-link @(ViewData["Title"]?.ToString() == "Dashboard" ? "active" : "")">
+                <span class="nav-icon">📊</span>
+                Dashboard
             </a>
 
-            <span class="nav-section">Management</span>
-            <a class="nav-link" href="/Branch/Index">
-                🏪 Branches
-            </a>
-            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-            {
-            <a class="nav-link" href="/Expenses/Index">
-                💰 Expenses
-            </a>
-            }
+            <!-- SALES -->
 
-            <span class="nav-section">Admin</span>
+            <div class="nav-section">Sales & POS</div>
+
+            <a href="/Sales/New" class="nav-link">
+                <span class="nav-icon">📱</span>
+                New Sale
+            </a>
+
+            <a href="/Sales/Index" class="nav-link">
+                <span class="nav-icon">🧾</span>
+                Sales History
+            </a>
+            <a href="/Receipts/Index" class="nav-link">
+                <span class="nav-icon">🧾</span>
+                Receipts
+            </a>
+            <a href="/Customers/Index" class="nav-link">
+                <span class="nav-icon">👥</span>
+                Customers
+            </a>
+
+            <!-- INVENTORY -->
+
+            <div class="nav-section">Inventory</div>
+
+            <a href="/Stock/Index" class="nav-link">
+                <span class="nav-icon">📦</span>
+                Phone Stock
+            </a>
+
+            <a href="/Stock/Add" class="nav-link">
+                <span class="nav-icon">➕</span>
+                Add IMEI Device
+            </a>
+
+            <a href="/Stock/Faulty" class="nav-link">
+                <span class="nav-icon">⚠️</span>
+                Faulty Devices
+            </a>
+
+            <!-- BRANCH -->
+
+            <div class="nav-section">Branch Management</div>
+
+            <a href="/Branch/Index" class="nav-link">
+                <span class="nav-icon">🏪</span>
+                Branches
+            </a>
+
+            <a href="/Performance/Index" class="nav-link">
+                <span class="nav-icon">📈</span>
+                Staff Performance
+            </a>
+
+            <!-- FINANCE -->
+
+            <div class="nav-section">Finance</div>
+
+            <a href="/Expenses/Index" class="nav-link">
+                <span class="nav-icon">💰</span>
+                Expenses
+            </a>
+
+            <a href="/Reports/Daily" class="nav-link">
+                <span class="nav-icon">📅</span>
+                Daily Reports
+            </a>
+
+            <a href="/Reports/Monthly" class="nav-link">
+                <span class="nav-icon">📊</span>
+                Monthly Reports
+            </a>
+
+            <!-- ADMIN -->
             @if (User.IsInRole("Admin"))
             {
-            <a class="nav-link" href="/Staff/Index">
-                👤 Staff
-            </a>
-            <a class="nav-link" href="/Reports/Index">
-                📈 Reports
-            </a>
+                <div class="nav-section">Administration</div>
+
+                <a href="/Staff/Index" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    Staff Accounts
+                </a>
+
+                <a href="/Settings/Index" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    System Settings
+                </a>
+
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">🔄</span>
+                    Stock Transfers
+                    <span class="coming-soon">PHASE 2</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">📦</span>
+                    Suppliers
+                    <span class="coming-soon">PHASE 2</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">💳</span>
+                    M-KOPA
+                    <span class="coming-soon">PHASE 2</span>
+                </a>
             }
 
-        </nav>
+        </div>
 
         <div class="sidebar-footer">
-            <a href="/Home/Privacy">Privacy Policy</a>
-            <span style="color:rgba(255,255,255,0.2);margin:0 8px;">•</span>
-            <a href="/Home/Terms">Terms of Service</a>
+            Brays Technologies ERP v1.0
+            <small>Multi-Branch Phone Shop System</small>
         </div>
-    </div>
+
+    </aside>
 
     <!-- TOPBAR -->
-    <div class="topbar">
-        <h6 class="mb-0 fw-semibold">
-            @ViewData["Title"]
-        </h6>
-        <div class="d-flex align-items-center gap-3">
+
+    <header class="topbar">
+
+        <div class="page-title">
+            <h5>@ViewData["Title"]</h5>
+            <small>
+                Manage sales, inventory, staff and branch operations
+            </small>
+        </div>
+
+        <div class="topbar-right">
+
+            <button class="quick-btn" title="Notifications">
+                🔔
+            </button>
+
+            <button class="quick-btn" title="Quick Sale">
+                ⚡
+            </button>
+
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                        type="button" data-bs-toggle="dropdown">
+
+                <button class="user-btn dropdown-toggle"
+                        data-bs-toggle="dropdown">
                     👤 @User.Identity!.Name
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
+
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+
                     <li>
                         <a class="dropdown-item"
                            href="/Auth/ChangePassword">
                             🔑 Change Password
                         </a>
                     </li>
+
+                    <li>
+                        <a class="dropdown-item"
+                           href="/Settings/Profile">
+                            👤 My Profile
+                        </a>
+                    </li>
+
                     <li><hr class="dropdown-divider"></li>
+
                     <li>
                         <form asp-controller="Auth"
-                              asp-action="Logout" method="post">
+                              asp-action="Logout"
+                              method="post">
+
                             <button type="submit"
                                     class="dropdown-item text-danger">
                                 🚪 Logout
                             </button>
+
                         </form>
                     </li>
-                </ul>
-            </div>
-        </div>
-    </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
+                </ul>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- MAIN -->
+
+    <main class="main-content">
         @RenderBody()
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('open');
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+
             ['toastSuccess', 'toastError'].forEach(function (id) {
+
                 const el = document.getElementById(id);
+
                 if (el) {
+
                     setTimeout(function () {
-                        el.style.transition = 'opacity 0.3s';
+
+                        el.style.transition = '0.3s';
                         el.style.opacity = '0';
-                        setTimeout(() => el.remove(), 300);
+
+                        setTimeout(() => {
+                            el.remove();
+                        }, 300);
+
                     }, 4000);
+
                 }
+
             });
+
         });
+
     </script>
+
 </body>
 </html>

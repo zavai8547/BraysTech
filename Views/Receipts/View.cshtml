@@ -1,0 +1,256 @@
+﻿@model BraysTech.Models.PhoneSale
+@{
+    ViewData["Title"] = $"Receipt RCP-{Model.SaleID:D5}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .receipt-wrap {
+        max-width: 480px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .receipt-top {
+        background: linear-gradient(135deg,#007A3D,#005C2E);
+        color: white;
+        padding: 28px;
+        text-align: center;
+    }
+
+        .receipt-top h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 2px;
+        }
+
+    .receipt-body {
+        padding: 24px;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 0.88rem;
+    }
+
+        .receipt-row:last-child {
+            border: none;
+        }
+
+        .receipt-row .lbl {
+            color: #666;
+        }
+
+        .receipt-row .val {
+            font-weight: 700;
+        }
+
+    .device-box {
+        background: #f9fef9;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+    }
+
+    .receipt-total {
+        background: #007A3D;
+        color: white;
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+    }
+
+    .receipt-footer {
+        text-align: center;
+        padding: 16px 24px 24px;
+        color: #aaa;
+        font-size: 0.8rem;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .receipt-wrap {
+            box-shadow: none;
+            border-radius: 0;
+            max-width: 100%;
+        }
+
+        .sidebar, .topbar, .hamburger,
+        .main-content > *:not(.receipt-wrap) {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+
+<!-- ACTION BAR -->
+<div class="d-flex justify-content-between
+            align-items-center mb-4 no-print">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Receipts/Index"
+           class="btn btn-outline-secondary rounded-pill px-3">
+            Back
+        </a>
+        <h4 class="fw-bold mb-0">
+            Receipt RCP-@Model.SaleID.ToString("D5")
+        </h4>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()"
+                class="btn btn-outline-secondary rounded-pill px-4">
+            Print
+        </button>
+        <a href="/Sales/New"
+           class="btn rounded-pill px-4 fw-semibold"
+           style="background:#007A3D;color:white;">
+            New Sale
+        </a>
+    </div>
+</div>
+
+<div class="receipt-wrap">
+    <div class="receipt-top">
+        <h2>@ViewBag.BusinessName</h2>
+        <small style="opacity:0.8;">
+            Smart Retail Management System
+        </small>
+        @if (!string.IsNullOrEmpty(
+        (string)ViewBag.BusinessPhone))
+        {
+            <div style="font-size:0.82rem;
+                         margin-top:4px;opacity:0.8;">
+                @ViewBag.BusinessPhone
+            </div>
+        }
+        <div style="margin-top:16px;
+                     background:rgba(255,255,255,0.15);
+                     border-radius:10px;padding:10px;">
+            <div style="font-weight:800;font-size:1rem;">
+                RCP-@Model.SaleID.ToString("D5")
+            </div>
+            <div style="font-size:0.8rem;opacity:0.85;">
+                @Model.CreatedAt.ToString(
+                         "dddd, dd MMMM yyyy — HH:mm")
+            </div>
+        </div>
+    </div>
+
+    <div class="receipt-body">
+
+        <div class="receipt-row">
+            <span class="lbl">Branch</span>
+            <span class="val">
+                @(Model.Branch?.Name ?? "—")
+            </span>
+        </div>
+        <div class="receipt-row">
+            <span class="lbl">Served By</span>
+            <span class="val">
+                @(Model.Staff?.FullName ?? "—")
+            </span>
+        </div>
+        <div class="receipt-row">
+            <span class="lbl">Customer</span>
+            <span class="val">
+                @(Model.CustomerName ?? "Walk-in Customer")
+            </span>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+        {
+            <div class="receipt-row">
+                <span class="lbl">Phone</span>
+                <span class="val">@Model.CustomerPhone</span>
+            </div>
+        }
+        <div class="receipt-row">
+            <span class="lbl">Payment</span>
+            <span class="val">@Model.PaymentMethod</span>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.MpesaCode))
+        {
+            <div class="receipt-row">
+                <span class="lbl">M-Pesa Code</span>
+                <span class="val"
+                      style="font-family:monospace;
+                             color:#007A3D;">
+                    @Model.MpesaCode
+                </span>
+            </div>
+        }
+
+        <div style="border-top:2px dashed #e5e7eb;
+                     margin:16px 0;"></div>
+
+        <div style="font-weight:700;font-size:0.78rem;
+                     color:#555;text-transform:uppercase;
+                     letter-spacing:1px;margin-bottom:10px;">
+            Items Purchased
+        </div>
+
+        @foreach (var item in Model.Items)
+        {
+            <div class="device-box">
+                <div style="font-weight:700;font-size:0.88rem;">
+                    @item.PhoneName
+                </div>
+                <div style="font-family:monospace;
+                             font-size:0.75rem;
+                             color:#888;margin:3px 0;">
+                    IMEI: @item.IMEI
+                </div>
+                <div style="display:flex;
+                             justify-content:space-between;
+                             margin-top:6px;font-size:0.82rem;">
+                    <span style="color:#666;">Unit Price</span>
+                    <span style="font-weight:700;
+                                  color:#007A3D;">
+                        KES @item.SellingPrice.ToString("N0")
+                    </span>
+                </div>
+            </div>
+        }
+
+        <div style="border-top:2px dashed #e5e7eb;
+                     margin:14px 0;"></div>
+
+        <div class="receipt-row">
+            <span class="lbl">Items</span>
+            <span class="val">@Model.Items.Count</span>
+        </div>
+
+        <div class="receipt-total">
+            <span style="font-weight:700;opacity:0.9;">
+                TOTAL PAID
+            </span>
+            <span style="font-size:1.6rem;font-weight:800;">
+                KES @Model.TotalAmount.ToString("N0")
+            </span>
+        </div>
+
+    </div>
+
+    <div class="receipt-footer">
+        @ViewBag.ReceiptFooter
+        <br />
+        <strong style="color:#007A3D;">
+            @ViewBag.BusinessName
+        </strong>
+    </div>
+</div>

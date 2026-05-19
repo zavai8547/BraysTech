@@ -54,15 +54,36 @@ namespace BraysTech.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(Branch model)
+        public async Task<IActionResult> Edit(
+            int BranchID,
+            string Name,
+            string Location,
+            string? Phone,
+            string? Notes)
         {
-            if (!ModelState.IsValid) return View(model);
+            // Don't accept CreatedAt or IsActive as parameters - security risk!
 
-            _db.Branches.Update(model);
+            if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Location))
+            {
+                TempData["Error"] = "Name and Location are required fields.";
+                return RedirectToAction("Edit", new { id = BranchID });
+            }
+
+            var branch = await _db.Branches.FindAsync(BranchID);
+            if (branch == null) return NotFound();
+
+            // Only update the allowed fields
+            branch.Name = Name;
+            branch.Location = Location;
+            branch.Phone = Phone;
+            branch.Notes = Notes;
+
+            // CreatedAt remains unchanged
+            // IsActive remains unchanged (use ToggleActive for that)
+
             await _db.SaveChangesAsync();
 
-            TempData["Success"] =
-                $"✅ Branch '{model.Name}' updated!";
+            TempData["Success"] = $"✅ Branch '{branch.Name}' updated successfully!";
             return RedirectToAction("Index");
         }
 
@@ -114,6 +135,12 @@ namespace BraysTech.Controllers
                 : $"⚠️ Branch '{branch.Name}' deactivated!";
 
             return RedirectToAction("Index");
+        }
+
+        // Helper method to check if branch exists (optional, for future use)
+        private async Task<bool> BranchExistsAsync(int id)
+        {
+            return await _db.Branches.AnyAsync(b => b.BranchID == id);
         }
     }
 }

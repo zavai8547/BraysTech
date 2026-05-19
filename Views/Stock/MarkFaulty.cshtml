@@ -1,0 +1,132 @@
+﻿@model BraysTech.Models.IMEIStock
+@{
+    ViewData["Title"] = "Mark as Faulty";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Stock/Index"
+               class="btn btn-outline-secondary rounded-pill px-3">
+                ← Back
+            </a>
+            <h4 class="fw-bold mb-0">⚠️ Mark Device as Faulty</h4>
+        </div>
+
+        <!-- Device Info -->
+        <div class="card border-0 shadow-sm mb-4"
+             style="border-radius:16px;
+                    border-left:4px solid #dc2626 !important;">
+            <div class="card-body p-4">
+                <div class="fw-bold fs-5">@Model.PhoneName</div>
+                <div style="font-family:monospace;color:#dc2626;
+                             font-weight:700;font-size:0.9rem;">
+                    IMEI: @Model.IMEI
+                </div>
+                <small class="text-muted">
+                    @(Model.Branch?.Name ?? "—") •
+                    Cost: KES @Model.BuyingPrice.ToString("N0")
+                </small>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:#dc2626;color:white;">
+                <h5 class="fw-bold mb-0">⚠️ Fault Details</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post"
+                      action="/Stock/MarkFaulty">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id"
+                           value="@Model.StockID" />
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Fault Reason
+                            <span class="text-danger">*</span>
+                        </label>
+                        <select name="faultReason"
+                                class="form-select form-select-lg"
+                                style="border-radius:10px;"
+                                required>
+                            <option value="">
+                                -- Select fault type --
+                            </option>
+                            <option>Screen issue</option>
+                            <option>Dead motherboard</option>
+                            <option>Battery overheating</option>
+                            <option>Battery not charging</option>
+                            <option>Camera not working</option>
+                            <option>Speaker/Microphone issue</option>
+                            <option>Water damage</option>
+                            <option>Physical damage</option>
+                            <option>Software issue</option>
+                            <option>Not turning on</option>
+                            <option>SIM card slot issue</option>
+                            <option>Charging port damaged</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Technician Notes
+                        </label>
+                        <textarea name="technicianNotes"
+                                  class="form-control"
+                                  rows="3"
+                                  style="border-radius:10px;"
+                                  placeholder="Describe the fault in detail...">
+                        </textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input type="checkbox"
+                                   name="warrantyClaim"
+                                   value="true"
+                                   class="form-check-input"
+                                   id="warrantyCheck"
+                                   style="width:2.5rem;height:1.3rem;" />
+                            <label class="form-check-label fw-semibold"
+                                   for="warrantyCheck">
+                                Submit Warranty Claim
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Check if this device is under
+                            supplier warranty
+                        </small>
+                    </div>
+
+                    <div class="alert border-0"
+                         style="background:#fef2f2;
+                                border-left:4px solid #dc2626 !important;
+                                border-radius:10px;">
+                        <strong>⚠️ Warning:</strong>
+                        This device will be removed from available
+                        stock and cannot be sold until repaired.
+                    </div>
+
+                    <div class="d-flex gap-3 mt-3">
+                        <button type="submit"
+                                class="btn btn-lg flex-grow-1 fw-bold btn-danger"
+                                style="border-radius:12px;">
+                            ⚠️ Mark as Faulty
+                        </button>
+                        <a href="/Stock/Index"
+                           class="btn btn-lg btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,400 @@
+﻿@model IEnumerable<BraysTech.Models.IMEIStock>
+@{
+    ViewData["Title"] = "Phone Stock";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .stock-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .stock-table thead th {
+        background: #007A3D;
+        color: white;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 13px 14px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .stock-table tbody td {
+        padding: 13px 14px;
+        vertical-align: middle;
+        border-color: #f0f7f3;
+        font-size: 0.88rem;
+    }
+
+    .stock-table tbody tr:hover {
+        background: #f9fef9;
+    }
+
+    .imei-mono {
+        font-family: monospace;
+        font-weight: 700;
+        font-size: 0.82rem;
+        background: #f0f7f3;
+        color: #007A3D;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #007A3D;
+    }
+
+    .margin-bar {
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+
+    .margin-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #007A3D, #34d399);
+        border-radius: 3px;
+    }
+</style>
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">📦 Phone Stock</h4>
+        <small class="text-muted">
+            IMEI-tracked inventory across all branches
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/Stock/Faulty"
+           class="btn btn-outline-warning rounded-pill px-3">
+            ⚠️ Faulty (@ViewBag.TotalFaulty)
+        </a>
+        <a href="/Stock/Add"
+           class="btn rounded-pill px-4 fw-semibold"
+           style="background:#007A3D;color:white;">
+            + Add Device
+        </a>
+    </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="text-muted small mb-1">In Stock</div>
+            <h4 class="fw-bold mb-0"
+                style="color:#007A3D;">
+                @ViewBag.TotalInStock
+            </h4>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color:#1d4ed8;">
+            <div class="text-muted small mb-1">Sold</div>
+            <h4 class="fw-bold mb-0" style="color:#1d4ed8;">
+                @ViewBag.TotalSold
+            </h4>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color:#dc2626;">
+            <div class="text-muted small mb-1">Faulty</div>
+            <h4 class="fw-bold mb-0" style="color:#dc2626;">
+                @ViewBag.TotalFaulty
+            </h4>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color:#7c3aed;">
+            <div class="text-muted small mb-1">Display</div>
+            <h4 class="fw-bold mb-0" style="color:#7c3aed;">
+                @ViewBag.TotalDisplay
+            </h4>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color:#b45309;">
+            <div class="text-muted small mb-1">Stock Value</div>
+            <h5 class="fw-bold mb-0" style="color:#b45309;">
+                KES @(((decimal)ViewBag.StockValue).ToString("N0"))
+            </h5>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color:#0891b2;">
+            <div class="text-muted small mb-1">If All Sold</div>
+            <h5 class="fw-bold mb-0" style="color:#0891b2;">
+                KES @(((decimal)ViewBag.PotentialRevenue).ToString("N0"))
+            </h5>
+        </div>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="stock-card mb-3 p-3">
+    <form method="get" action="/Stock/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <input name="search"
+                       class="form-control"
+                       placeholder="🔍 IMEI, brand, model..."
+                       value="@ViewBag.Search" />
+            </div>
+            <div class="col-md-2">
+                <select name="brand" class="form-select">
+                    <option value="">All Brands</option>
+                    @foreach (var b in ViewBag.Brands)
+                    {
+                        if (b == ViewBag.SelectedBrand)
+                        {
+                            <option value="@b" selected>@b</option>
+                        }
+                        else
+                        {
+                            <option value="@b">@b</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in new[] {
+                    "InStock","Sold","Faulty","DisplayUnit"})
+                    {
+                        if (s == ViewBag.SelectedStatus)
+                        {
+                            <option value="@s" selected>
+                                @s.Replace("DisplayUnit", "Display Unit")
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@s">
+                                @s.Replace("DisplayUnit", "Display Unit")
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="branchID" class="form-select">
+                    <option value="">All Branches</option>
+                    @foreach (var b in ViewBag.Branches)
+                    {
+                        if (b.BranchID == ViewBag.SelectedBranch)
+                        {
+                            <option value="@b.BranchID" selected>
+                                @b.Name
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@b.BranchID">@b.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit"
+                        class="btn w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-1">
+                <a href="/Stock/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- TABLE -->
+<div class="stock-card">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3.5rem;">📦</div>
+            <h5 class="mt-3 fw-bold">No devices found</h5>
+            <p>Add your first device to get started.</p>
+            <a href="/Stock/Add"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                + Add Device
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover stock-table mb-0">
+                <thead>
+                    <tr>
+                        <th>IMEI</th>
+                        <th>Device</th>
+                        <th>Color / Storage</th>
+                        <th>Branch</th>
+                        <th>Buy Price</th>
+                        <th>Sell Price</th>
+                        <th>Margin</th>
+                        <th>Status</th>
+                        <th>Date Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model)
+                    {
+                        var statusStyle = d.Status switch
+                        {
+                            PhoneStatus.InStock =>
+                            "background:#dcfce7;color:#16a34a;",
+                            PhoneStatus.Sold =>
+                            "background:#dbeafe;color:#2563eb;",
+                            PhoneStatus.Faulty =>
+                            "background:#fee2e2;color:#dc2626;",
+                            PhoneStatus.DisplayUnit =>
+                            "background:#f3e8ff;color:#7c3aed;",
+                            _ => "background:#f3f4f6;color:#374151;"
+                        };
+                        var statusLabel = d.Status switch
+                        {
+                            PhoneStatus.InStock => "✅ In Stock",
+                            PhoneStatus.Sold => "💰 Sold",
+                            PhoneStatus.Faulty => "⚠️ Faulty",
+                            PhoneStatus.DisplayUnit => "🪟 Display",
+                            _ => d.Status.ToString()
+                        };
+                        var marginPct = Math.Min((double)d.Margin, 100);
+                        <tr>
+                            <td>
+                                <span class="imei-mono">@d.IMEI</span>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@d.PhoneName</div>
+                                @if (!string.IsNullOrEmpty(d.SupplierName))
+                                {
+                                    <small class="text-muted">
+                                        @d.SupplierName
+                                    </small>
+                                }
+                            </td>
+                            <td>
+                                <small>
+                                    @(d.Color ?? "—")
+                                    @if (!string.IsNullOrEmpty(d.Storage))
+                                    {
+                                        <span> · @d.Storage</span>
+                                    }
+                                </small>
+                            </td>
+                            <td>
+                                <small>@(d.Branch?.Name ?? "—")</small>
+                            </td>
+                            <td>
+                                KES @d.BuyingPrice.ToString("N0")
+                            </td>
+                            <td>
+                                <strong style="color:#007A3D;">
+                                    KES @d.SellingPrice.ToString("N0")
+                                </strong>
+                            </td>
+                            <td style="min-width:90px;">
+                                <div style="font-size:0.78rem;
+                                             font-weight:700;
+                                             color:#b45309;">
+                                    @d.Margin.ToString("N1")%
+                                </div>
+                                <div class="margin-bar">
+                                    <div class="margin-fill"
+                                         style="width:@marginPct%">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                      style="@statusStyle">
+                                    @statusLabel
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @d.DateAdded.ToString("dd MMM yyyy")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <a href="/Stock/Details/@d.StockID"
+                                       class="btn btn-sm fw-semibold"
+                                       style="background:#007A3D;
+                                              color:white;border-radius:7px;
+                                              font-size:0.78rem;">
+                                        View
+                                    </a>
+                                    @if (d.Status == PhoneStatus.InStock ||
+                                   d.Status == PhoneStatus.DisplayUnit)
+                                    {
+                                        <a href="/Stock/Edit/@d.StockID"
+                                           class="btn btn-sm btn-outline-secondary"
+                                           style="border-radius:7px;
+                                                  font-size:0.78rem;">
+                                            ✏️
+                                        </a>
+                                        @if (d.Status == PhoneStatus.InStock)
+                                        {
+                                            <a href="/Stock/MarkFaulty/@d.StockID"
+                                               class="btn btn-sm btn-outline-danger"
+                                               style="border-radius:7px;
+                                                      font-size:0.78rem;">
+                                                ⚠️
+                                            </a>
+                                            <form method="post"
+                                                  action="/Stock/MarkDisplay"
+                                                  style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@d.StockID" />
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        style="border-radius:7px;
+                                                               font-size:0.78rem;"
+                                                        title="Set as Display Unit">
+                                                    🪟
+                                                </button>
+                                            </form>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

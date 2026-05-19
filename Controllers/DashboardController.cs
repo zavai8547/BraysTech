@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BraysTech.Data;
@@ -10,46 +11,51 @@ namespace BraysTech.Controllers
     public class DashboardController : Controller
     {
         private readonly AppDbContext _db;
+        private readonly UserManager<AppUser> _userManager;
 
-        public DashboardController(AppDbContext db)
+        public DashboardController(
+            AppDbContext db,
+            UserManager<AppUser> userManager)
         {
             _db = db;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
         {
             var today = DateTime.Today;
-            var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
+            var firstOfMonth = new DateTime(
+                today.Year, today.Month, 1);
 
-            // 1. Fetch Top-Level Stats
-            var totalBranches = await _db.Branches.CountAsync();
+            // Top level stats
+            var totalBranches = await _db.Branches
+                .CountAsync(b => b.IsActive);
             var totalStaff = await _db.Users.CountAsync();
-
-            // Fix: Changed 'IsSold' to 'Status == PhoneStatus.InStock'
-            var totalPhonesInStock = await _db.IMEIStock
+            var totalInStock = await _db.IMEIStock
                 .CountAsync(i => i.Status == PhoneStatus.InStock);
+            var totalFaulty = await _db.IMEIStock
+                .CountAsync(i => i.Status == PhoneStatus.Faulty);
+            var totalDisplay = await _db.IMEIStock
+                .CountAsync(i => i.Status == PhoneStatus.DisplayUnit);
 
             var salesToday = await _db.PhoneSales
                 .CountAsync(s => s.CreatedAt.Date == today);
-
-            var revenueTodayAll = await _db.PhoneSales
+            var revToday = await _db.PhoneSales
                 .Where(s => s.CreatedAt.Date == today)
                 .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
 
-            var salesThisMonth = await _db.PhoneSales
-                .CountAsync(s => s.CreatedAt >= firstDayOfMonth);
-
-            var revenueThisMonthAll = await _db.PhoneSales
-                .Where(s => s.CreatedAt >= firstDayOfMonth)
+            var salesMonth = await _db.PhoneSales
+                .CountAsync(s => s.CreatedAt >= firstOfMonth);
+            var revMonth = await _db.PhoneSales
+                .Where(s => s.CreatedAt >= firstOfMonth)
                 .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
-
-            // Profit calculation using your model's 'TotalProfit' field
-            var profitThisMonth = await _db.PhoneSales
-                .Where(s => s.CreatedAt >= firstDayOfMonth)
+            var profitMonth = await _db.PhoneSales
+                .Where(s => s.CreatedAt >= firstOfMonth)
                 .SumAsync(s => (decimal?)s.TotalProfit) ?? 0;
 
-            // 2. Fetch Branches and calculate summaries manually to avoid SQL translation issues
-            var branches = await _db.Branches.ToListAsync();
+            // Branch summaries
+            var branches = await _db.Branches
+                .Where(b => b.IsActive).ToListAsync();
             var branchSummaries = new List<BranchSummary>();
 
             foreach (var b in branches)
@@ -57,36 +63,73 @@ namespace BraysTech.Controllers
                 branchSummaries.Add(new BranchSummary
                 {
                     BranchName = b.Name,
-
-                    // FIXED HERE: Changed u.BranchId == b.Id  →  u.BranchID == b.BranchID
-                    StaffCount = await _db.Users.CountAsync(u => u.BranchID == b.BranchID),
-
-                    // Fix: Check Status enum instead of IsSold
+                    StaffCount = await _db.Users
+                        .CountAsync(u => u.BranchID == b.BranchID),
                     PhonesInStock = await _db.IMEIStock
-                        .CountAsync(i => i.BranchID == b.BranchID && i.Status == PhoneStatus.InStock),
-
+                        .CountAsync(i =>
+                            i.BranchID == b.BranchID &&
+                            i.Status == PhoneStatus.InStock),
                     RevenueToday = await _db.PhoneSales
-                        .Where(s => s.BranchID == b.BranchID && s.CreatedAt.Date == today)
+                        .Where(s => s.BranchID == b.BranchID &&
+                                    s.CreatedAt.Date == today)
                         .SumAsync(s => (decimal?)s.TotalAmount) ?? 0,
-
                     RevenueThisMonth = await _db.PhoneSales
-                        .Where(s => s.BranchID == b.BranchID && s.CreatedAt >= firstDayOfMonth)
+                        .Where(s => s.BranchID == b.BranchID &&
+                                    s.CreatedAt >= firstOfMonth)
                         .SumAsync(s => (decimal?)s.TotalAmount) ?? 0
                 });
             }
 
-            // 3. Bind to ViewModel
+            // Recent sales
+            var recentSales = await _db.PhoneSales
+                .Include(s => s.Staff)
+                .Include(s => s.Branch)
+                .Include(s => s.Items)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(8)
+                .ToListAsync();
+
+            // Top staff today
+            var allStaff = await _userManager.Users
+                .Where(u => u.IsActive).ToListAsync();
+            var topStaff = new List<StaffPerformance>();
+
+            foreach (var u in allStaff)
+            {
+                var todaySales = await _db.PhoneSales
+                    .Where(s => s.StaffID == u.Id &&
+                                s.CreatedAt.Date == today)
+                    .ToListAsync();
+
+                if (!todaySales.Any()) continue;
+
+                topStaff.Add(new StaffPerformance
+                {
+                    StaffID = u.Id,
+                    StaffName = u.FullName,
+                    SalesToday = todaySales.Count,
+                    RevenueToday = todaySales
+                        .Sum(s => s.TotalAmount)
+                });
+            }
+
             var vm = new DashboardViewModel
             {
                 TotalBranches = totalBranches,
                 TotalStaff = totalStaff,
-                TotalPhonesInStock = totalPhonesInStock,
+                TotalPhonesInStock = totalInStock,
+                TotalFaulty = totalFaulty,
+                TotalDisplay = totalDisplay,
                 SalesToday = salesToday,
-                RevenueTodayAll = revenueTodayAll,
-                SalesThisMonth = salesThisMonth,
-                RevenueThisMonthAll = revenueThisMonthAll,
-                ProfitThisMonth = profitThisMonth,
-                BranchSummaries = branchSummaries
+                RevenueTodayAll = revToday,
+                SalesThisMonth = salesMonth,
+                RevenueThisMonthAll = revMonth,
+                ProfitThisMonth = profitMonth,
+                BranchSummaries = branchSummaries,
+                RecentSales = recentSales,
+                TopStaffToday = topStaff
+                    .OrderByDescending(s => s.RevenueToday)
+                    .Take(5).ToList()
             };
 
             return View(vm);

@@ -1,0 +1,478 @@
+﻿@model IEnumerable<BraysTech.Models.PhoneSale>
+@{
+    ViewData["Title"] = "Sales History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isAdmin = ViewBag.IsAdmin;
+    bool isManager = ViewBag.IsManager;
+}
+
+<style>
+    .stat-card {
+        border-radius: 16px;
+        border: none;
+        padding: 20px 24px;
+        color: white;
+    }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .stat-card .sub {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+    .filter-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 20px 24px;
+        margin-bottom: 20px;
+    }
+
+    .sales-table {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+        .sales-table .table {
+            margin: 0;
+        }
+
+        .sales-table thead th {
+            background: #007A3D;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 14px 16px;
+            border: none;
+        }
+
+        .sales-table tbody td {
+            padding: 14px 16px;
+            vertical-align: middle;
+            border-color: #f0f7f3;
+            font-size: 0.9rem;
+        }
+
+        .sales-table tbody tr:hover {
+            background: #f9fef9;
+        }
+
+    .payment-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .imei-chip {
+        background: #f0f7f3;
+        color: #007A3D;
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-family: monospace;
+        font-weight: 600;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    .btn-view {
+        background: #007A3D;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+        .btn-view:hover {
+            background: #005C2E;
+            color: white;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+        .empty-state .icon {
+            font-size: 3.5rem;
+        }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">🧾 Sales History</h4>
+        <small class="text-muted">
+            All phone sales across branches
+        </small>
+    </div>
+    <a href="/Sales/New"
+       class="btn fw-semibold rounded-pill px-4"
+       style="background:#007A3D;color:white;">
+        + New Sale
+    </a>
+</div>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card"
+             style="background:linear-gradient(135deg,#007A3D,#009648)">
+            <div class="label">Total Sales</div>
+            <div class="value">@ViewBag.TotalSales</div>
+            <div class="sub">matching your filters</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"
+             style="background:linear-gradient(135deg,#1d4ed8,#3b82f6)">
+            <div class="label">Total Revenue</div>
+            <div class="value">
+                KES @(((decimal)ViewBag.TotalRevenue).ToString("N0"))
+            </div>
+            <div class="sub">gross sales amount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"
+             style="background:linear-gradient(135deg,#b45309,#f59e0b)">
+            <div class="label">Total Profit</div>
+            <div class="value">
+                KES @(((decimal)ViewBag.TotalProfit).ToString("N0"))
+            </div>
+            <div class="sub">selling minus buying price</div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filter-card">
+    <form method="get" action="/Sales/Index">
+        <div class="row g-2 align-items-end">
+
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">
+                    Search
+                </label>
+                <input name="search" class="form-control form-control-sm"
+                       placeholder="Name, phone, IMEI..."
+                       value="@ViewBag.Search" />
+            </div>
+
+            @if (isAdmin)
+            {
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">
+                        Branch
+                    </label>
+                    <select name="branchID"
+                            class="form-select form-select-sm">
+                        <option value="">All Branches</option>
+                        @foreach (var b in ViewBag.Branches)
+                        {
+                            if (b.BranchID == ViewBag.SelectedBranch)
+                            {
+                                <option value="@b.BranchID" selected>
+                                    @b.Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted">
+                        Staff
+                    </label>
+                    <select name="staffID"
+                            class="form-select form-select-sm">
+                        <option value="">All Staff</option>
+                        @foreach (var s in ViewBag.Staff)
+                        {
+                            if (s.Id == ViewBag.SelectedStaff)
+                            {
+                                <option value="@s.Id" selected>
+                                    @s.FullName
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@s.Id">
+                                    @s.FullName
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">
+                    Payment
+                </label>
+                <select name="payment"
+                        class="form-select form-select-sm">
+                    <option value="">All Methods</option>
+                    @foreach (var m in new[] { "Cash", "MPesa", "MKOPA", "Card" })
+                    {
+                        if (m == ViewBag.SelectedPayment)
+                        {
+                            <option value="@m" selected>@m</option>
+                        }
+                        else
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">
+                    From
+                </label>
+                <input type="date" name="from"
+                       class="form-control form-control-sm"
+                       value="@ViewBag.From" />
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold text-muted">
+                    To
+                </label>
+                <input type="date" name="to"
+                       class="form-control form-control-sm"
+                       value="@ViewBag.To" />
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit"
+                        class="btn btn-sm w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+
+            <div class="col-md-1">
+                <a href="/Sales/Index"
+                   class="btn btn-sm btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<!-- SALES TABLE -->
+<div class="sales-table">
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="icon">🧾</div>
+            <h5 class="mt-3 fw-bold">No sales found</h5>
+            <p>Try adjusting your filters or record a new sale.</p>
+            <a href="/Sales/New"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                + Record New Sale
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        @if (isAdmin || isManager)
+                        {
+                            <th>Branch</th>
+                            <th>Staff</th>
+                        }
+                        <th>Phones Sold</th>
+                        <th>Payment</th>
+                        <th>Amount</th>
+                        <th>Profit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var payBadge = s.PaymentMethod.ToString() switch
+                        {
+                            "Cash" => "background:#dcfce7;color:#16a34a;",
+                            "MPesa" => "background:#fef9c3;color:#ca8a04;",
+                            "MKOPA" => "background:#dbeafe;color:#2563eb;",
+                            "Card" => "background:#f3e8ff;color:#7c3aed;",
+                            _ => "background:#f3f4f6;color:#374151;"
+                        };
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-muted">
+                                    #@s.SaleID
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" style="font-size:0.85rem;">
+                                    @s.CreatedAt.ToString("dd MMM yyyy")
+                                </div>
+                                <small class="text-muted">
+                                    @s.CreatedAt.ToString("HH:mm")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">
+                                    @(s.CustomerName ?? "Walk-in")
+                                </div>
+                                @if (!string.IsNullOrEmpty(s.CustomerPhone))
+                                {
+                                    <small class="text-muted">
+                                        @s.CustomerPhone
+                                    </small>
+                                }
+                            </td>
+                            @if (isAdmin || isManager)
+                            {
+                                <td>
+                                    <span style="font-size:0.82rem;">
+                                        @(s.Branch?.Name ?? "—")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="font-size:0.82rem;">
+                                        @(s.Staff?.FullName ?? "—")
+                                    </span>
+                                </td>
+                            }
+                            <td>
+                                @foreach (var item in s.Items)
+                                {
+                                    <div class="imei-chip">
+                                        @item.PhoneName
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <span class="payment-badge"
+                                      style="@payBadge">
+                                    @s.PaymentMethod
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-bold"
+                                     style="color:#007A3D;">
+                                    KES @s.TotalAmount.ToString("N0")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold"
+                                     style="color:#b45309;">
+                                    KES @s.TotalProfit.ToString("N0")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="/Sales/Details/@s.SaleID"
+                                       class="btn-view">
+                                        View
+                                    </a>
+                                    @if (isAdmin || isManager)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                style="border-radius:8px;font-size:0.78rem;"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#del_@s.SaleID">
+                                            🗑
+                                        </button>
+                                        <div class="modal fade"
+                                             id="del_@s.SaleID"
+                                             tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header"
+                                                         style="background:#dc2626;color:white;">
+                                                        <h5 class="modal-title">
+                                                            Delete Sale #@s.SaleID?
+                                                        </h5>
+                                                        <button type="button"
+                                                                class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal">
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <p class="mb-1">
+                                                            KES @s.TotalAmount.ToString("N0")
+                                                            — @(s.CustomerName ?? "Walk-in")
+                                                        </p>
+                                                        <p class="text-muted small">
+                                                            Phones will be restored to stock.
+                                                            This cannot be undone.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <form method="post"
+                                                              action="/Sales/Delete">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden"
+                                                                   name="id"
+                                                                   value="@s.SaleID" />
+                                                            <button type="submit"
+                                                                    class="btn btn-danger">
+                                                                Yes, Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

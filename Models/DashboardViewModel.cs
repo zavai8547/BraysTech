@@ -1,17 +1,25 @@
-﻿namespace BraysTech.Models
+﻿using BraysTech.Models;
+
+namespace BraysTech.Models
 {
     public class DashboardViewModel
     {
         public int TotalBranches { get; set; }
         public int TotalStaff { get; set; }
         public int TotalPhonesInStock { get; set; }
+        public int TotalFaulty { get; set; }
+        public int TotalDisplay { get; set; }
         public decimal RevenueTodayAll { get; set; }
         public decimal RevenueThisMonthAll { get; set; }
         public decimal ProfitThisMonth { get; set; }
         public int SalesToday { get; set; }
         public int SalesThisMonth { get; set; }
         public List<BranchSummary> BranchSummaries { get; set; }
-            = new List<BranchSummary>();
+            = new();
+        public List<PhoneSale> RecentSales { get; set; }
+            = new();
+        public List<StaffPerformance> TopStaffToday { get; set; }
+            = new();
     }
 
     public class BranchSummary

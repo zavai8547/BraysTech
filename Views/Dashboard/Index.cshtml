@@ -4,121 +4,554 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #f59e0b !important;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted small mb-1">Phones in Stock</p>
-                        <h2 class="fw-bold mb-0">@Model.TotalPhonesInStock</h2>
-                    </div>
-                    <div style="font-size:2.5rem;">📱</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #3b82f6 !important;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted small mb-1">Total Staff</p>
-                        <h2 class="fw-bold mb-0">@Model.TotalStaff</h2>
-                    </div>
-                    <div style="font-size:2.5rem;">👥</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981 !important;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted small mb-1">Sales Today</p>
-                        <h2 class="fw-bold mb-0">@Model.SalesToday</h2>
-                    </div>
-                    <div style="font-size:2.5rem;">🛒</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #8b5cf6 !important;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted small mb-1">Branches</p>
-                        <h2 class="fw-bold mb-0">@Model.TotalBranches</h2>
-                    </div>
-                    <div style="font-size:2.5rem;">🏢</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    .dash-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm bg-success text-white">
-            <div class="card-body">
-                <p class="mb-1 opacity-75">Revenue Today</p>
-                <h3 class="fw-bold">KES @Model.RevenueTodayAll.ToString("N0")</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm bg-primary text-white">
-            <div class="card-body">
-                <p class="mb-1 opacity-75">Revenue This Month</p>
-                <h3 class="fw-bold">KES @Model.RevenueThisMonthAll.ToString("N0")</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm bg-dark text-white">
-            <div class="card-body">
-                <p class="mb-1 opacity-75">Profit This Month</p>
-                <h3 class="fw-bold">KES @Model.ProfitThisMonth.ToString("N0")</h3>
-            </div>
-        </div>
-    </div>
-</div>
+    .metric-card {
+        background: white;
+        border-radius: 14px;
+        padding: 20px 22px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #007A3D;
+        height: 100%;
+    }
 
-<div class="mb-4">
-    <a href="/Sales/New" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
-        ➕ New Phone Sale
+        .metric-card .label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .metric-card .value {
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -1px;
+            color: #111;
+        }
+
+        .metric-card .sub {
+            font-size: 0.78rem;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+    .section-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #007A3D;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 14px;
+    }
+
+    .branch-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f0f7f3;
+        transition: 0.15s;
+    }
+
+        .branch-row:last-child {
+            border: none;
+        }
+
+        .branch-row:hover {
+            background: #f9fef9;
+        }
+
+    .branch-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #111;
+    }
+
+    .branch-location {
+        font-size: 0.78rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .branch-stat {
+        text-align: right;
+        min-width: 100px;
+    }
+
+        .branch-stat .amount {
+            font-weight: 800;
+            color: #007A3D;
+            font-size: 0.95rem;
+        }
+
+        .branch-stat .phones {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+    .quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 12px;
+        border-radius: 14px;
+        background: white;
+        border: 1.5px solid #e5f0e8;
+        text-decoration: none;
+        color: #111;
+        transition: 0.2s;
+        text-align: center;
+    }
+
+        .quick-action:hover {
+            border-color: #007A3D;
+            background: #f0f7f3;
+            color: #007A3D;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,122,61,0.12);
+        }
+
+        .quick-action .qa-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .quick-action .qa-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+    .activity-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        border-bottom: 1px solid #f0f7f3;
+        font-size: 0.86rem;
+    }
+
+        .activity-row:last-child {
+            border: none;
+        }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #007A3D;
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Dashboard</h4>
+        <small class="text-muted">
+            @DateTime.Now.ToString("dddd, dd MMMM yyyy")
+        </small>
+    </div>
+    <a href="/Sales/New"
+       class="btn fw-semibold rounded-pill px-4"
+       style="background:#007A3D;color:white;">
+        New Sale
     </a>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white fw-semibold border-0 pt-3">
-        📊 Branch Performance
+<!-- TOP METRICS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="metric-card">
+            <div class="label">Revenue Today</div>
+            <div class="value"
+                 style="font-size:1.4rem;color:#007A3D;">
+                KES @Model.RevenueTodayAll.ToString("N0")
+            </div>
+            <div class="sub">@Model.SalesToday sales</div>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Branch Name</th>
-                    <th>Staff Count</th>
-                    <th>In Stock</th>
-                    <th>Today's Revenue</th>
-                    <th>Monthly Revenue</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var b in Model.BranchSummaries)
+    <div class="col-md-2">
+        <div class="metric-card"
+             style="border-left-color:#1d4ed8;">
+            <div class="label">Revenue This Month</div>
+            <div class="value"
+                 style="font-size:1.4rem;color:#1d4ed8;">
+                KES @Model.RevenueThisMonthAll.ToString("N0")
+            </div>
+            <div class="sub">@Model.SalesThisMonth transactions</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card"
+             style="border-left-color:#b45309;">
+            <div class="label">Profit This Month</div>
+            <div class="value"
+                 style="font-size:1.4rem;
+                        color:@(Model.ProfitThisMonth >= 0 ?
+                            "#b45309" : "#dc2626");">
+                @(Model.ProfitThisMonth >= 0 ? "+" : "")
+                KES @Model.ProfitThisMonth.ToString("N0")
+            </div>
+            <div class="sub">gross profit on sales</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card"
+             style="border-left-color:#7c3aed;">
+            <div class="label">Phones In Stock</div>
+            <div class="value" style="color:#7c3aed;">
+                @Model.TotalPhonesInStock
+            </div>
+            <div class="sub">across all branches</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card"
+             style="border-left-color:#0891b2;">
+            <div class="label">Active Branches</div>
+            <div class="value" style="color:#0891b2;">
+                @Model.TotalBranches
+            </div>
+            <div class="sub">operational branches</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card"
+             style="border-left-color:#db2777;">
+            <div class="label">Total Staff</div>
+            <div class="value" style="color:#db2777;">
+                @Model.TotalStaff
+            </div>
+            <div class="sub">active accounts</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-md-8">
+
+        <!-- BRANCH PERFORMANCE -->
+        <div class="dash-card mb-4">
+            <div style="padding:18px 20px;
+                        border-bottom:1px solid #f0f7f3;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;">
+                <span class="section-title mb-0">
+                    Branch Performance Today
+                </span>
+                <a href="/Branch/Index"
+                   style="font-size:0.82rem;color:#007A3D;
+                          text-decoration:none;font-weight:600;">
+                    View All
+                </a>
+            </div>
+
+            @if (!Model.BranchSummaries.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <p class="mb-1 fw-semibold">No branches yet</p>
+                    <a href="/Branch/Create"
+                       style="color:#007A3D;font-size:0.85rem;">
+                        Add your first branch
+                    </a>
+                </div>
+            }
+            else
+            {
+                @foreach (var b in Model.BranchSummaries
+               .OrderByDescending(x => x.RevenueToday))
                 {
-                    <tr>
-                        <td><strong>@b.BranchName</strong></td>
-                        <td>@b.StaffCount</td>
-                        <td>@b.PhonesInStock</td>
-                        <td>KES @b.RevenueToday.ToString("N0")</td>
-                        <td>KES @b.RevenueThisMonth.ToString("N0")</td>
-                    </tr>
+                    var monthPct = Model.BranchSummaries
+                    .Max(x => x.RevenueThisMonth) > 0
+                    ? (double)(b.RevenueThisMonth /
+                    Model.BranchSummaries
+                    .Max(x => x.RevenueThisMonth) * 100)
+                    : 0;
+
+                    <div class="branch-row">
+                        <div style="flex:1;">
+                            <div class="branch-name">
+                                @b.BranchName
+                            </div>
+                            <div class="d-flex align-items-center
+                                        gap-2 mt-2">
+                                <div style="flex:1;height:6px;
+                                             background:#e5e7eb;
+                                             border-radius:3px;
+                                             overflow:hidden;
+                                             max-width:200px;">
+                                    <div style="height:100%;
+                                                 width:@monthPct%;
+                                                 background:linear-gradient(
+                                                     90deg,#007A3D,#34d399);
+                                                 border-radius:3px;">
+                                    </div>
+                                </div>
+                                <small class="text-muted"
+                                       style="font-size:0.72rem;">
+                                    @b.StaffCount staff
+                                </small>
+                                <small class="text-muted"
+                                       style="font-size:0.72rem;">
+                                    @b.PhonesInStock phones
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <div class="branch-stat">
+                                <div class="amount">
+                                    KES @b.RevenueToday.ToString("N0")
+                                </div>
+                                <div class="phones">today</div>
+                            </div>
+                            <div class="branch-stat">
+                                <div class="amount"
+                                     style="color:#1d4ed8;">
+                                    KES @b.RevenueThisMonth.ToString("N0")
+                                </div>
+                                <div class="phones">this month</div>
+                            </div>
+                        </div>
+                    </div>
                 }
-            </tbody>
-        </table>
+            }
+        </div>
+
+        <!-- RECENT SALES -->
+        <div class="dash-card">
+            <div style="padding:18px 20px;
+                        border-bottom:1px solid #f0f7f3;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;">
+                <span class="section-title mb-0">
+                    Recent Sales
+                </span>
+                <a href="/Sales/Index"
+                   style="font-size:0.82rem;color:#007A3D;
+                          text-decoration:none;font-weight:600;">
+                    View All
+                </a>
+            </div>
+
+            @if (!Model.RecentSales.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <p class="mb-1">No sales recorded yet</p>
+                    <a href="/Sales/New"
+                       style="color:#007A3D;font-size:0.85rem;">
+                        Record first sale
+                    </a>
+                </div>
+            }
+            else
+            {
+                @foreach (var s in Model.RecentSales)
+                {
+                    var payStyle = s.PaymentMethod.ToString() switch
+                    {
+                        "Cash" =>
+                        "background:#dcfce7;color:#16a34a;",
+                        "MPesa" =>
+                        "background:#fef9c3;color:#ca8a04;",
+                        "MKOPA" =>
+                        "background:#dbeafe;color:#2563eb;",
+                        _ =>
+                        "background:#f3f4f6;color:#374151;"
+                    };
+                    <div class="activity-row">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="dot"></div>
+                            <div>
+                                <div class="fw-semibold"
+                                     style="font-size:0.88rem;">
+                                    @(s.CustomerName ?? "Walk-in")
+                                </div>
+                                <div style="font-size:0.75rem;
+                                             color:#888;">
+                                    @s.Branch?.Name
+                                    &nbsp;·&nbsp;
+                                    @s.Staff?.FullName
+                                    &nbsp;·&nbsp;
+                                    @s.CreatedAt.ToString("HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span style="padding:3px 10px;
+                                          border-radius:20px;
+                                          font-size:0.73rem;
+                                          font-weight:700;
+                                          @payStyle">
+                                @s.PaymentMethod
+                            </span>
+                            <span class="fw-bold"
+                                  style="color:#007A3D;
+                                         font-size:0.9rem;">
+                                KES @s.TotalAmount.ToString("N0")
+                            </span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-md-4">
+
+        <!-- QUICK ACTIONS -->
+        <div class="mb-4">
+            <div class="section-title">Quick Actions</div>
+            <div class="row g-2">
+                @foreach (var action in new[]
+                {
+                ("/Sales/New", "New Sale", "📱"),
+                ("/Stock/Add", "Add Device", "➕"),
+                ("/Customers/Create", "Add Customer", "👥"),
+                ("/Branch/Create", "Add Branch", "🏪"),
+                ("/Reports/Daily", "Daily Report", "📅"),
+                ("/Reports/Monthly", "Monthly Report", "📊")
+                })
+                {
+                    <div class="col-4">
+                        <a href="@action.Item1"
+                           class="quick-action">
+                            <div class="qa-icon">@action.Item3</div>
+                            <div class="qa-label">@action.Item2</div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- STOCK ALERTS -->
+        <div class="dash-card mb-4">
+            <div style="padding:16px 20px;
+                        border-bottom:1px solid #f0f7f3;">
+                <span class="section-title mb-0">
+                    Stock Status
+                </span>
+            </div>
+            <div style="padding:16px 20px;">
+                <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+                    <span style="font-size:0.85rem;color:#555;">
+                        Phones Available
+                    </span>
+                    <span class="fw-bold"
+                          style="color:#007A3D;">
+                        @Model.TotalPhonesInStock
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+                    <span style="font-size:0.85rem;color:#555;">
+                        Faulty Devices
+                    </span>
+                    <span class="fw-bold" style="color:#dc2626;">
+                        @Model.TotalFaulty
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+                    <span style="font-size:0.85rem;color:#555;">
+                        Display Units
+                    </span>
+                    <span class="fw-bold" style="color:#7c3aed;">
+                        @Model.TotalDisplay
+                    </span>
+                </div>
+                <a href="/Stock/Index"
+                   class="btn w-100 fw-semibold mt-1"
+                   style="background:#f0f7f3;color:#007A3D;
+                          border-radius:10px;font-size:0.85rem;">
+                    View All Stock
+                </a>
+            </div>
+        </div>
+
+        <!-- TOP STAFF TODAY -->
+        <div class="dash-card">
+            <div style="padding:16px 20px;
+                        border-bottom:1px solid #f0f7f3;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;">
+                <span class="section-title mb-0">
+                    Top Staff Today
+                </span>
+                <a href="/Performance/Index"
+                   style="font-size:0.82rem;color:#007A3D;
+                          text-decoration:none;font-weight:600;">
+                    Full View
+                </a>
+            </div>
+
+            @if (!Model.TopStaffToday.Any())
+            {
+                <div class="text-center py-4 text-muted"
+                     style="font-size:0.85rem;">
+                    No sales recorded today
+                </div>
+            }
+            else
+            {
+                @foreach (var s in Model.TopStaffToday
+               .Take(5))
+                {
+                    var initials = string.Join("",
+                    s.StaffName.Split(' ')
+                    .Take(2)
+                    .Select(w => w.Length > 0
+                    ? w[0].ToString().ToUpper()
+                    : ""));
+                    <div style="display:flex;align-items:center;
+                                 gap:12px;padding:12px 20px;
+                                 border-bottom:1px solid #f0f7f3;">
+                        <div style="width:36px;height:36px;
+                                     border-radius:50%;
+                                     background:linear-gradient(
+                                         135deg,#007A3D,#009648);
+                                     color:white;display:flex;
+                                     align-items:center;
+                                     justify-content:center;
+                                     font-weight:700;font-size:0.8rem;
+                                     flex-shrink:0;">
+                            @initials
+                        </div>
+                        <div style="flex:1;">
+                            <div class="fw-semibold"
+                                 style="font-size:0.85rem;">
+                                @s.StaffName
+                            </div>
+                            <div style="font-size:0.72rem;
+                                         color:#888;">
+                                @s.SalesToday sales today
+                            </div>
+                        </div>
+                        <div class="fw-bold"
+                             style="color:#007A3D;font-size:0.88rem;">
+                            KES @s.RevenueToday.ToString("N0")
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
     </div>
 </div>

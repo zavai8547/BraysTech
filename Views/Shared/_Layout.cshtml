@@ -458,7 +458,7 @@
                 Monthly Reports
             </a>
 
-            <!-- ADMIN -->
+            <!-- ADMINISTRATION (UPDATED: added Activity Logs link) -->
             @if (User.IsInRole("Admin"))
             {
                 <div class="nav-section">Administration</div>
@@ -466,6 +466,12 @@
                 <a href="/Staff/Index" class="nav-link">
                     <span class="nav-icon">👤</span>
                     Staff Accounts
+                </a>
+
+                <!-- NEW ACTIVITY LOGS LINK ADDED HERE -->
+                <a href="/Audit/Index" class="nav-link">
+                    <span class="nav-icon">📋</span>
+                    Activity Logs
                 </a>
 
                 <a href="/Settings/Index" class="nav-link">

@@ -1,0 +1,320 @@
+﻿@model IEnumerable<BraysTech.Models.AuditLog>
+@{
+    ViewData["Title"] = "Activity Logs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .audit-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .audit-table thead th {
+        background: #007A3D;
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 12px 14px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .audit-table tbody td {
+        padding: 11px 14px;
+        vertical-align: middle;
+        border-color: #f0f7f3;
+        font-size: 0.84rem;
+    }
+
+    .audit-table tbody tr:hover {
+        background: #f9fef9;
+    }
+
+    .action-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .change-box {
+        font-size: 0.75rem;
+        font-family: monospace;
+    }
+
+    .old-val {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-decoration: line-through;
+    }
+
+    .new-val {
+        background: #dcfce7;
+        color: #16a34a;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Activity Logs</h4>
+        <small class="text-muted">
+            Full audit trail of all system actions.
+            Showing last @ViewBag.TotalLogs entries.
+        </small>
+    </div>
+</div>
+
+<div class="audit-card mb-3 p-3">
+    <form method="get" action="/Audit/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label
+                              small fw-semibold text-muted">
+                    Module
+                </label>
+                <select name="module" class="form-select form-select-sm">
+                    <option value="">All Modules</option>
+                    @foreach (var m in (string[])ViewBag.Modules)
+                    {
+                        if (m == ViewBag.SelectedModule)
+                        {
+                            <option value="@m" selected>@m</option>
+                        }
+                        else
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label
+                              small fw-semibold text-muted">
+                    Action
+                </label>
+                <select name="action"
+                        class="form-select form-select-sm">
+                    <option value="">All Actions</option>
+                    @foreach (var a in (string[])ViewBag.Actions)
+                    {
+                        if (a == ViewBag.SelectedAction)
+                        {
+                            <option value="@a" selected>@a</option>
+                        }
+                        else
+                        {
+                            <option value="@a">@a</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label
+                              small fw-semibold text-muted">
+                    Branch
+                </label>
+                <select name="branchID"
+                        class="form-select form-select-sm">
+                    <option value="">All Branches</option>
+                    @foreach (var b in ViewBag.Branches)
+                    {
+                        if (b.BranchID == ViewBag.SelectedBranch)
+                        {
+                            <option value="@b.BranchID" selected>
+                                @b.Name
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@b.BranchID">
+                                @b.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label
+                              small fw-semibold text-muted">
+                    From
+                </label>
+                <input type="date" name="from"
+                       class="form-control form-control-sm"
+                       value="@ViewBag.From" />
+            </div>
+            <div class="col-md-1">
+                <label class="form-label
+                              small fw-semibold text-muted">
+                    To
+                </label>
+                <input type="date" name="to"
+                       class="form-control form-control-sm"
+                       value="@ViewBag.To" />
+            </div>
+            <div class="col-md-1">
+                <button type="submit"
+                        class="btn btn-sm w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-1">
+                <a href="/Audit/Index"
+                   class="btn btn-sm btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="audit-card">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <h5 class="fw-bold">No activity logged yet</h5>
+            <p>Actions will appear here as staff use the system.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover
+                          audit-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Staff Member</th>
+                        <th>Role</th>
+                        <th>Branch</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>Description</th>
+                        <th>Change</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        var actionStyle = log.Action switch
+                        {
+                            AuditAction.SaleDeleted or
+                            AuditAction.CustomerDeleted or
+                            AuditAction.ExpenseDeleted or
+                            AuditAction.StaffDeactivated =>
+                            "background:#fee2e2;color:#dc2626;",
+
+                            AuditAction.PriceOverride =>
+                            "background:#fef9c3;color:#ca8a04;",
+
+                            AuditAction.Login =>
+                            "background:#dbeafe;color:#2563eb;",
+
+                            AuditAction.SaleCreated or
+                            AuditAction.StockAdded or
+                            AuditAction.CustomerCreated or
+                            AuditAction.StaffCreated =>
+                            "background:#dcfce7;color:#16a34a;",
+
+                            AuditAction.PasswordReset or
+                            AuditAction.StaffRoleChanged =>
+                            "background:#f3e8ff;color:#7c3aed;",
+
+                            _ =>
+                            "background:#f3f4f6;color:#374151;"
+                        };
+
+                        <tr>
+                            <td style="white-space:nowrap;">
+                                <div class="fw-semibold"
+                                     style="font-size:0.82rem;">
+                                    @log.CreatedAt.ToString("dd MMM yyyy")
+                                </div>
+                                <small class="text-muted">
+                                    @log.CreatedAt.ToString("HH:mm:ss")
+                                </small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">
+                                    @log.UserName
+                                </div>
+                            </td>
+                            <td>
+                                <small style="color:#666;">
+                                    @(log.UserRole ?? "—")
+                                </small>
+                            </td>
+                            <td>
+                                <small>
+                                    @(log.BranchName ?? "—")
+                                </small>
+                            </td>
+                            <td>
+                                <small class="fw-semibold">
+                                    @log.Module
+                                </small>
+                            </td>
+                            <td>
+                                <span class="action-badge"
+                                      style="@actionStyle">
+                                    @log.Action.ToString()
+                                </span>
+                            </td>
+                            <td style="max-width:280px;">
+                                <small>@log.Description</small>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(log.OldValue) || !string.IsNullOrEmpty(log.NewValue))
+                                {
+                                    <div class="change-box">
+                                        @if (!string.IsNullOrEmpty(log.OldValue))
+                                        {
+                                            <span class="old-val">
+                                                @log.OldValue
+                                            </span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(log.OldValue) && !string.IsNullOrEmpty(log.NewValue))
+                                        {
+                                            <span style="color:#aaa; margin:0 4px;">
+                                                to
+                                            </span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(log.NewValue))
+                                        {
+                                            <span class="new-val">
+                                                @log.NewValue
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span style="color:#ccc;">—</span>
+                                }
+                            </td>
+                            <td>
+                                <small class="text-muted"
+                                       style="font-family:monospace;">
+                                    @(log.IPAddress ?? "—")
+                                </small>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

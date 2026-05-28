@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BraysTech.Data;
 using BraysTech.Models;
+using BraysTech.Services;
 using System.Security.Claims;
 
 namespace BraysTech.Controllers
@@ -11,7 +12,13 @@ namespace BraysTech.Controllers
     public class StockController : Controller
     {
         private readonly AppDbContext _db;
-        public StockController(AppDbContext db) { _db = db; }
+        private readonly AuditService _audit;
+
+        public StockController(AppDbContext db, AuditService audit)
+        {
+            _db = db;
+            _audit = audit;
+        }
 
         // ── PHONE STOCK INDEX ──────────────────────────────
         public async Task<IActionResult> Index(
@@ -149,6 +156,18 @@ namespace BraysTech.Controllers
             _db.IMEIStock.Add(device);
             await _db.SaveChangesAsync();
 
+            // After Add POST saves:
+            await _audit.LogAsync(
+                AuditAction.StockAdded,
+                "Inventory",
+                $"New device added: {device.PhoneName} " +
+                $"IMEI: {device.IMEI}. " +
+                $"Branch: {device.BranchID}. " +
+                $"Buy: KES {device.BuyingPrice:N0}. " +
+                $"Sell: KES {device.SellingPrice:N0}.",
+                recordType: "IMEIStock",
+                recordID: device.StockID.ToString());
+
             TempData["Success"] =
                 $"✅ {device.PhoneName} (IMEI: {device.IMEI}) added to stock!";
             return RedirectToAction("Index");
@@ -182,54 +201,55 @@ namespace BraysTech.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(IMEIStock model)
+        public async Task<IActionResult> Edit(IMEIStock device)
         {
-            // Remove navigation property validation errors
             ModelState.Remove("Branch");
-
-            // Validate branch exists
-            if (model.BranchID <= 0)
+            if (device.BranchID <= 0)
             {
-                TempData["Error"] = "❌ Please select a valid branch.";
+                TempData["Error"] = "Please select a valid branch.";
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive)
                     .OrderBy(b => b.Name)
                     .ToListAsync();
-                return View(model);
+                return View(device);
             }
-
-            // Check IMEI uniqueness (excluding current device)
             var existing = await _db.IMEIStock
                 .FirstOrDefaultAsync(i =>
-                    i.IMEI == model.IMEI &&
-                    i.StockID != model.StockID);
-
+                    i.IMEI == device.IMEI &&
+                    i.StockID != device.StockID);
             if (existing != null)
             {
-                TempData["Error"] = "❌ Another device already has this IMEI.";
+                TempData["Error"] =
+                    "Another device already has this IMEI.";
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive)
                     .OrderBy(b => b.Name)
                     .ToListAsync();
-                return View(model);
+                return View(device);
             }
-
             try
             {
-                _db.IMEIStock.Update(model);
+                _db.IMEIStock.Update(device);
                 await _db.SaveChangesAsync();
-
-                TempData["Success"] = "✅ Device updated!";
+                await _audit.LogAsync(
+                    AuditAction.StockEdited,
+                    "Inventory",
+                    $"{device.PhoneName} (IMEI: {device.IMEI}) edited.",
+                    recordType: "IMEIStock",
+                    recordID: device.StockID.ToString());
+                TempData["Success"] = "Device updated.";
                 return RedirectToAction("Index");
             }
             catch (DbUpdateException ex)
             {
-                TempData["Error"] = $"❌ Database error: {ex.InnerException?.Message ?? ex.Message}";
+                TempData["Error"] =
+                    $"Database error: " +
+                    $"{ex.InnerException?.Message ?? ex.Message}";
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive)
                     .OrderBy(b => b.Name)
                     .ToListAsync();
-                return View(model);
+                return View(device);
             }
         }
 
@@ -261,6 +281,17 @@ namespace BraysTech.Controllers
             device.RepairStatus = "Pending";
 
             await _db.SaveChangesAsync();
+
+            // After MarkFaulty POST:
+            await _audit.LogAsync(
+                AuditAction.StockMarkedFaulty,
+                "Inventory",
+                $"{device.PhoneName} (IMEI: {device.IMEI}) " +
+                $"marked faulty. Reason: {faultReason}.",
+                oldValue: "InStock",
+                newValue: "Faulty",
+                recordType: "IMEIStock",
+                recordID: id.ToString());
 
             TempData["Success"] = $"⚠️ {device.PhoneName} marked as faulty.";
             return RedirectToAction("Faulty");

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BraysTech.Data;
 using BraysTech.Models;
+using BraysTech.Services;
 using System.Security.Claims;
 
 namespace BraysTech.Controllers
@@ -13,12 +14,16 @@ namespace BraysTech.Controllers
     {
         private readonly AppDbContext _db;
         private readonly UserManager<AppUser> _userManager;
+        private readonly AuditService _audit;
 
-        public SalesController(AppDbContext db,
-            UserManager<AppUser> userManager)
+        public SalesController(
+            AppDbContext db,
+            UserManager<AppUser> userManager,
+            AuditService audit)
         {
             _db = db;
             _userManager = userManager;
+            _audit = audit;
         }
 
         public async Task<IActionResult> Index(
@@ -40,39 +45,31 @@ namespace BraysTech.Controllers
                     .ThenInclude(i => i.Phone)
                 .AsQueryable();
 
-            // Salesperson sees only own sales
             if (!isAdmin && !isManager)
                 query = query.Where(s =>
                     s.StaffID == currentUserID);
-
-            // Manager sees only their branch
-            else if (isManager && currentUser?.BranchID != null)
+            else if (isManager &&
+                     currentUser?.BranchID != null)
                 query = query.Where(s =>
                     s.BranchID == currentUser.BranchID);
 
-            // Filters
             if (branchID.HasValue)
                 query = query.Where(s =>
                     s.BranchID == branchID);
-
             if (!string.IsNullOrEmpty(staffID))
                 query = query.Where(s =>
                     s.StaffID == staffID);
-
             if (!string.IsNullOrEmpty(payment) &&
                 Enum.TryParse<SalePaymentMethod>(
                     payment, out var pm))
                 query = query.Where(s =>
                     s.PaymentMethod == pm);
-
             if (from.HasValue)
                 query = query.Where(s =>
                     s.CreatedAt.Date >= from.Value.Date);
-
             if (to.HasValue)
                 query = query.Where(s =>
                     s.CreatedAt.Date <= to.Value.Date);
-
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s =>
                     (s.CustomerName != null &&
@@ -87,18 +84,15 @@ namespace BraysTech.Controllers
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
 
-            // Summary stats
             ViewBag.TotalSales = sales.Count;
-            ViewBag.TotalRevenue = sales.Sum(s => s.TotalAmount);
-            ViewBag.TotalProfit = sales.Sum(s => s.TotalProfit);
-
-            // Filter dropdowns
+            ViewBag.TotalRevenue =
+                sales.Sum(s => s.TotalAmount);
+            ViewBag.TotalProfit =
+                sales.Sum(s => s.TotalProfit);
             ViewBag.Branches = await _db.Branches
                 .Where(b => b.IsActive).ToListAsync();
             ViewBag.Staff = await _userManager.Users
                 .Where(u => u.IsActive).ToListAsync();
-
-            // Pass filters back to view
             ViewBag.SelectedBranch = branchID;
             ViewBag.SelectedStaff = staffID;
             ViewBag.SelectedPayment = payment;
@@ -122,7 +116,6 @@ namespace BraysTech.Controllers
 
             if (sale == null) return NotFound();
 
-            // Only admin/manager or the staff who made the sale
             var currentUserID = User
                 .FindFirstValue(ClaimTypes.NameIdentifier);
             if (!User.IsInRole("Admin") &&
@@ -144,7 +137,12 @@ namespace BraysTech.Controllers
 
             if (sale == null) return NotFound();
 
-            // Restore phone status back to InStock
+            var saleID = sale.SaleID;
+            var totalAmount = sale.TotalAmount;
+            var customerName =
+                sale.CustomerName ?? "Walk-in";
+
+            // Restore phone statuses
             foreach (var item in sale.Items)
             {
                 if (item.Phone != null)
@@ -154,56 +152,99 @@ namespace BraysTech.Controllers
                 }
             }
 
+            // Fix customer totals
+            if (sale.CustomerID.HasValue)
+            {
+                var customer = await _db.Customers
+                    .FindAsync(sale.CustomerID.Value);
+                if (customer != null)
+                {
+                    customer.TotalPurchases = Math.Max(0,
+                        customer.TotalPurchases -
+                        sale.Items.Count);
+                    customer.TotalSpent = Math.Max(0,
+                        customer.TotalSpent - totalAmount);
+                }
+            }
+
             _db.PhoneSaleItems.RemoveRange(sale.Items);
             _db.PhoneSales.Remove(sale);
             await _db.SaveChangesAsync();
 
+            await _audit.LogAsync(
+                AuditAction.SaleDeleted,
+                "Sales",
+                $"Sale #{saleID} deleted. " +
+                $"KES {totalAmount:N0}. " +
+                $"Customer: {customerName}.",
+                recordType: "PhoneSale",
+                recordID: saleID.ToString());
+
             TempData["Success"] =
-                $"✅ Sale #{sale.SaleID} deleted and " +
-                $"stock restored.";
+                $"Sale #{saleID} deleted and stock restored.";
             return RedirectToAction("Index");
         }
-
-        // ========== NEW SALES ACTIONS ==========
 
         [HttpGet]
         public async Task<IActionResult> New()
         {
-            var currentUser = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var isAdmin = User.IsInRole("Admin");
+            var currentUserID = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUser = await _userManager
+                .FindByIdAsync(currentUserID!);
             var isManager = User.IsInRole("Manager");
 
-            // If manager, only show their branch
             if (isManager && currentUser?.BranchID != null)
-            {
                 ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive && b.BranchID == currentUser.BranchID)
+                    .Where(b => b.IsActive &&
+                                b.BranchID ==
+                                    currentUser.BranchID)
                     .ToListAsync();
-            }
             else
-            {
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive).ToListAsync();
-            }
 
             return View();
         }
 
+        // ── BUG 2 FIX ─────────────────────────────────────
+        // Added customerPhone trim and null safety.
+        // CustomerPhone is now always saved even for
+        // walk-in customers who have a phone number.
         [HttpPost]
         public async Task<IActionResult> New(
-            string? customerName, string? customerPhone,
-            int? customerID, List<int> stockIDs,
-            List<decimal> customPrices, List<decimal> discounts,
-            SalePaymentMethod paymentMethod, string? mpesaCode,
-            int branchID, string? notes)
+            string? customerName,
+            string? customerPhone,
+            int? customerID,
+            List<int> stockIDs,
+            List<decimal> customPrices,
+            List<decimal> discounts,
+            SalePaymentMethod paymentMethod,
+            string? mpesaCode,
+            int branchID,
+            string? notes)
         {
             if (stockIDs == null || !stockIDs.Any())
             {
-                TempData["Error"] = "❌ Add at least one device.";
-                return RedirectToAction("New");
+                TempData["Error"] =
+                    "Add at least one device.";
+                ViewBag.Branches = await _db.Branches
+                    .Where(b => b.IsActive).ToListAsync();
+                return View();
             }
 
-            var staffID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // Clean string inputs — this was the root cause
+            // of customerPhone arriving as null.
+            // Trim whitespace and treat empty string as null.
+            customerName = string.IsNullOrWhiteSpace(
+                customerName)
+                ? null : customerName.Trim();
+            customerPhone = string.IsNullOrWhiteSpace(
+                customerPhone)
+                ? null : customerPhone.Trim();
+
+            var staffID = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
             var saleItems = new List<PhoneSaleItem>();
             decimal totalAmount = 0;
             decimal totalProfit = 0;
@@ -218,21 +259,46 @@ namespace BraysTech.Controllers
                 if (phone == null)
                 {
                     TempData["Error"] =
-                        $"❌ Device not available or already sold.";
-                    return RedirectToAction("New");
+                        "One or more devices are no " +
+                        "longer available.";
+                    ViewBag.Branches = await _db.Branches
+                        .Where(b => b.IsActive).ToListAsync();
+                    return View();
                 }
 
-                var sellingPrice = customPrices != null && customPrices.Count > i
-                    ? customPrices[i] : phone.SellingPrice;
-                var discount = discounts != null && discounts.Count > i
-                    ? discounts[i] : 0;
+                var sellingPrice =
+                    customPrices != null &&
+                    customPrices.Count > i
+                        ? customPrices[i]
+                        : phone.SellingPrice;
+                var discount =
+                    discounts != null &&
+                    discounts.Count > i
+                        ? discounts[i] : 0;
                 var finalPrice = sellingPrice - discount;
                 var profit = finalPrice - phone.BuyingPrice;
 
                 totalAmount += finalPrice;
                 totalProfit += profit;
 
-                // Mark phone as sold
+                // Log price override if below minimum
+                if (finalPrice < phone.SellingPrice)
+                {
+                    await _audit.LogAsync(
+                        AuditAction.PriceOverride,
+                        "Sales",
+                        $"Price override: " +
+                        $"{phone.PhoneName} " +
+                        $"IMEI: {phone.IMEI}. " +
+                        $"Min: KES {phone.SellingPrice:N0}." +
+                        $" Sold: KES {finalPrice:N0}.",
+                        oldValue: phone.SellingPrice
+                            .ToString("N0"),
+                        newValue: finalPrice.ToString("N0"),
+                        recordType: "IMEIStock",
+                        recordID: phone.StockID.ToString());
+                }
+
                 phone.Status = PhoneStatus.Sold;
                 phone.DateSold = DateTime.Now;
 
@@ -240,47 +306,63 @@ namespace BraysTech.Controllers
                 {
                     StockID = phone.StockID,
                     IMEI = phone.IMEI,
-                    PhoneName = $"{phone.Brand} {phone.Model}".Trim(),
+                    PhoneName = phone.PhoneName,
                     BuyingPrice = phone.BuyingPrice,
                     SellingPrice = finalPrice,
                     Profit = profit
                 });
             }
 
-            // Handle customer
-            int? custID = customerID;
-            if (custID == null && !string.IsNullOrEmpty(customerPhone))
+            // Handle customer linking
+            int? resolvedCustomerID = customerID;
+            string resolvedCustomerName =
+                customerName ?? "Walk-in";
+
+            if (resolvedCustomerID == null &&
+                !string.IsNullOrEmpty(customerPhone))
             {
+                // Look for existing customer by phone
                 var existing = await _db.Customers
-                    .FirstOrDefaultAsync(c => c.Phone == customerPhone);
+                    .FirstOrDefaultAsync(c =>
+                        c.Phone == customerPhone);
+
                 if (existing != null)
                 {
-                    custID = existing.CustomerID;
-                    existing.TotalPurchases += stockIDs.Count;
+                    resolvedCustomerID =
+                        existing.CustomerID;
+                    existing.TotalPurchases +=
+                        saleItems.Count;
                     existing.TotalSpent += totalAmount;
+                    resolvedCustomerName = existing.FullName;
                 }
-                else if (!string.IsNullOrEmpty(customerName))
+                else if (!string.IsNullOrEmpty(
+                    customerName))
                 {
+                    // Create new customer record
                     var newCust = new Customer
                     {
                         FullName = customerName,
                         Phone = customerPhone,
-                        TotalPurchases = stockIDs.Count,
+                        TotalPurchases = saleItems.Count,
                         TotalSpent = totalAmount,
                         CreatedAt = DateTime.Now
                     };
                     _db.Customers.Add(newCust);
                     await _db.SaveChangesAsync();
-                    custID = newCust.CustomerID;
+                    resolvedCustomerID =
+                        newCust.CustomerID;
+                    resolvedCustomerName = newCust.FullName;
                 }
             }
-            else if (custID.HasValue)
+            else if (resolvedCustomerID.HasValue)
             {
-                var cust = await _db.Customers.FindAsync(custID);
+                var cust = await _db.Customers
+                    .FindAsync(resolvedCustomerID.Value);
                 if (cust != null)
                 {
-                    cust.TotalPurchases += stockIDs.Count;
+                    cust.TotalPurchases += saleItems.Count;
                     cust.TotalSpent += totalAmount;
+                    resolvedCustomerName = cust.FullName;
                 }
             }
 
@@ -288,14 +370,16 @@ namespace BraysTech.Controllers
             {
                 StaffID = staffID!,
                 BranchID = branchID,
-                CustomerID = custID,
-                CustomerName = customerName,
+                CustomerID = resolvedCustomerID,
+                CustomerName = resolvedCustomerName,
                 CustomerPhone = customerPhone,
                 TotalAmount = totalAmount,
                 TotalProfit = totalProfit,
                 PaymentMethod = paymentMethod,
-                MpesaCode = paymentMethod == SalePaymentMethod.MPesa
-                    ? mpesaCode?.Trim().ToUpper() : null,
+                MpesaCode = paymentMethod ==
+                    SalePaymentMethod.MPesa
+                    ? mpesaCode?.Trim().ToUpper()
+                    : null,
                 Notes = notes,
                 CreatedAt = DateTime.Now
             };
@@ -311,10 +395,24 @@ namespace BraysTech.Controllers
 
             await _db.SaveChangesAsync();
 
+            await _audit.LogAsync(
+                AuditAction.SaleCreated,
+                "Sales",
+                $"Sale #{sale.SaleID}. " +
+                $"Customer: {resolvedCustomerName}. " +
+                $"KES {totalAmount:N0}. " +
+                $"Profit: KES {totalProfit:N0}. " +
+                $"{saleItems.Count} device(s). " +
+                $"Payment: {paymentMethod}.",
+                recordType: "PhoneSale",
+                recordID: sale.SaleID.ToString());
+
             TempData["Success"] =
-                $"✅ Sale recorded! Total: KES {totalAmount:N0} | " +
+                $"Sale complete. " +
+                $"Total: KES {totalAmount:N0} | " +
                 $"Profit: KES {totalProfit:N0}";
-            return RedirectToAction("Receipt", new { id = sale.SaleID });
+            return RedirectToAction("Receipt",
+                new { id = sale.SaleID });
         }
 
         public async Task<IActionResult> Receipt(int id)
@@ -329,38 +427,43 @@ namespace BraysTech.Controllers
 
             if (sale == null) return NotFound();
 
-            // Security check
-            var currentUserID = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!User.IsInRole("Admin") && !User.IsInRole("Manager") && sale.StaffID != currentUserID)
+            var currentUserID = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") &&
+                !User.IsInRole("Manager") &&
+                sale.StaffID != currentUserID)
                 return Forbid();
 
             return View(sale);
         }
 
-        // AJAX — Search phone by IMEI or name
         [HttpGet]
-        public async Task<IActionResult> SearchDevice(string q)
+        public async Task<IActionResult> SearchDevice(
+            string q)
         {
             if (string.IsNullOrEmpty(q) || q.Length < 2)
                 return Json(new List<object>());
 
-            var currentUser = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var currentUserID = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUser = await _userManager
+                .FindByIdAsync(currentUserID!);
             var isAdmin = User.IsInRole("Admin");
-            var isManager = User.IsInRole("Manager");
 
             var query = _db.IMEIStock
                 .Include(p => p.Branch)
-                .Where(p => p.Status == PhoneStatus.InStock &&
-                           (p.IMEI.Contains(q) ||
-                            p.PhoneName.Contains(q) ||
-                            (p.Brand != null && p.Brand.Contains(q)) ||
-                            (p.Model != null && p.Model.Contains(q))));
+                .Where(p =>
+                    p.Status == PhoneStatus.InStock &&
+                    (p.IMEI.Contains(q) ||
+                     p.PhoneName.Contains(q) ||
+                     (p.Brand != null &&
+                      p.Brand.Contains(q)) ||
+                     (p.Model != null &&
+                      p.Model.Contains(q))));
 
-            // Restrict by branch for non-admin
             if (!isAdmin && currentUser?.BranchID != null)
-            {
-                query = query.Where(p => p.BranchID == currentUser.BranchID);
-            }
+                query = query.Where(p =>
+                    p.BranchID == currentUser.BranchID);
 
             var results = await query
                 .Take(8)
@@ -382,15 +485,17 @@ namespace BraysTech.Controllers
             return Json(results);
         }
 
-        // AJAX — Search customers by name or phone
         [HttpGet]
-        public async Task<IActionResult> SearchCustomer(string q)
+        public async Task<IActionResult> SearchCustomer(
+            string q)
         {
             if (string.IsNullOrEmpty(q) || q.Length < 2)
                 return Json(new List<object>());
 
             var results = await _db.Customers
-                .Where(c => c.FullName.Contains(q) || c.Phone.Contains(q))
+                .Where(c =>
+                    c.FullName.Contains(q) ||
+                    c.Phone.Contains(q))
                 .Take(10)
                 .Select(c => new
                 {

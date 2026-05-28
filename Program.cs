@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using BraysTech.Data;
 using BraysTech.Models;
+using BraysTech.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,8 +33,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Auth/AccessDenied";
     options.SlidingExpiration = true;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
+
     options.Cookie.HttpOnly = true;
+
+    // Change to Always in production with HTTPS
     options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
@@ -41,11 +46,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
-        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+// ADD SERVICES
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -64,7 +74,9 @@ if (!app.Environment.IsDevelopment())
 // app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

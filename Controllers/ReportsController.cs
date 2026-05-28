@@ -119,9 +119,14 @@ namespace BraysTech.Controllers
             var today = DateTime.Today;
             var selectedMonth = month ?? today.Month;
             var selectedYear = year ?? today.Year;
-            var firstOfMonth = new DateTime(
-                selectedYear, selectedMonth, 1);
-            var lastOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
+            var firstOfMonth = new DateTime(selectedYear, selectedMonth, 1);
+            var lastOfMonth = new DateTime(
+                selectedYear,
+                selectedMonth,
+                DateTime.DaysInMonth(selectedYear, selectedMonth),
+                23, 59, 59
+            );
 
             var salesQuery = _db.PhoneSales
                 .Include(s => s.Staff)
@@ -219,7 +224,12 @@ namespace BraysTech.Controllers
             {
                 var mStart = new DateTime(
                     today.Year, today.Month, 1).AddMonths(-i);
-                var mEnd = mStart.AddMonths(1).AddDays(-1);
+                var mEnd = new DateTime(
+                    mStart.Year,
+                    mStart.Month,
+                    DateTime.DaysInMonth(mStart.Year, mStart.Month),
+                    23, 59, 59
+                );
 
                 var mSales = await _db.PhoneSales
                     .Where(s => s.CreatedAt >= mStart &&

@@ -1,0 +1,263 @@
+﻿@model BraysTech.Models.IMEIStock
+@{
+    ViewData["Title"] = "Device Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var statusStyle = Model.Status switch
+    {
+        BraysTech.Models.PhoneStatus.InStock =>
+            "background:#dcfce7;color:#16a34a;",
+        BraysTech.Models.PhoneStatus.Sold =>
+            "background:#dbeafe;color:#2563eb;",
+        BraysTech.Models.PhoneStatus.Faulty =>
+            "background:#fee2e2;color:#dc2626;",
+        BraysTech.Models.PhoneStatus.DisplayUnit =>
+            "background:#f3e8ff;color:#7c3aed;",
+        _ => "background:#f3f4f6;color:#374151;"
+    };
+
+    var statusLabel = Model.Status switch
+    {
+        BraysTech.Models.PhoneStatus.InStock => "In Stock",
+        BraysTech.Models.PhoneStatus.Sold => "Sold",
+        BraysTech.Models.PhoneStatus.Faulty => "Faulty",
+        BraysTech.Models.PhoneStatus.DisplayUnit =>
+            "Display Unit",
+        _ => Model.Status.ToString()
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Stock/Index" class="btn btn-outline-secondary rounded-pill px-3">
+            Back
+        </a>
+        <div>
+            <h4 class="fw-bold mb-0">@Model.PhoneName</h4>
+            <small style="font-family:monospace; color:#007A3D; font-weight:700;">
+                IMEI: @Model.IMEI
+            </small>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.Status == BraysTech.Models.PhoneStatus.InStock ||
+        Model.Status == BraysTech.Models.PhoneStatus.DisplayUnit)
+        {
+            <a href="/Stock/Edit/@Model.StockID" class="btn btn-outline-secondary rounded-pill px-3">
+                Edit
+            </a>
+        }
+        @if (Model.Status == BraysTech.Models.PhoneStatus.InStock)
+        {
+            <a href="/Stock/MarkFaulty/@Model.StockID" class="btn btn-outline-danger rounded-pill px-3">
+                Mark Faulty
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Status</p>
+                <span style="padding:5px 14px; border-radius:20px; font-size:0.82rem; font-weight:700; @statusStyle">
+                    @statusLabel
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #1d4ed8 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Branch</p>
+                <h6 class="fw-bold mb-0">
+                    @(Model.Branch?.Name ?? "Not assigned")
+                </h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Buying Price</p>
+                <h6 class="fw-bold mb-0">
+                    KES @Model.BuyingPrice.ToString("N0")
+                </h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Min. Selling Price</p>
+                <h6 class="fw-bold mb-0" style="color:#007A3D;">
+                    KES @Model.SellingPrice.ToString("N0")
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-header bg-white border-0 pt-3 fw-bold" style="color:#007A3D;">
+                Device Information
+            </div>
+            <div class="card-body pt-0">
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">IMEI</span>
+                    <span class="fw-semibold" style="font-family:monospace; color:#007A3D;">
+                        @Model.IMEI
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Brand</span>
+                    <span class="fw-semibold">
+                        @(Model.Brand ?? "—")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Model</span>
+                    <span class="fw-semibold">
+                        @(Model.Model ?? "—")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Color</span>
+                    <span class="fw-semibold">
+                        @(Model.Color ?? "—")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Storage</span>
+                    <span class="fw-semibold">
+                        @(Model.Storage ?? "—")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Supplier</span>
+                    <span class="fw-semibold">
+                        @(Model.SupplierName ?? "—")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Date Added</span>
+                    <span class="fw-semibold">
+                        @Model.DateAdded.ToString("dd MMM yyyy")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; font-size:0.88rem;">
+                    <span style="color:#666;">Date Sold</span>
+                    <span class="fw-semibold">
+                        @(Model.DateSold.HasValue
+                            ? Model.DateSold.Value.ToString("dd MMM yyyy")
+                            : "Not sold yet")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm mb-3" style="border-radius:16px;">
+            <div class="card-header bg-white border-0 pt-3 fw-bold" style="color:#007A3D;">
+                Financial Summary
+            </div>
+            <div class="card-body pt-0">
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Buying Price</span>
+                    <span class="fw-semibold">
+                        KES @Model.BuyingPrice.ToString("N0")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Min. Selling Price</span>
+                    <span class="fw-semibold" style="color:#007A3D;">
+                        KES @Model.SellingPrice.ToString("N0")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f0f7f3; font-size:0.88rem;">
+                    <span style="color:#666;">Expected Profit</span>
+                    <span class="fw-semibold" style="color:#b45309;">
+                        KES @Model.Profit.ToString("N0")
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; padding:9px 0; font-size:0.88rem;">
+                    <span style="color:#666;">Margin</span>
+                    <span class="fw-semibold">
+                        @Model.Margin.ToString("N1")%
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div style="background:#f0f7f3; border-radius:10px; padding:12px; margin-top:12px; font-size:0.85rem;">
+                        <strong>Notes:</strong> @Model.Notes
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.Status == BraysTech.Models.PhoneStatus.Faulty)
+        {
+            <div class="card border-0 shadow-sm" style="border-radius:16px; border-left:4px solid #dc2626 !important;">
+                <div class="card-header bg-white border-0 pt-3 fw-bold text-danger">
+                    Fault Information
+                </div>
+                <div class="card-body pt-0">
+                    <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #fef2f2; font-size:0.88rem;">
+                        <span style="color:#666;">Fault Reason</span>
+                        <span class="fw-semibold text-danger">
+                            @(Model.FaultReason ?? "—")
+                        </span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #fef2f2; font-size:0.88rem;">
+                        <span style="color:#666;">Date Reported</span>
+                        <span class="fw-semibold">
+                            @(Model.DateMarkedFaulty.HasValue
+                                ? Model.DateMarkedFaulty.Value.ToString("dd MMM yyyy")
+                                : "—")
+                        </span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #fef2f2; font-size:0.88rem;">
+                        <span style="color:#666;">Repair Status</span>
+                        <span class="fw-semibold">
+                            @(Model.RepairStatus ?? "Pending")
+                        </span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #fef2f2; font-size:0.88rem;">
+                        <span style="color:#666;">Warranty Claim</span>
+                        <span class="fw-semibold">
+                            @(Model.WarrantyClaim ? "Yes" : "No")
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.TechnicianNotes))
+                    {
+                        <div style="padding:9px 0; font-size:0.88rem;">
+                            <span style="color:#666;">Technician Notes</span>
+                            <div style="background:#fef2f2; padding:10px; border-radius:8px; margin-top:6px;">
+                                @Model.TechnicianNotes
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div> @* Added closing tag for col-md-6 financial panel *@
+</div> @* Added closing tag for main row container *@

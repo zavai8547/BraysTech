@@ -133,7 +133,6 @@
     </button>
 </div>
 
-<!-- FILTER -->
 <div class="report-card">
     <div class="report-body">
         <form method="get" action="/Reports/Monthly">
@@ -148,15 +147,13 @@
                             if (m == (int)ViewBag.SelectedMonth)
                             {
                                 <option value="@m" selected>
-                                    @(new DateTime(2026, m, 1)
-                                        .ToString("MMMM"))
+                                    @(new DateTime(2026, m, 1).ToString("MMMM"))
                                 </option>
                             }
                             else
                             {
                                 <option value="@m">
-                                    @(new DateTime(2026, m, 1)
-                                        .ToString("MMMM"))
+                                    @(new DateTime(2026, m, 1).ToString("MMMM"))
                                 </option>
                             }
                         }
@@ -167,8 +164,7 @@
                         Year
                     </label>
                     <select name="year" class="form-select">
-                        @for (int y = 2025;
-                        y <= DateTime.Now.Year + 1; y++)
+                        @for (int y = 2025; y <= DateTime.Now.Year + 1; y++)
                         {
                             if (y == (int)ViewBag.SelectedYear)
                             {
@@ -224,7 +220,6 @@
     </div>
 </div>
 
-<!-- SUMMARY CARDS -->
 <div class="row g-3 mb-3">
     <div class="col-md-3">
         <div class="report-card mb-0">
@@ -233,19 +228,19 @@
                 <div class="stat-row">
                     <span class="stat-label">Total Revenue</span>
                     <span class="stat-value" style="color:#007A3D;">
-                        KES @((decimal)ViewBag.TotalRevenue).ToString("N0"))
+                        KES @(((decimal)ViewBag.TotalRevenue).ToString("N0"))
                     </span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">Gross Profit</span>
                     <span class="stat-value">
-                        KES @((decimal)ViewBag.TotalProfit).ToString("N0"))
+                        KES @(((decimal)ViewBag.TotalProfit).ToString("N0"))
                     </span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">Total Expenses</span>
                     <span class="stat-value" style="color:#dc2626;">
-                        KES @((decimal)ViewBag.TotalExpenses).ToString("N0"))
+                        KES @(((decimal)ViewBag.TotalExpenses).ToString("N0"))
                     </span>
                 </div>
                 <div class="net-profit-box">
@@ -254,10 +249,8 @@
                     </span>
                     <span class="fw-bold"
                           style="font-size:1.2rem;
-                                 color:@((decimal)ViewBag.NetProfit >= 0 ?
-                                     "#007A3D" : "#dc2626");">
-                        @((decimal)ViewBag.NetProfit >= 0 ? "+" : "")KES
-                        @((decimal)ViewBag.NetProfit).ToString("N0"))
+                                 color:@((decimal)ViewBag.NetProfit >= 0 ? "#007A3D" : "#dc2626");">
+                        @((decimal)ViewBag.NetProfit >= 0 ? "+" : "")KES @(((decimal)ViewBag.NetProfit).ToString("N0"))
                     </span>
                 </div>
             </div>
@@ -281,8 +274,7 @@
                         @if ((int)ViewBag.TotalSales > 0)
                         {
                             <text>
-                                KES @(((decimal)ViewBag.TotalRevenue /
-                                (int)ViewBag.TotalSales).ToString("N0"))
+                                KES @(((decimal)ViewBag.TotalRevenue / (int)ViewBag.TotalSales).ToString("N0"))
                             </text>
                         }
                         else
@@ -294,8 +286,7 @@
                 <div class="stat-row">
                     <span class="stat-label">Daily Average Revenue</span>
                     <span class="stat-value">
-                        KES @(((decimal)ViewBag.TotalRevenue / 30)
-                        .ToString("N0"))
+                        KES @(((decimal)ViewBag.TotalRevenue / 30).ToString("N0"))
                     </span>
                 </div>
             </div>
@@ -307,12 +298,9 @@
             <div class="report-body">
                 @foreach (var p in ViewBag.PaymentBreakdown)
                 {
-                    var method = (string)p.GetType()
-                    .GetProperty("Method").GetValue(p);
-                    var count = (int)p.GetType()
-                    .GetProperty("Count").GetValue(p);
-                    var total = (decimal)p.GetType()
-                    .GetProperty("Total").GetValue(p);
+                    var method = (string)p.GetType().GetProperty("Method").GetValue(p);
+                    var count = (int)p.GetType().GetProperty("Count").GetValue(p);
+                    var total = (decimal)p.GetType().GetProperty("Total").GetValue(p);
                     var badgeStyle = method switch
                     {
                         "Cash" => "background:#dcfce7;color:#16a34a;",
@@ -349,26 +337,18 @@
             <div class="report-body">
                 <div class="trend-bar-wrap">
                     @{
-                        var trend = ViewBag.DailyTrend as
-                        IEnumerable<dynamic>;
+                        var trend = ViewBag.DailyTrend as IEnumerable<dynamic>;
                         decimal maxRev = 1m;
                         if (trend != null && trend.Any())
-                            maxRev = Math.Max(
-                            (decimal)trend.Max(t =>
-                            (decimal)t.GetType()
-                            .GetProperty("Revenue")
-                            .GetValue(t)), 1m);
+                            maxRev = Math.Max((decimal)trend.Max(t => (decimal)t.GetType().GetProperty("Revenue").GetValue(t)), 1m);
 
                         if (trend != null)
                         {
                             foreach (var t in trend)
                             {
-                                int day = (int)t.GetType()
-                                .GetProperty("Day").GetValue(t);
-                                decimal rev = (decimal)t.GetType()
-                                .GetProperty("Revenue").GetValue(t);
-                                int cnt = (int)t.GetType()
-                                .GetProperty("Count").GetValue(t);
+                                int day = (int)t.GetType().GetProperty("Day").GetValue(t);
+                                decimal rev = (decimal)t.GetType().GetProperty("Revenue").GetValue(t);
+                                int cnt = (int)t.GetType().GetProperty("Count").GetValue(t);
                                 double pct = (double)(rev / maxRev * 90);
                                 <div class="trend-bar-col">
                                     <div class="trend-count">@cnt</div>
@@ -389,7 +369,6 @@
     </div>
 </div>
 
-<!-- BRANCH BREAKDOWN -->
 <div class="report-card">
     <div class="report-header">Branch Performance</div>
     <div class="table-responsive">
@@ -406,16 +385,11 @@
             <tbody>
                 @foreach (var b in ViewBag.BranchBreakdown)
                 {
-                    var bName = (string)b.GetType()
-                    .GetProperty("BranchName").GetValue(b);
-                    var bCount = (int)b.GetType()
-                    .GetProperty("SalesCount").GetValue(b);
-                    var bDev = (int)b.GetType()
-                    .GetProperty("Devices").GetValue(b);
-                    var bRev = (decimal)b.GetType()
-                    .GetProperty("Revenue").GetValue(b);
-                    var bProf = (decimal)b.GetType()
-                    .GetProperty("Profit").GetValue(b);
+                    var bName = (string)b.GetType().GetProperty("BranchName").GetValue(b);
+                    var bCount = (int)b.GetType().GetProperty("SalesCount").GetValue(b);
+                    var bDev = (int)b.GetType().GetProperty("Devices").GetValue(b);
+                    var bRev = (decimal)b.GetType().GetProperty("Revenue").GetValue(b);
+                    var bProf = (decimal)b.GetType().GetProperty("Profit").GetValue(b);
                     <tr>
                         <td class="fw-semibold">@bName</td>
                         <td>@bCount</td>
@@ -428,8 +402,7 @@
                         </td>
                     </tr>
                 }
-                @if (!(ViewBag.BranchBreakdown as IEnumerable<dynamic>)?
-                .Any() ?? true)
+                @if (!(ViewBag.BranchBreakdown as IEnumerable<dynamic>)?.Any() ?? true)
                 {
                     <tr>
                         <td colspan="5"
@@ -443,7 +416,6 @@
     </div>
 </div>
 
-<!-- STAFF LEADERBOARD -->
 <div class="report-card">
     <div class="report-header">Staff Leaderboard</div>
     <div class="table-responsive">
@@ -464,16 +436,11 @@
                 }
                 @foreach (var s in ViewBag.StaffLeaderboard)
                 {
-                    var sName = (string)s.GetType()
-                    .GetProperty("StaffName").GetValue(s);
-                    var sCount = (int)s.GetType()
-                    .GetProperty("SalesCount").GetValue(s);
-                    var sDev = (int)s.GetType()
-                    .GetProperty("Devices").GetValue(s);
-                    var sRev = (decimal)s.GetType()
-                    .GetProperty("Revenue").GetValue(s);
-                    var sProf = (decimal)s.GetType()
-                    .GetProperty("Profit").GetValue(s);
+                    var sName = (string)s.GetType().GetProperty("StaffName").GetValue(s);
+                    var sCount = (int)s.GetType().GetProperty("SalesCount").GetValue(s);
+                    var sDev = (int)s.GetType().GetProperty("Devices").GetValue(s);
+                    var sRev = (decimal)s.GetType().GetProperty("Revenue").GetValue(s);
+                    var sProf = (decimal)s.GetType().GetProperty("Profit").GetValue(s);
                     var rankStyle = rank switch
                     {
                         1 => "background:#fef9c3;color:#ca8a04;",
@@ -499,8 +466,7 @@
                     </tr>
                     rank++;
                 }
-                @if (!(ViewBag.StaffLeaderboard as IEnumerable<dynamic>)?
-                .Any() ?? true)
+                @if (!(ViewBag.StaffLeaderboard as IEnumerable<dynamic>)?.Any() ?? true)
                 {
                     <tr>
                         <td colspan="6"
@@ -514,7 +480,6 @@
     </div>
 </div>
 
-<!-- TOP DEVICES -->
 <div class="report-card">
     <div class="report-header">Top Selling Devices</div>
     <div class="table-responsive">
@@ -530,14 +495,10 @@
             <tbody>
                 @foreach (var d in ViewBag.TopDevices)
                 {
-                    var dName = (string)d.GetType()
-                    .GetProperty("PhoneName").GetValue(d);
-                    var dUnits = (int)d.GetType()
-                    .GetProperty("UnitsSold").GetValue(d);
-                    var dRev = (decimal)d.GetType()
-                    .GetProperty("Revenue").GetValue(d);
-                    var dProf = (decimal)d.GetType()
-                    .GetProperty("Profit").GetValue(d);
+                    var dName = (string)d.GetType().GetProperty("PhoneName").GetValue(d);
+                    var dUnits = (int)d.GetType().GetProperty("UnitsSold").GetValue(d);
+                    var dRev = (decimal)d.GetType().GetProperty("Revenue").GetValue(d);
+                    var dProf = (decimal)d.GetType().GetProperty("Profit").GetValue(d);
                     <tr>
                         <td class="fw-semibold">@dName</td>
                         <td>
@@ -558,8 +519,7 @@
                         </td>
                     </tr>
                 }
-                @if (!(ViewBag.TopDevices as IEnumerable<dynamic>)?
-                .Any() ?? true)
+                @if (!(ViewBag.TopDevices as IEnumerable<dynamic>)?.Any() ?? true)
                 {
                     <tr>
                         <td colspan="4"
@@ -573,7 +533,6 @@
     </div>
 </div>
 
-<!-- 6 MONTH COMPARISON -->
 <div class="report-card">
     <div class="report-header">6 Month Comparison</div>
     <div class="table-responsive">
@@ -591,23 +550,14 @@
             <tbody>
                 @foreach (var m in ViewBag.SixMonthTrend)
                 {
-                    var mName = (string)m.GetType()
-                    .GetProperty("month").GetValue(m);
-                    var mSales = (int)m.GetType()
-                    .GetProperty("sales").GetValue(m);
-                    var mRev = (decimal)m.GetType()
-                    .GetProperty("revenue").GetValue(m);
-                    var mProf = (decimal)m.GetType()
-                    .GetProperty("profit").GetValue(m);
-                    var mExp = (decimal)m.GetType()
-                    .GetProperty("expenses").GetValue(m);
+                    var mName = (string)m.GetType().GetProperty("month").GetValue(m);
+                    var mSales = (int)m.GetType().GetProperty("sales").GetValue(m);
+                    var mRev = (decimal)m.GetType().GetProperty("revenue").GetValue(m);
+                    var mProf = (decimal)m.GetType().GetProperty("profit").GetValue(m);
+                    var mExp = (decimal)m.GetType().GetProperty("expenses").GetValue(m);
                     var mNet = mProf - mExp;
-                    var isSelected = mName ==
-                    ViewBag.SelectedMonthName.ToString()
-                    .Substring(0, 3) +
-                    " " + ViewBag.SelectedYear;
-                    <tr style="@(isSelected ?
-                        "background:#f0f7f3;font-weight:600;" : "")">
+                    var isSelected = mName == ViewBag.SelectedMonthName.ToString().Substring(0, 3) + " " + ViewBag.SelectedYear;
+                    <tr style="@(isSelected ? "background:#f0f7f3;font-weight:600;" : "")">
                         <td class="fw-semibold">@mName</td>
                         <td>@mSales</td>
                         <td style="color:#007A3D;font-weight:700;">
@@ -619,11 +569,8 @@
                         <td style="color:#dc2626;">
                             KES @mExp.ToString("N0")
                         </td>
-                        <td style="font-weight:800;
-                                   color:@(mNet >= 0 ? "#007A3D" :
-                                       "#dc2626");">
-                            @(mNet >= 0 ? "+" : "")KES
-                            @mNet.ToString("N0")
+                        <td style="font-weight:800; color:@(mNet >= 0 ? "#007A3D" : "#dc2626");">
+                            @(mNet >= 0 ? "+" : "")KES @mNet.ToString("N0")
                         </td>
                     </tr>
                 }

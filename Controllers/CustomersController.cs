@@ -47,7 +47,51 @@ namespace BraysTech.Controllers
 
             if (customer == null) return NotFound();
 
-            return View(customer);
+            // Also find sales that match by phone number
+            // in case CustomerID was not set at time of sale
+            if (customer.Sales.Count == 0 &&
+                !string.IsNullOrEmpty(customer.Phone))
+            {
+                var phoneMatchSales = await _db.PhoneSales
+                    .Include(s => s.Items)
+                    .Include(s => s.Branch)
+                    .Include(s => s.Staff)
+                    .Where(s => s.CustomerPhone == customer.Phone)
+                    .ToListAsync();
+
+                if (phoneMatchSales.Any())
+                {
+                    // Link them properly
+                    foreach (var sale in phoneMatchSales)
+                    {
+                        if (sale.CustomerID == null)
+                        {
+                            sale.CustomerID = customer.CustomerID;
+                        }
+                    }
+                    await _db.SaveChangesAsync();
+
+                    // Recalculate customer totals
+                    customer.TotalPurchases =
+                        phoneMatchSales.Sum(s => s.Items.Count);
+                    customer.TotalSpent =
+                        phoneMatchSales.Sum(s => s.TotalAmount);
+                    await _db.SaveChangesAsync();
+
+                    // Reload with fixed links
+                    customer = await _db.Customers
+                        .Include(c => c.Sales)
+                            .ThenInclude(s => s.Items)
+                        .Include(c => c.Sales)
+                            .ThenInclude(s => s.Branch)
+                        .Include(c => c.Sales)
+                            .ThenInclude(s => s.Staff)
+                        .FirstOrDefaultAsync(
+                            c => c.CustomerID == id);
+                }
+            }
+
+            return View(customer!);
         }
 
         [HttpGet]

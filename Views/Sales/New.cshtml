@@ -39,6 +39,7 @@
         font-size: 1rem;
         transition: 0.2s;
         outline: none;
+        box-sizing: border-box;
     }
 
         .search-input:focus {
@@ -66,7 +67,8 @@
         transition: 0.15s;
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
+        gap: 12px;
     }
 
         .device-result:last-child {
@@ -81,18 +83,30 @@
             font-weight: 700;
             font-size: 0.9rem;
             color: #111;
+            white-space: normal;
+            word-break: break-word;
         }
 
         .device-result .imei {
             font-size: 0.75rem;
             color: #888;
             font-family: monospace;
+            margin-top: 3px;
+        }
+
+        .device-result .branch-tag {
+            font-size: 0.72rem;
+            color: #007A3D;
+            font-weight: 600;
+            margin-top: 3px;
         }
 
         .device-result .price {
             font-weight: 800;
             color: #007A3D;
             font-size: 0.95rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
     .cart-item {
@@ -109,6 +123,8 @@
             font-size: 0.95rem;
             color: #111;
             margin-bottom: 4px;
+            padding-right: 28px;
+            word-break: break-word;
         }
 
         .cart-item .imei-tag {
@@ -126,7 +142,7 @@
     .price-row {
         display: flex;
         gap: 10px;
-        align-items: center;
+        align-items: flex-start;
     }
 
     .price-label {
@@ -142,6 +158,7 @@
         border-radius: 8px;
         font-size: 0.9rem;
         font-weight: 600;
+        box-sizing: border-box;
     }
 
         .price-input:focus {
@@ -287,6 +304,18 @@
             background: #f0f7f3;
         }
 
+    .min-price-box {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: #fff8e1;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
     @@media(max-width:1024px) {
         .pos-wrapper {
             grid-template-columns: 1fr;
@@ -294,16 +323,17 @@
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
     <div>
-        <h4 class="fw-bold mb-1">📱 New Sale</h4>
+        <h4 class="fw-bold mb-1">New Sale</h4>
         <small class="text-muted">
             Search device, add customer, complete sale
         </small>
     </div>
     <a href="/Sales/Index"
        class="btn btn-outline-secondary rounded-pill px-3">
-        ← Sales History
+        Sales History
     </a>
 </div>
 
@@ -312,20 +342,18 @@
 
     <div class="pos-wrapper">
 
-        <!-- LEFT — DEVICE SEARCH + CART -->
+        <!-- LEFT -->
         <div>
-
-            <!-- DEVICE SEARCH -->
             <div class="pos-card mb-4">
                 <div class="pos-card-header">
-                    📱 Search & Add Device
+                    Search and Add Device
                 </div>
                 <div class="pos-card-body">
                     <div style="position:relative;">
                         <input type="text"
                                id="deviceSearch"
                                class="search-input"
-                               placeholder="Search by IMEI, brand, model..."
+                               placeholder="Type IMEI, brand or model..."
                                autocomplete="off" />
                         <div id="deviceResults"
                              class="search-results"
@@ -333,103 +361,104 @@
                         </div>
                     </div>
                     <small class="text-muted mt-2 d-block">
-                        Only in-stock devices appear in search results
+                        Only in-stock devices appear here
                     </small>
                 </div>
             </div>
 
-            <!-- CART -->
             <div class="pos-card">
                 <div class="pos-card-header">
-                    🛒 Cart
+                    Cart
                     <span id="cartCount"
                           style="background:rgba(255,255,255,0.2);
-                                 border-radius:20px;padding:2px 10px;
-                                 font-size:0.8rem;margin-left:8px;">
+                                 border-radius:20px;
+                                 padding:2px 10px;
+                                 font-size:0.8rem;
+                                 margin-left:8px;">
                         0 items
                     </span>
                 </div>
                 <div class="pos-card-body">
                     <div id="cartItems">
                         <div class="empty-cart">
-                            <div class="icon">📱</div>
+                            <div class="icon">&#128241;</div>
                             <p class="mt-2 mb-0">
-                                Search for a device above to add it
+                                Search for a device above
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- RIGHT — CUSTOMER + PAYMENT + SUMMARY -->
+        <!-- RIGHT -->
         <div>
 
             <!-- CUSTOMER -->
             <div class="pos-card mb-4">
-                <div class="pos-card-header">👥 Customer</div>
+                <div class="pos-card-header">Customer</div>
                 <div class="pos-card-body">
-
-                    <!-- Customer search -->
-                    <div style="position:relative;" class="mb-3">
+                    <div style="position:relative;"
+                         class="mb-3">
                         <input type="text"
                                id="customerSearch"
                                class="search-input"
-                               placeholder="Search by name or phone..."
+                               placeholder="Search existing customer..."
                                autocomplete="off" />
                         <div id="customerResults"
                              class="search-results"
                              style="display:none;">
                         </div>
                     </div>
-
                     <input type="hidden"
-                           name="customerID" id="customerID" />
-
+                           name="customerID"
+                           id="customerID" />
+                    <div id="selectedCustomerBox"
+                         style="display:none;
+                                margin-bottom:12px;">
+                    </div>
                     <div id="customerFields">
                         <div class="mb-3">
-                            <label class="price-label fw-semibold">
+                            <label class="price-label
+                                          fw-semibold">
                                 Customer Name
                             </label>
                             <input type="text"
                                    name="customerName"
                                    id="customerName"
                                    class="search-input"
-                                   style="font-size:0.9rem;padding:10px 14px;"
+                                   style="font-size:0.9rem;
+                                          padding:10px 14px;"
                                    placeholder="Walk-in or enter name" />
                         </div>
                         <div>
-                            <label class="price-label fw-semibold">
+                            <label class="price-label
+                                          fw-semibold">
                                 Phone Number
                             </label>
                             <input type="text"
                                    name="customerPhone"
                                    id="customerPhone"
                                    class="search-input"
-                                   style="font-size:0.9rem;padding:10px 14px;"
-                                   placeholder="e.g. 0712 345 678" />
+                                   style="font-size:0.9rem;
+                                          padding:10px 14px;"
+                                   placeholder="e.g. 0712345678" />
                         </div>
                     </div>
-
-                    <div id="selectedCustomer"
-                         style="display:none;"
-                         class="mt-2 p-3 rounded-3"
-                         style="background:#f0f7f3;">
-                    </div>
-
                 </div>
             </div>
 
             <!-- BRANCH -->
             <div class="pos-card mb-4">
-                <div class="pos-card-header">🏪 Branch</div>
+                <div class="pos-card-header">Branch</div>
                 <div class="pos-card-body">
                     <select name="branchID"
                             class="form-select"
                             style="border-radius:10px;"
                             required>
-                        <option value="">-- Select Branch --</option>
+                        <option value="">
+                            -- Select Branch --
+                        </option>
                         @foreach (var b in ViewBag.Branches)
                         {
                             <option value="@b.BranchID">
@@ -442,38 +471,64 @@
 
             <!-- PAYMENT -->
             <div class="pos-card mb-4">
-                <div class="pos-card-header">💳 Payment Method</div>
+                <div class="pos-card-header">
+                    Payment Method
+                </div>
                 <div class="pos-card-body">
                     <div class="d-flex gap-2 mb-3">
-                        @foreach (var m in new[] {
-                        ("Cash","💵","0"),
-                        ("MPesa","📱","1"),
-                        ("MKOPA","🏦","2"),
-                        ("Card","💳","3")
-                        })
-                        {
-                            <div class="payment-option @(m.Item3 == "0" ? "selected" : "")"
-                                 onclick="selectPayment('@m.Item1', '@m.Item3', this)">
-                                <div style="font-size:1.3rem;margin-bottom:4px;">
-                                    @m.Item2
-                                </div>
-                                @m.Item1
+                        <div class="payment-option selected"
+                             onclick="selectPayment(
+                                 'Cash','0',this)">
+                            <div style="font-size:1rem;
+                                         margin-bottom:4px;">
+                                Cash
                             </div>
-                        }
+                            Cash
+                        </div>
+                        <div class="payment-option"
+                             onclick="selectPayment(
+                                 'MPesa','1',this)">
+                            <div style="font-size:1rem;
+                                         margin-bottom:4px;">
+                                M
+                            </div>
+                            MPesa
+                        </div>
+                        <div class="payment-option"
+                             onclick="selectPayment(
+                                 'MKOPA','2',this)">
+                            <div style="font-size:1rem;
+                                         margin-bottom:4px;">
+                                MK
+                            </div>
+                            MKOPA
+                        </div>
+                        <div class="payment-option"
+                             onclick="selectPayment(
+                                 'Card','3',this)">
+                            <div style="font-size:1rem;
+                                         margin-bottom:4px;">
+                                Card
+                            </div>
+                            Card
+                        </div>
                     </div>
                     <input type="hidden"
                            name="paymentMethod"
-                           id="paymentMethod" value="0" />
-
+                           id="paymentMethod"
+                           value="0" />
                     <div id="mpesaDiv" style="display:none;">
                         <label class="price-label fw-semibold">
                             M-Pesa Code
                         </label>
                         <input type="text"
                                name="mpesaCode"
-                               class="search-input text-uppercase"
-                               style="font-size:0.9rem;padding:10px 14px;
-                                      font-family:monospace;font-weight:700;"
+                               class="search-input"
+                               style="font-size:0.9rem;
+                                      padding:10px 14px;
+                                      font-family:monospace;
+                                      font-weight:700;
+                                      text-transform:uppercase;"
                                placeholder="e.g. QHX4RT8K2P" />
                         <small class="text-muted">
                             Enter code from customer SMS
@@ -484,33 +539,41 @@
 
             <!-- NOTES -->
             <div class="pos-card mb-4">
-                <div class="pos-card-header">📝 Notes (optional)</div>
+                <div class="pos-card-header">
+                    Notes (optional)
+                </div>
                 <div class="pos-card-body">
                     <textarea name="notes"
                               class="form-control"
                               style="border-radius:10px;"
                               rows="2"
-                              placeholder="Any notes about this sale...">
+                              placeholder="Any notes...">
                     </textarea>
                 </div>
             </div>
 
             <!-- SUMMARY -->
             <div class="pos-card">
-                <div class="pos-card-header">📊 Sale Summary</div>
+                <div class="pos-card-header">
+                    Sale Summary
+                </div>
                 <div class="pos-card-body">
                     <div class="summary-row">
                         <span class="label">Devices</span>
-                        <span class="value" id="summaryCount">0</span>
+                        <span class="value"
+                              id="summaryCount">0</span>
                     </div>
                     <div class="summary-row">
                         <span class="label">Subtotal</span>
-                        <span class="value" id="summarySubtotal">
+                        <span class="value"
+                              id="summarySubtotal">
                             KES 0
                         </span>
                     </div>
                     <div class="summary-row">
-                        <span class="label">Total Discount</span>
+                        <span class="label">
+                            Total Discount
+                        </span>
                         <span class="value text-danger"
                               id="summaryDiscount">
                             - KES 0
@@ -526,19 +589,20 @@
                     </div>
                     <div class="total-row">
                         <span class="label">TOTAL</span>
-                        <span class="amount" id="summaryTotal">
+                        <span class="amount"
+                              id="summaryTotal">
                             KES 0
                         </span>
                     </div>
-
                     <button type="submit"
                             class="btn-complete"
                             id="completeBtn"
                             disabled>
-                        ✅ Complete Sale
+                        Complete Sale
                     </button>
                     <a href="/Sales/Index"
-                       class="btn btn-outline-secondary w-100 mt-2 rounded-pill">
+                       class="btn btn-outline-secondary
+                              w-100 mt-2 rounded-pill">
                         Cancel
                     </a>
                 </div>
@@ -549,12 +613,13 @@
 </form>
 
 <script>
-    // ── STATE ──────────────────────────────────────────────
     let cart = {};
 
     // ── DEVICE SEARCH ──────────────────────────────────────
-    const deviceSearch = document.getElementById('deviceSearch');
-    const deviceResults = document.getElementById('deviceResults');
+    const deviceSearch = document.getElementById(
+        'deviceSearch');
+    const deviceResults = document.getElementById(
+        'deviceResults');
 
     let deviceTimer;
     deviceSearch.addEventListener('input', function () {
@@ -564,41 +629,83 @@
             deviceResults.style.display = 'none';
             return;
         }
-        deviceTimer = setTimeout(async () => {
-            const res = await fetch(`/Sales/SearchDevice?q=${encodeURIComponent(q)}`);
-            const data = await res.json();
-            if (!data.length) {
-                deviceResults.innerHTML =
-                    '<div style="padding:16px;text-align:center;color:#aaa;">No devices found</div>';
-            } else {
-                deviceResults.innerHTML = data.map(d => `
-                        <div class="device-result"
-                             onclick="addToCart(${JSON.stringify(d).replace(/"/g, '&quot;')})">
-                            <div>
-                                <div class="name">${d.brand} ${d.model} ${d.storage ?? ''} ${d.color ?? ''}</div>
-                                <div class="imei">IMEI: ${d.imei} &nbsp;•&nbsp; ${d.branchName}</div>
-                            </div>
-                            <div class="price">KES ${d.sellingPrice.toLocaleString()}</div>
-                        </div>`).join('');
+        deviceTimer = setTimeout(async function () {
+            try {
+                const res = await fetch(
+                    '/Sales/SearchDevice?q=' +
+                    encodeURIComponent(q));
+                const data = await res.json();
+                if (!data.length) {
+                    deviceResults.innerHTML =
+                        '<div style="padding:16px;' +
+                        'text-align:center;color:#aaa;">' +
+                        'No in-stock devices found</div>';
+                } else {
+                    deviceResults.innerHTML = data.map(
+                        function (d) {
+                            const safeName =
+                                (d.brand || '') + ' ' +
+                                (d.model || '') +
+                                (d.storage
+                                    ? ' ' + d.storage : '') +
+                                (d.color
+                                    ? ' - ' + d.color : '');
+                            const safeData =
+                                encodeURIComponent(
+                                    JSON.stringify(d));
+                            return '<div class="device-result"' +
+                                ' onclick="addToCartEncoded(\'' +
+                                safeData + '\')">' +
+                                '<div style="flex:1;' +
+                                'min-width:0;">' +
+                                '<div class="name">' +
+                                safeName.trim() + '</div>' +
+                                '<div class="imei">IMEI: ' +
+                                d.imei + '</div>' +
+                                '<div class="branch-tag">' +
+                                d.branchName + '</div>' +
+                                '</div>' +
+                                '<div class="price">KES ' +
+                                d.sellingPrice
+                                    .toLocaleString() +
+                                '</div></div>';
+                        }).join('');
+                }
+                deviceResults.style.display = 'block';
+            } catch (err) {
+                console.error('Device search error:', err);
             }
-            deviceResults.style.display = 'block';
         }, 300);
     });
 
-    document.addEventListener('click', e => {
+    document.addEventListener('click', function (e) {
         if (!deviceSearch.contains(e.target) &&
-            !deviceResults.contains(e.target))
+            !deviceResults.contains(e.target)) {
             deviceResults.style.display = 'none';
+        }
     });
 
-    // ── ADD TO CART ────────────────────────────────────────
+    function addToCartEncoded(encoded) {
+        const device = JSON.parse(
+            decodeURIComponent(encoded));
+        addToCart(device);
+    }
+
     function addToCart(device) {
         if (cart[device.stockID]) {
             alert('This device is already in the cart.');
             return;
         }
         cart[device.stockID] = {
-            ...device,
+            stockID: device.stockID,
+            imei: device.imei,
+            brand: device.brand || '',
+            model: device.model || '',
+            color: device.color || '',
+            storage: device.storage || '',
+            buyingPrice: device.buyingPrice,
+            sellingPrice: device.sellingPrice,
+            branchName: device.branchName,
             customPrice: device.sellingPrice,
             discount: 0
         };
@@ -614,92 +721,240 @@
 
     // ── RENDER CART ────────────────────────────────────────
     function renderCart() {
-        const container = document.getElementById('cartItems');
+        const container = document.getElementById(
+            'cartItems');
         const items = Object.values(cart);
         const count = items.length;
 
         document.getElementById('cartCount').textContent =
-            `${count} item${count !== 1 ? 's' : ''}`;
+            count + ' item' + (count !== 1 ? 's' : '');
 
-        // Remove old hidden inputs
-        document.querySelectorAll('.cart-hidden').forEach(e => e.remove());
+        document.querySelectorAll('.cart-hidden')
+            .forEach(function (e) { e.remove(); });
 
         if (!count) {
-            container.innerHTML = `
-                    <div class="empty-cart">
-                        <div class="icon">📱</div>
-                        <p class="mt-2 mb-0">Search for a device above to add it</p>
-                    </div>`;
+            container.innerHTML =
+                '<div class="empty-cart">' +
+                '<div class="icon">&#128241;</div>' +
+                '<p class="mt-2 mb-0">' +
+                'Search for a device above to add it' +
+                '</p></div>';
             updateSummary();
             return;
         }
 
-        container.innerHTML = items.map(item => {
-            const profit = item.customPrice - item.discount - item.buyingPrice;
-            const profitColor = profit >= 0 ? '#16a34a' : '#dc2626';
-            return `
-                <div class="cart-item" id="cartItem_${item.stockID}">
-                    <button type="button" class="remove-btn"
-                            onclick="removeFromCart(${item.stockID})">✕</button>
-                    <div class="phone-name">
-                        ${item.brand} ${item.model}
-                        ${item.storage ? `· ${item.storage}` : ''}
-                        ${item.color ? `· ${item.color}` : ''}
-                    </div>
-                    <div class="imei-tag">IMEI: ${item.imei}</div>
-                    <div class="price-row">
-                        <div style="flex:1;">
-                            <div class="price-label">Selling Price (KES)</div>
-                            <input type="number"
-                                   class="price-input"
-                                   value="${item.customPrice}"
-                                   min="0"
-                                   onchange="updatePrice(${item.stockID}, this.value)"
-                                   oninput="updatePrice(${item.stockID}, this.value)" />
-                        </div>
-                        <div style="flex:1;">
-                            <div class="price-label">Discount (KES)</div>
-                            <input type="number"
-                                   class="price-input"
-                                   value="${item.discount}"
-                                   min="0"
-                                   onchange="updateDiscount(${item.stockID}, this.value)"
-                                   oninput="updateDiscount(${item.stockID}, this.value)" />
-                        </div>
-                        <div>
-                            <div class="price-label">Profit</div>
-                            <div class="profit-tag"
-                                 style="background:${profit >= 0 ? '#dcfce7' : '#fef2f2'};
-                                        color:${profitColor};"
-                                 id="profit_${item.stockID}">
-                                KES ${profit.toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
+        var html = '';
+        items.forEach(function (item) {
+            const finalPrice =
+                item.customPrice - item.discount;
+            const profit = finalPrice - item.buyingPrice;
 
-        // Add hidden inputs for form
+            // ── BUG 1 FIX ──────────────────────────────
+            // isBelowMin is true only when customPrice
+            // is LESS than the minimum sellingPrice
+            const isBelowMin =
+                item.customPrice < item.sellingPrice;
+            // absDiff is always positive
+            const absDiff = item.sellingPrice -
+                item.customPrice;
+
+            const profitColor =
+                profit >= 0 ? '#16a34a' : '#dc2626';
+            const borderColor =
+                isBelowMin ? '#dc2626' : '#007A3D';
+            const inputColor =
+                isBelowMin ? '#dc2626' : '#007A3D';
+            const phoneName = (
+                item.brand + ' ' +
+                item.model +
+                (item.storage ? ' ' + item.storage : '') +
+                (item.color ? ' - ' + item.color : ''))
+                .trim();
+
+            html += '<div class="cart-item" ' +
+                'id="cartItem_' + item.stockID + '">';
+
+            html += '<button type="button" ' +
+                'class="remove-btn" ' +
+                'onclick="removeFromCart(' +
+                item.stockID + ')">x</button>';
+
+            html += '<div class="phone-name">' +
+                phoneName + '</div>';
+
+            html += '<div class="imei-tag">IMEI: ' +
+                item.imei + '</div>';
+
+            html += '<div class="min-price-box">' +
+                '<span style="font-size:0.75rem;' +
+                'color:#92400e;font-weight:600;' +
+                'flex-shrink:0;">Min. Selling Price' +
+                '</span>' +
+                '<span style="font-size:1rem;' +
+                'font-weight:800;color:#b45309;">' +
+                'KES ' +
+                item.sellingPrice.toLocaleString() +
+                '</span>' +
+                '<span style="font-size:0.7rem;' +
+                'color:#a16207;">' +
+                '(set when phone was added)' +
+                '</span></div>';
+
+            html += '<div class="price-row">';
+
+            html += '<div style="flex:1;">' +
+                '<div class="price-label fw-semibold">' +
+                'Actual Selling Price (KES)</div>' +
+                '<div style="font-size:0.7rem;' +
+                'color:#888;margin-bottom:4px;">' +
+                'Enter the price you are selling for' +
+                '</div>' +
+                '<input type="number" ' +
+                'class="price-input" ' +
+                'id="priceInput_' + item.stockID + '" ' +
+                'value="' + item.customPrice + '" ' +
+                'min="0" ' +
+                'style="border:2px solid ' +
+                borderColor + ';' +
+                'font-size:1rem;font-weight:800;' +
+                'color:' + inputColor + ';" ' +
+                'onchange="updatePrice(' +
+                item.stockID + ', this.value)" ' +
+                'oninput="updatePrice(' +
+                item.stockID + ', this.value)" />';
+
+            // Only show warning when actually below min
+            if (isBelowMin) {
+                html += '<div id="warning_' +
+                    item.stockID + '" ' +
+                    'style="color:#dc2626;' +
+                    'font-size:0.72rem;' +
+                    'margin-top:4px;' +
+                    'font-weight:600;">' +
+                    'Below minimum by KES ' +
+                    absDiff.toLocaleString() +
+                    '</div>';
+            } else {
+                html += '<div id="warning_' +
+                    item.stockID + '"></div>';
+            }
+
+            html += '</div>';
+
+            html += '<div style="flex:1;">' +
+                '<div class="price-label fw-semibold">' +
+                'Discount (KES)</div>' +
+                '<div style="font-size:0.7rem;' +
+                'color:#888;margin-bottom:4px;">' +
+                'Optional</div>' +
+                '<input type="number" ' +
+                'class="price-input" ' +
+                'value="' + item.discount + '" ' +
+                'min="0" ' +
+                'style="border:2px solid #e5e7eb;" ' +
+                'onchange="updateDiscount(' +
+                item.stockID + ', this.value)" ' +
+                'oninput="updateDiscount(' +
+                item.stockID + ', this.value)" />' +
+                '</div>';
+
+            html += '<div style="min-width:90px;">' +
+                '<div class="price-label">Profit</div>' +
+                '<div class="profit-tag" ' +
+                'id="profit_' + item.stockID + '" ' +
+                'style="background:' +
+                (profit >= 0 ? '#dcfce7' : '#fef2f2') +
+                ';color:' + profitColor + ';">' +
+                'KES ' + profit.toLocaleString() +
+                '</div>' +
+                '<div style="font-size:0.68rem;' +
+                'color:#aaa;margin-top:3px;' +
+                'text-align:center;">after disc.</div>' +
+                '</div>';
+
+            html += '</div>';
+
+            html += '<div style="display:flex;' +
+                'justify-content:space-between;' +
+                'font-size:0.78rem;color:#888;' +
+                'margin-top:8px;padding-top:8px;' +
+                'border-top:1px dashed #e5e7eb;">' +
+                '<span>Cost: KES ' +
+                item.buyingPrice.toLocaleString() +
+                '</span>' +
+                '<span>Final: <strong ' +
+                'id="final_' + item.stockID + '" ' +
+                'style="color:#111;">KES ' +
+                finalPrice.toLocaleString() +
+                '</strong></span></div>';
+
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+
         const form = document.getElementById('saleForm');
-        items.forEach(item => {
-            const addHidden = (name, val) => {
+        items.forEach(function (item) {
+            function addH(name, val) {
                 const inp = document.createElement('input');
                 inp.type = 'hidden';
                 inp.name = name;
                 inp.value = val;
                 inp.className = 'cart-hidden';
                 form.appendChild(inp);
-            };
-            addHidden('stockIDs', item.stockID);
-            addHidden('customPrices', item.customPrice);
-            addHidden('discounts', item.discount);
+            }
+            addH('stockIDs', item.stockID);
+            addH('customPrices', item.customPrice);
+            addH('discounts', item.discount);
         });
 
         updateSummary();
     }
 
+    // ── BUG 1 FIX — updatePrice ────────────────────────────
+    // The original code had a broken comparison:
+    // cart[stockID].customPrice
+    // cart[stockID].sellingPrice
+    // (the < operator was missing — it was not a
+    // comparison at all, just two statements)
     function updatePrice(stockID, val) {
         cart[stockID].customPrice = parseFloat(val) || 0;
+
+        const item = cart[stockID];
+        // true only when selling BELOW the minimum
+        const isBelowMin =
+            item.customPrice < item.sellingPrice;
+        // always positive — how far below minimum
+        const absDiff =
+            item.sellingPrice - item.customPrice;
+
+        const input = document.getElementById(
+            'priceInput_' + stockID);
+        const warning = document.getElementById(
+            'warning_' + stockID);
+
+        if (input) {
+            input.style.borderColor =
+                isBelowMin ? '#dc2626' : '#007A3D';
+            input.style.color =
+                isBelowMin ? '#dc2626' : '#007A3D';
+        }
+
+        if (warning) {
+            if (isBelowMin) {
+                warning.innerHTML =
+                    'Below minimum by KES ' +
+                    absDiff.toLocaleString();
+                warning.style.color = '#dc2626';
+                warning.style.fontSize = '0.72rem';
+                warning.style.fontWeight = '600';
+                warning.style.marginTop = '4px';
+            } else {
+                // Clear warning when at or above minimum
+                warning.innerHTML = '';
+            }
+        }
+
         updateProfitTag(stockID);
         updateSummary();
         updateHiddens();
@@ -714,68 +969,95 @@
 
     function updateProfitTag(stockID) {
         const item = cart[stockID];
-        const profit = item.customPrice - item.discount - item.buyingPrice;
-        const el = document.getElementById(`profit_${stockID}`);
-        if (el) {
-            el.textContent = `KES ${profit.toLocaleString()}`;
-            el.style.background = profit >= 0 ? '#dcfce7' : '#fef2f2';
-            el.style.color = profit >= 0 ? '#16a34a' : '#dc2626';
+        const finalPrice = item.customPrice - item.discount;
+        const profit = finalPrice - item.buyingPrice;
+
+        const profitEl = document.getElementById(
+            'profit_' + stockID);
+        if (profitEl) {
+            profitEl.textContent =
+                'KES ' + profit.toLocaleString();
+            profitEl.style.background =
+                profit >= 0 ? '#dcfce7' : '#fef2f2';
+            profitEl.style.color =
+                profit >= 0 ? '#16a34a' : '#dc2626';
+        }
+
+        const finalEl = document.getElementById(
+            'final_' + stockID);
+        if (finalEl) {
+            finalEl.textContent =
+                'KES ' + finalPrice.toLocaleString();
         }
     }
 
     function updateHiddens() {
-        document.querySelectorAll('.cart-hidden').forEach(e => e.remove());
+        document.querySelectorAll('.cart-hidden')
+            .forEach(function (e) { e.remove(); });
         const form = document.getElementById('saleForm');
-        Object.values(cart).forEach(item => {
-            ['stockIDs', 'customPrices', 'discounts'].forEach((name, i) => {
-                const vals = [item.stockID, item.customPrice, item.discount];
+        Object.values(cart).forEach(function (item) {
+            function addH(name, val) {
                 const inp = document.createElement('input');
                 inp.type = 'hidden';
                 inp.name = name;
-                inp.value = vals[i];
+                inp.value = val;
                 inp.className = 'cart-hidden';
                 form.appendChild(inp);
-            });
+            }
+            addH('stockIDs', item.stockID);
+            addH('customPrices', item.customPrice);
+            addH('discounts', item.discount);
         });
     }
 
-    // ── SUMMARY ────────────────────────────────────────────
     function updateSummary() {
         const items = Object.values(cart);
-        let subtotal = 0, totalDiscount = 0, totalProfit = 0;
-        items.forEach(item => {
+        let subtotal = 0, totalDiscount = 0,
+            totalProfit = 0;
+        items.forEach(function (item) {
             subtotal += item.customPrice;
             totalDiscount += item.discount;
-            totalProfit += (item.customPrice - item.discount - item.buyingPrice);
+            totalProfit += (item.customPrice -
+                item.discount - item.buyingPrice);
         });
         const total = subtotal - totalDiscount;
 
-        document.getElementById('summaryCount').textContent = items.length;
-        document.getElementById('summarySubtotal').textContent =
-            `KES ${subtotal.toLocaleString()}`;
-        document.getElementById('summaryDiscount').textContent =
-            `- KES ${totalDiscount.toLocaleString()}`;
-        document.getElementById('summaryProfit').textContent =
-            `KES ${totalProfit.toLocaleString()}`;
-        document.getElementById('summaryTotal').textContent =
-            `KES ${total.toLocaleString()}`;
+        document.getElementById('summaryCount')
+            .textContent = items.length;
+        document.getElementById('summarySubtotal')
+            .textContent = 'KES ' +
+            subtotal.toLocaleString();
+        document.getElementById('summaryDiscount')
+            .textContent = '- KES ' +
+            totalDiscount.toLocaleString();
+        document.getElementById('summaryProfit')
+            .textContent = 'KES ' +
+            totalProfit.toLocaleString();
+        document.getElementById('summaryTotal')
+            .textContent = 'KES ' +
+            total.toLocaleString();
 
-        document.getElementById('completeBtn').disabled = items.length === 0;
+        document.getElementById('completeBtn').disabled =
+            items.length === 0;
     }
 
-    // ── PAYMENT METHOD ─────────────────────────────────────
     function selectPayment(name, value, el) {
         document.querySelectorAll('.payment-option')
-            .forEach(o => o.classList.remove('selected'));
+            .forEach(function (o) {
+                o.classList.remove('selected');
+            });
         el.classList.add('selected');
-        document.getElementById('paymentMethod').value = value;
+        document.getElementById('paymentMethod').value =
+            value;
         document.getElementById('mpesaDiv').style.display =
             name === 'MPesa' ? 'block' : 'none';
     }
 
     // ── CUSTOMER SEARCH ────────────────────────────────────
-    const customerSearch = document.getElementById('customerSearch');
-    const customerResults = document.getElementById('customerResults');
+    const customerSearch = document.getElementById(
+        'customerSearch');
+    const customerResults = document.getElementById(
+        'customerResults');
 
     let custTimer;
     customerSearch.addEventListener('input', function () {
@@ -786,51 +1068,89 @@
             customerResults.style.display = 'none';
             return;
         }
-        custTimer = setTimeout(async () => {
-            const res = await fetch(
-                `/Customers/Search?q=${encodeURIComponent(q)}`);
-            const data = await res.json();
-            if (!data.length) {
-                customerResults.innerHTML =
-                    '<div style="padding:14px;color:#aaa;text-align:center;">' +
-                    'No customer found — fill in details below</div>';
-            } else {
-                customerResults.innerHTML = data.map(c => `
-                        <div class="customer-search-result"
-                             onclick="selectCustomer(${c.customerID},'${c.fullName}','${c.phone}')">
-                            <div style="font-weight:700;font-size:0.9rem;">
-                                ${c.fullName}
-                            </div>
-                            <div style="font-size:0.78rem;color:#888;">
-                                ${c.phone} &nbsp;•&nbsp;
-                                ${c.totalPurchases} purchases &nbsp;•&nbsp;
-                                KES ${c.totalSpent.toLocaleString()} spent
-                            </div>
-                        </div>`).join('');
+        custTimer = setTimeout(async function () {
+            try {
+                const res = await fetch(
+                    '/Customers/Search?q=' +
+                    encodeURIComponent(q));
+                const data = await res.json();
+                if (!data.length) {
+                    customerResults.innerHTML =
+                        '<div style="padding:14px;' +
+                        'color:#aaa;text-align:center;">' +
+                        'No customer found — fill in ' +
+                        'details below</div>';
+                } else {
+                    customerResults.innerHTML = data.map(
+                        function (c) {
+                            return '<div class="' +
+                                'customer-search-result" ' +
+                                'onclick="selectCustomer(' +
+                                c.customerID + ',\'' +
+                                c.fullName.replace(
+                                    /'/g, "\\'") +
+                                '\',\'' + c.phone +
+                                '\')">' +
+                                '<div style="font-weight:' +
+                                '700;font-size:0.9rem;">' +
+                                c.fullName + '</div>' +
+                                '<div style="font-size:' +
+                                '0.78rem;color:#888;">' +
+                                c.phone +
+                                ' &nbsp;|&nbsp; ' +
+                                c.totalPurchases +
+                                ' purchases</div></div>';
+                        }).join('');
+                }
+                customerResults.style.display = 'block';
+            } catch (err) {
+                console.error('Customer search:', err);
             }
-            customerResults.style.display = 'block';
         }, 300);
     });
 
-    document.addEventListener('click', e => {
+    document.addEventListener('click', function (e) {
         if (!customerSearch.contains(e.target) &&
-            !customerResults.contains(e.target))
+            !customerResults.contains(e.target)) {
             customerResults.style.display = 'none';
+        }
     });
 
     function selectCustomer(id, name, phone) {
         document.getElementById('customerID').value = id;
         document.getElementById('customerName').value = name;
-        document.getElementById('customerPhone').value = phone;
+        document.getElementById('customerPhone').value =
+            phone;
         customerSearch.value = name;
         customerResults.style.display = 'none';
 
-        document.getElementById('selectedCustomer').style.display = 'block';
-        document.getElementById('selectedCustomer').innerHTML = `
-                <div style="background:#f0f7f3;padding:12px;border-radius:10px;
-                            border-left:3px solid #007A3D;">
-                    <div style="font-weight:700;color:#007A3D;">✓ ${name}</div>
-                    <div style="font-size:0.8rem;color:#555;">${phone}</div>
-                </div>`;
+        const box = document.getElementById(
+            'selectedCustomerBox');
+        box.style.display = 'block';
+        box.innerHTML =
+            '<div style="background:#f0f7f3;' +
+            'padding:12px;border-radius:10px;' +
+            'border-left:3px solid #007A3D;' +
+            'margin-bottom:8px;">' +
+            '<div style="font-weight:700;' +
+            'color:#007A3D;">Selected: ' + name +
+            '</div>' +
+            '<div style="font-size:0.8rem;color:#555;">' +
+            phone + '</div>' +
+            '<button type="button" ' +
+            'onclick="clearCustomer()" ' +
+            'style="margin-top:6px;font-size:0.75rem;' +
+            'background:none;border:none;color:#dc2626;' +
+            'cursor:pointer;padding:0;">' +
+            'Clear selection</button></div>';
+    }
+
+    function clearCustomer() {
+        document.getElementById('customerID').value = '';
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerPhone').value = '';
+        customerSearch.value = '';
+        document.getElementById(
+            'selectedCustomerBox').style.display = 'none';
     }
 </script>

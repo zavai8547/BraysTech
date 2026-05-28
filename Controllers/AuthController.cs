@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using BraysTech.Models;
+using BraysTech.Services;
 
 namespace BraysTech.Controllers
 {
@@ -10,15 +11,18 @@ namespace BraysTech.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly AuditService _audit;
 
         public AuthController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            AuditService audit)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _audit = audit;
         }
 
         // ── LOGIN ──────────────────────────────────────
@@ -39,7 +43,20 @@ namespace BraysTech.Controllers
                 model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
 
             if (result.Succeeded)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    // After successful login:
+                    await _audit.LogAsync(
+                        AuditAction.Login,
+                        "Auth",
+                        $"{user.FullName} logged in.",
+                        recordType: "AppUser",
+                        recordID: user.Id);
+                }
                 return RedirectToAction("Index", "Dashboard");
+            }
 
             if (result.IsLockedOut)
                 ModelState.AddModelError("", "Account locked. Try again later.");
@@ -80,6 +97,16 @@ namespace BraysTech.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, model.Role);
+
+                // Log staff creation
+                var currentUser = await _userManager.GetUserAsync(User);
+                await _audit.LogAsync(
+                    AuditAction.StaffCreated,
+                    "Staff",
+                    $"{currentUser?.FullName ?? "System"} created staff account for {model.FullName} with role {model.Role}.",
+                    recordType: "AppUser",
+                    recordID: user.Id);
+
                 TempData["Success"] = $"Staff account created for {model.FullName}";
                 return RedirectToAction("Index", "Staff");
             }
@@ -95,6 +122,17 @@ namespace BraysTech.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                await _audit.LogAsync(
+                    AuditAction.Logout,
+                    "Auth",
+                    $"{user.FullName} logged out.",
+                    recordType: "AppUser",
+                    recordID: user.Id);
+            }
+
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
@@ -103,28 +141,43 @@ namespace BraysTech.Controllers
         [HttpGet]
         public async Task<IActionResult> SeedAdmin()
         {
-            if (_userManager.Users.Any())
-                return RedirectToAction("Login");
+            // Only run if no admin exists
+            var adminExists = await _userManager.GetUsersInRoleAsync("Admin");
+            if (adminExists.Any())
+                return Content("Admin already exists.");
 
-            string[] roles = { "Admin", "Manager", "Cashier", "Washer" };
-            foreach (var role in roles)
+            // Ensure roles exist
+            foreach (var role in new[] { "Admin", "Manager", "Salesperson" })
+            {
                 if (!await _roleManager.RoleExistsAsync(role))
                     await _roleManager.CreateAsync(new IdentityRole(role));
+            }
 
             var admin = new AppUser
             {
-                FullName = "System Admin",
-                UserName = "admin@splashcity.com",
-                Email = "admin@splashcity.com",
-                IsActive = true
+                FullName = "System Administrator",
+                UserName = "admin@braystech.store",
+                Email = "admin@braystech.store",
+                IsActive = true,
+                CreatedAt = DateTime.Now
             };
 
-            var result = await _userManager.CreateAsync(admin, "Admin@123");
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(admin, "Admin");
+            var result = await _userManager.CreateAsync(admin, "Admin@1234");
 
-            TempData["Success"] = "Admin created! Email: admin@splashcity.com | Password: Admin@123";
-            return RedirectToAction("Login");
+            if (!result.Succeeded)
+                return Content(string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.AddToRoleAsync(admin, "Admin");
+
+            // Log admin creation (system event)
+            await _audit.LogAsync(
+                AuditAction.StaffCreated,
+                "Auth",
+                $"System created admin account for {admin.FullName} (admin@braystech.store).",
+                recordType: "AppUser",
+                recordID: admin.Id);
+
+            return Content("Admin created. Email: admin@braystech.store Password: Admin@1234 Login and change password immediately.");
         }
 
         // ── CHANGE PASSWORD ─────────────────────────────
@@ -159,6 +212,14 @@ namespace BraysTech.Controllers
 
             if (result.Succeeded)
             {
+                // Log password change
+                await _audit.LogAsync(
+                    AuditAction.PasswordReset,
+                    "Auth",
+                    $"{user.FullName} changed their password.",
+                    recordType: "AppUser",
+                    recordID: user.Id);
+
                 await _signInManager.RefreshSignInAsync(user);
                 TempData["Success"] = "✅ Password changed successfully!";
                 return RedirectToAction("ChangePassword");

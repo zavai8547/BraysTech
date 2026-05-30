@@ -31,37 +31,67 @@ namespace BraysTech.Controllers
         {
             if (User.Identity!.IsAuthenticated)
                 return RedirectToAction("Index", "Dashboard");
+
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
 
+            // FIND USER FIRST
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            // USER NOT FOUND
+            if (user == null)
+            {
+                ModelState.AddModelError("",
+                    "Invalid email or password.");
+
+                return View(model);
+            }
+
+            // BLOCK DEACTIVATED USERS
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError("",
+                    "Your account has been deactivated. Please contact administrator.");
+
+                return View(model);
+            }
+
+            // ATTEMPT LOGIN
             var result = await _signInManager.PasswordSignInAsync(
-                model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
+                model.Email,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: true);
 
             if (result.Succeeded)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user != null)
-                {
-                    // After successful login:
-                    await _audit.LogAsync(
-                        AuditAction.Login,
-                        "Auth",
-                        $"{user.FullName} logged in.",
-                        recordType: "AppUser",
-                        recordID: user.Id);
-                }
+                // LOG LOGIN
+                await _audit.LogAsync(
+                    AuditAction.Login,
+                    "Auth",
+                    $"{user.FullName} logged in.",
+                    recordType: "AppUser",
+                    recordID: user.Id);
+
                 return RedirectToAction("Index", "Dashboard");
             }
 
             if (result.IsLockedOut)
-                ModelState.AddModelError("", "Account locked. Try again later.");
+            {
+                ModelState.AddModelError("",
+                    "Account locked. Try again later.");
+            }
             else
-                ModelState.AddModelError("", "Invalid email or password.");
+            {
+                ModelState.AddModelError("",
+                    "Invalid email or password.");
+            }
 
             return View(model);
         }
@@ -78,10 +108,14 @@ namespace BraysTech.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
 
             if (!await _roleManager.RoleExistsAsync(model.Role))
-                await _roleManager.CreateAsync(new IdentityRole(model.Role));
+            {
+                await _roleManager.CreateAsync(
+                    new IdentityRole(model.Role));
+            }
 
             var user = new AppUser
             {
@@ -89,17 +123,24 @@ namespace BraysTech.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 Phone = model.Phone,
-                IsActive = true
+                IsActive = true,
+                CreatedAt = DateTime.Now
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(
+                user,
+                model.Password);
 
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, model.Role);
+                await _userManager.AddToRoleAsync(
+                    user,
+                    model.Role);
 
-                // Log staff creation
-                var currentUser = await _userManager.GetUserAsync(User);
+                // LOG STAFF CREATION
+                var currentUser =
+                    await _userManager.GetUserAsync(User);
+
                 await _audit.LogAsync(
                     AuditAction.StaffCreated,
                     "Staff",
@@ -107,12 +148,17 @@ namespace BraysTech.Controllers
                     recordType: "AppUser",
                     recordID: user.Id);
 
-                TempData["Success"] = $"Staff account created for {model.FullName}";
+                TempData["Success"] =
+                    $"Staff account created for {model.FullName}";
+
                 return RedirectToAction("Index", "Staff");
             }
 
             foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+            {
+                ModelState.AddModelError("",
+                    error.Description);
+            }
 
             return View(model);
         }
@@ -123,6 +169,7 @@ namespace BraysTech.Controllers
         public async Task<IActionResult> Logout()
         {
             var user = await _userManager.GetUserAsync(User);
+
             if (user != null)
             {
                 await _audit.LogAsync(
@@ -134,6 +181,7 @@ namespace BraysTech.Controllers
             }
 
             await _signInManager.SignOutAsync();
+
             return RedirectToAction("Login");
         }
 
@@ -141,16 +189,26 @@ namespace BraysTech.Controllers
         [HttpGet]
         public async Task<IActionResult> SeedAdmin()
         {
-            // Only run if no admin exists
-            var adminExists = await _userManager.GetUsersInRoleAsync("Admin");
+            // ONLY RUN IF NO ADMIN EXISTS
+            var adminExists =
+                await _userManager.GetUsersInRoleAsync("Admin");
+
             if (adminExists.Any())
                 return Content("Admin already exists.");
 
-            // Ensure roles exist
-            foreach (var role in new[] { "Admin", "Manager", "Salesperson" })
+            // ENSURE ROLES EXIST
+            foreach (var role in new[]
+                     {
+                         "Admin",
+                         "Manager",
+                         "Salesperson"
+                     })
             {
                 if (!await _roleManager.RoleExistsAsync(role))
-                    await _roleManager.CreateAsync(new IdentityRole(role));
+                {
+                    await _roleManager.CreateAsync(
+                        new IdentityRole(role));
+                }
             }
 
             var admin = new AppUser
@@ -162,14 +220,22 @@ namespace BraysTech.Controllers
                 CreatedAt = DateTime.Now
             };
 
-            var result = await _userManager.CreateAsync(admin, "Admin@1234");
+            var result = await _userManager.CreateAsync(
+                admin,
+                "Admin@1234");
 
             if (!result.Succeeded)
-                return Content(string.Join(", ", result.Errors.Select(e => e.Description)));
+            {
+                return Content(
+                    string.Join(", ",
+                        result.Errors.Select(e => e.Description)));
+            }
 
-            await _userManager.AddToRoleAsync(admin, "Admin");
+            await _userManager.AddToRoleAsync(
+                admin,
+                "Admin");
 
-            // Log admin creation (system event)
+            // LOG ADMIN CREATION
             await _audit.LogAsync(
                 AuditAction.StaffCreated,
                 "Auth",
@@ -177,13 +243,17 @@ namespace BraysTech.Controllers
                 recordType: "AppUser",
                 recordID: admin.Id);
 
-            return Content("Admin created. Email: admin@braystech.store Password: Admin@1234 Login and change password immediately.");
+            return Content(
+                "Admin created. Email: admin@braystech.store Password: Admin@1234 Login and change password immediately.");
         }
 
         // ── CHANGE PASSWORD ─────────────────────────────
         [HttpGet]
         [Authorize]
-        public IActionResult ChangePassword() => View();
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
 
         [HttpPost]
         [Authorize]
@@ -194,25 +264,34 @@ namespace BraysTech.Controllers
         {
             if (newPassword != confirmPassword)
             {
-                TempData["Error"] = "❌ New passwords do not match.";
+                TempData["Error"] =
+                    "❌ New passwords do not match.";
+
                 return View();
             }
 
             if (newPassword.Length < 6)
             {
-                TempData["Error"] = "❌ Password must be at least 6 characters.";
+                TempData["Error"] =
+                    "❌ Password must be at least 6 characters.";
+
                 return View();
             }
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
 
-            var result = await _userManager.ChangePasswordAsync(
-                user, currentPassword, newPassword);
+            if (user == null)
+                return RedirectToAction("Login");
+
+            var result =
+                await _userManager.ChangePasswordAsync(
+                    user,
+                    currentPassword,
+                    newPassword);
 
             if (result.Succeeded)
             {
-                // Log password change
+                // LOG PASSWORD CHANGE
                 await _audit.LogAsync(
                     AuditAction.PasswordReset,
                     "Auth",
@@ -221,16 +300,25 @@ namespace BraysTech.Controllers
                     recordID: user.Id);
 
                 await _signInManager.RefreshSignInAsync(user);
-                TempData["Success"] = "✅ Password changed successfully!";
+
+                TempData["Success"] =
+                    "✅ Password changed successfully!";
+
                 return RedirectToAction("ChangePassword");
             }
 
             foreach (var error in result.Errors)
-                TempData["Error"] = "❌ " + error.Description;
+            {
+                TempData["Error"] =
+                    "❌ " + error.Description;
+            }
 
             return View();
         }
 
-        public IActionResult AccessDenied() => View();
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
     }
 }

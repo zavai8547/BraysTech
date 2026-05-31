@@ -18,13 +18,15 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # Target the specific project for clean dependency tracking
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore BraysTech/BraysTech.csproj
 
+      # Target the specific project for compilation
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build BraysTech/BraysTech.csproj --configuration Release --no-restore
 
-      # FIX: Targets the project file directly in its subfolder
+      # Target the specific project for output distribution
       - name: Publish
         run: dotnet publish BraysTech/BraysTech.csproj --configuration Release --no-build --output ./publish
 

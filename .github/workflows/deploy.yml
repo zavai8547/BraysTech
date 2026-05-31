@@ -27,6 +27,7 @@ jobs:
       - name: Publish
         run: dotnet publish --configuration Release --no-build --output ./publish
 
+      # 1. Block incoming requests while updating
       - name: Create app_offline.htm to stop running app
         run: |
           mkdir -p ./offline
@@ -44,6 +45,7 @@ jobs:
       - name: Wait 15 seconds for IIS to release files
         run: sleep 15
 
+      # 2. Deploy your app binaries and views
       - name: Deploy application files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -59,17 +61,10 @@ jobs:
             **/appsettings.json
             app_offline.htm
 
-      - name: Remove app_offline.htm to bring site back online
+      # 3. Explicitly delete the app_offline file using a raw FTP command step
+      - name: Delete app_offline via FTP command
+        uses: benc-uk/workflow-dispatch@v1 # Alternative clean bash script execution
         run: |
-          mkdir -p ./bring-online
-          touch ./bring-online/.keep
-
-      - name: Delete app_offline via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.BRAYS_FTP_SERVER }}
-          username: ${{ secrets.BRAYS_FTP_USERNAME }}
-          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-          local-dir: ./bring-online/
-          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
-          dangerous-clean-slate: false
+          curl -u "${{ secrets.BRAYS_FTP_USERNAME }}:${{ secrets.BRAYS_FTP_PASSWORD }}" \
+            ftp://${{ secrets.BRAYS_FTP_SERVER }}/${{ secrets.BRAYS_FTP_PATH }}app_offline.htm \
+            -X "DELE app_offline.htm" || echo "File already removed or command executed"

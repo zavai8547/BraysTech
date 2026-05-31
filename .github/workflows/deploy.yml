@@ -18,17 +18,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Target the specific project for clean dependency tracking
+      # FIX: Uses '**/*.csproj' to automatically find and restore your project file
       - name: Restore dependencies
-        run: dotnet restore BraysTech/BraysTech.csproj
+        run: dotnet restore **/*.csproj
 
-      # Target the specific project for compilation
+      # FIX: Builds using the wildcard pattern
       - name: Build
-        run: dotnet build BraysTech/BraysTech.csproj --configuration Release --no-restore
+        run: dotnet build **/*.csproj --configuration Release --no-restore
 
-      # Target the specific project for output distribution
+      # FIX: Publishes the dynamically located project to our flat ./publish directory
       - name: Publish
-        run: dotnet publish BraysTech/BraysTech.csproj --configuration Release --no-build --output ./publish
+        run: dotnet publish **/*.csproj --configuration Release --no-build --output ./publish
 
       - name: Create app_offline.htm to stop running app
         run: |

@@ -27,11 +27,24 @@ jobs:
       - name: Publish
         run: dotnet publish --configuration Release --no-build --output ./publish
 
-      - name: Add app_offline.htm to publish folder
+      - name: Create app_offline.htm to stop running app
         run: |
-          echo "<!DOCTYPE html><html><body><h3>System update in progress. Back in 60 seconds.</h3></body></html>" > ./publish/app_offline.htm
+          mkdir -p ./offline
+          echo "<html><body><h2>Updating, back shortly...</h2></body></html>" > ./offline/app_offline.htm
 
-      - name: Deploy via FTP
+      - name: Upload app_offline.htm
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.BRAYS_FTP_SERVER }}
+          username: ${{ secrets.BRAYS_FTP_USERNAME }}
+          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
+          local-dir: ./offline/
+          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
+
+      - name: Wait 15 seconds for IIS to release files
+        run: sleep 15
+
+      - name: Deploy application files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.BRAYS_FTP_SERVER }}
@@ -44,3 +57,19 @@ jobs:
             **/.git*/**
             **/appsettings.Development.json
             **/appsettings.json
+            app_offline.htm
+
+      - name: Remove app_offline.htm to bring site back online
+        run: |
+          mkdir -p ./bring-online
+          touch ./bring-online/.keep
+
+      - name: Delete app_offline via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.BRAYS_FTP_SERVER }}
+          username: ${{ secrets.BRAYS_FTP_USERNAME }}
+          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
+          local-dir: ./bring-online/
+          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
+          dangerous-clean-slate: false

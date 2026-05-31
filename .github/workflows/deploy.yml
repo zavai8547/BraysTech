@@ -1,4 +1,4 @@
-name: Deploy BraysTech to SmarterASP
+name: Deploy BraysTech
 
 on:
   push:
@@ -10,69 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # FIX: Uses '**/*.csproj' to automatically find and restore your project file
-      - name: Restore dependencies
-        run: dotnet restore **/*.csproj
-
-      # FIX: Builds using the wildcard pattern
-      - name: Build
-        run: dotnet build **/*.csproj --configuration Release --no-restore
-
-      # FIX: Publishes the dynamically located project to our flat ./publish directory
       - name: Publish
-        run: dotnet publish **/*.csproj --configuration Release --no-build --output ./publish
+        run: dotnet publish --configuration Release --output ./publish
 
-      - name: Create app_offline.htm to stop running app
-        run: |
-          mkdir -p ./offline
-          echo "<html><body><h2>Updating, back shortly...</h2></body></html>" > ./offline/app_offline.htm
-
-      - name: Upload app_offline.htm
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.BRAYS_FTP_SERVER }}
-          username: ${{ secrets.BRAYS_FTP_USERNAME }}
-          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-          local-dir: ./offline/
-          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
-
-      - name: Wait 15 seconds for IIS to release files
-        run: sleep 15
-
-      - name: Deploy application files
+      - name: Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.BRAYS_FTP_SERVER }}
           username: ${{ secrets.BRAYS_FTP_USERNAME }}
           password: ${{ secrets.BRAYS_FTP_PASSWORD }}
           local-dir: ./publish/
-          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
+          server-dir: /site1/
+          timeout: 60000
           exclude: |
             **/.git*
             **/.git*/**
             **/appsettings.Development.json
             **/appsettings.json
-            app_offline.htm
-
-      - name: Clear app_offline.htm contents
-        run: |
-          mkdir -p ./bring-online
-          touch ./bring-online/app_offline.htm
-
-      - name: Overwrite app_offline on server
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.BRAYS_FTP_SERVER }}
-          username: ${{ secrets.BRAYS_FTP_USERNAME }}
-          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-          local-dir: ./bring-online/
-          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
-          log-level: verbose

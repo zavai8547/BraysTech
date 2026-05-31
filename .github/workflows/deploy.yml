@@ -10,22 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Upgraded to v4 to support Node 24 and stop the warnings
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # Upgraded to v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      # Target your main web project directly instead of the whole solution file
       - name: Restore dependencies
         run: dotnet restore
 
+      # Target the specific project to prevent build output collision
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      # FIX: Specify your main web project name here (e.g., BraysTech.csproj)
+      # If it's inside a subfolder, use the path: run: dotnet publish YourSubfolder/BraysTech.csproj ...
       - name: Publish
-        run: dotnet publish --configuration Release --no-build --output ./publish
+        run: dotnet publish BraysTech.csproj --configuration Release --no-build --output ./publish
 
       - name: Create app_offline.htm to stop running app
         run: |
@@ -44,7 +50,6 @@ jobs:
       - name: Wait 15 seconds for IIS to release files
         run: sleep 15
 
-      # The main deployment push
       - name: Deploy application files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -60,8 +65,6 @@ jobs:
             **/appsettings.json
             app_offline.htm
 
-      # FIX: Instead of an empty folder, we create a blank file named app_offline.htm
-      # Overwriting it with a 0-byte file makes IIS ignore it and brings the site back online!
       - name: Clear app_offline.htm contents
         run: |
           mkdir -p ./bring-online

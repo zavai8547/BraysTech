@@ -1,47 +1,46 @@
 name: Deploy BraysTech to SmarterASP
 
 on:
-push:
-branches:
-- master
+  push:
+    branches:
+      - master
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v3
-    with:
-      dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
 
-  - name: Restore dependencies
-    run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-  - name: Build
-    run: dotnet build --configuration Release --no-restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-  - name: Publish
-    run: dotnet publish --configuration Release --no-build --output ./publish
+      - name: Publish
+        run: dotnet publish --configuration Release --no-build --output ./publish
 
-  - name: Put app offline
-    run: echo "Maintenance" > ./publish/app_offline.htm
+      - name: Add app_offline.htm to publish folder
+        run: |
+          echo "<!DOCTYPE html><html><body><h3>System update in progress. Back in 60 seconds.</h3></body></html>" > ./publish/app_offline.htm
 
-  - name: Deploy via FTP
-    uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-    with:
-      server: ${{ secrets.BRAYS_FTP_SERVER }}
-      username: ${{ secrets.BRAYS_FTP_USERNAME }}
-      password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-      local-dir: ./publish/
-      server-dir: ${{ secrets.BRAYS_FTP_PATH }}
-      dangerous-clean-slate: false
-      exclude: |
-        **/.git*
-        **/.git*/**
-        **/appsettings.Development.json
-```
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.BRAYS_FTP_SERVER }}
+          username: ${{ secrets.BRAYS_FTP_USERNAME }}
+          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
+          local-dir: ./publish/
+          server-dir: ${{ secrets.BRAYS_FTP_PATH }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/appsettings.Development.json
+            **/appsettings.json

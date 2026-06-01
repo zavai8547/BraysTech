@@ -5,7 +5,6 @@ on:
     branches:
       - master
 
-# This fixes the Node.js deprecation warning for ALL steps at once
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -21,29 +20,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Fixes the solution-level warning by targeting the project explicitly
+      # 1. Clean compilation targeting the project directly
       - name: Publish
         run: dotnet publish BraysTech.csproj --configuration Release --output ./publish
 
-      # FIXES THE FTP 550 LOCKED FILE ERROR:
-      # Creates an app_offline file in the publish folder so IIS gracefully shuts down the app before FTP deployment kicks in
-      - name: Create App Offline Lock File
+      # 2. Inject the offline file into the publish folder right before syncing.
+      # When FTP uploads this first, IIS will catch it and release the lock on your DLLs.
+      - name: Inject App Offline File
         run: echo "<h3>Site is updating. Please refresh in a few moments...</h3>" > ./publish/app_offline.htm
 
-      # Uploads app_offline.htm first to unlock your application files
-      - name: Deploy App Offline File First
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.BRAYS_FTP_SERVER }}
-          username: ${{ secrets.BRAYS_FTP_USERNAME }}
-          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-          local-dir: ./publish/
-          server-dir: /site1/
-          timeout: 60000
-          only-newer: false
-
-      # Deploys the rest of your updated binary files completely risk-free
-      - name: Deploy Main Application Files
+      # 3. Main Deployment (Uploads everything, including app_offline.htm)
+      - name: Deploy Application Files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.BRAYS_FTP_SERVER }}
@@ -52,25 +39,8 @@ jobs:
           local-dir: ./publish/
           server-dir: /site1/
           timeout: 120000
-          retry-count: 3
           exclude: |
             **/.git*
             **/.git*/**
             **/appsettings.Development.json
             **/appsettings.json
-
-      # Removes the app_offline.htm file from the production server, booting the system back online instantly
-      - name: Remove App Offline Lock File (Bring Online)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.BRAYS_FTP_SERVER }}
-          username: ${{ secrets.BRAYS_FTP_USERNAME }}
-          password: ${{ secrets.BRAYS_FTP_PASSWORD }}
-          server-dir: /site1/
-          dangerous-clean-slate: false
-          only-newer: false
-          exclude: |
-            **/*
-          # The custom command deletes app_offline from the hosting directory
-          # Note: If your hosting provider restricts raw commands via FTP, you can remove this step 
-          # and simply rename/delete the file via cPanel/Plesk manually if needed.

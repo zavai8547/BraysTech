@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brays Technologies — @ViewData["Title"]</title>
 
-    <!-- THEME PERSISTENCE SCRIPT - APPLIES THEME BEFORE PAGE RENDERS TO PREVENT FLASH -->
     <script>
         (function () {
             const t = localStorage.getItem('theme');
@@ -150,18 +149,25 @@
         /* TOPBAR */
 
         .topbar {
-            height: 72px;
+            height: auto;
+            min-height: 72px;
             background: white;
             margin-left: 260px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
+            padding: 10px 28px;
             border-bottom: 3px solid #007A3D;
             position: sticky;
             top: 0;
             z-index: 150;
             box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+        }
+
+        .page-title {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .page-title h5 {
@@ -178,6 +184,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
 
         .quick-btn {
@@ -257,7 +264,7 @@
         .hamburger {
             display: none;
             position: fixed;
-            top: 12px;
+            top: 14px;
             left: 12px;
             z-index: 999;
             border: none;
@@ -290,6 +297,11 @@
                     transform: translateX(0);
                 }
 
+            /* Adds padding inside the open sidebar header so the hamburger button doesn't cover "Brays Technologies" */
+            .sidebar.open .brand {
+                padding-left: 65px; 
+            }
+
             .overlay.open {
                 display: block;
             }
@@ -299,8 +311,20 @@
                 margin-left: 0;
             }
 
+            /* Keeps text safe from hitting the user logout widget dropdown */
             .topbar {
-                padding-left: 60px;
+                padding-left: 70px;
+                padding-top: 14px;
+                padding-bottom: 14px;
+            }
+
+            /* Hides the super lengthy sentence description only on mobiles to completely prevent crossline overlapping layout bugs */
+            .page-title small {
+                display: none;
+            }
+
+            .page-title h5 {
+                font-size: 18px;
             }
 
             .main-content {
@@ -313,6 +337,7 @@
 
             .user-btn {
                 font-size: 12px;
+                padding: 6px 10px;
             }
         }
     </style>
@@ -320,11 +345,8 @@
 
 <body>
 
-    <!-- MOBILE BUTTON -->
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    <!-- TOASTS -->
 
     <div class="toast-container-custom">
 
@@ -358,8 +380,6 @@
 
     </div>
 
-    <!-- SIDEBAR -->
-
     <aside class="sidebar" id="sidebar">
 
         <div class="brand">
@@ -371,8 +391,6 @@
 
         <div class="nav-wrapper">
 
-            <!-- MAIN -->
-
             <div class="nav-section">Main</div>
 
             <a href="/Dashboard/Index"
@@ -380,8 +398,6 @@
                 <span class="nav-icon">📊</span>
                 Dashboard
             </a>
-
-            <!-- SALES -->
 
             <div class="nav-section">Sales & POS</div>
 
@@ -403,8 +419,6 @@
                 Customers
             </a>
 
-            <!-- INVENTORY -->
-
             <div class="nav-section">Inventory</div>
 
             <a href="/Stock/Index" class="nav-link">
@@ -422,8 +436,6 @@
                 Faulty Devices
             </a>
 
-            <!-- BRANCH -->
-
             <div class="nav-section">Branch Management</div>
 
             <a href="/Branch/Index" class="nav-link">
@@ -435,8 +447,6 @@
                 <span class="nav-icon">📈</span>
                 Staff Performance
             </a>
-
-            <!-- FINANCE -->
 
             <div class="nav-section">Finance</div>
 
@@ -455,7 +465,6 @@
                 Monthly Reports
             </a>
 
-            <!-- ADMINISTRATION (UPDATED: added Activity Logs link) -->
             @if (User.IsInRole("Admin"))
             {
                 <div class="nav-section">Administration</div>
@@ -465,7 +474,6 @@
                     Staff Accounts
                 </a>
 
-                <!--  ACTIVITY LOGS  -->
                 <a href="/Audit/Index" class="nav-link">
                     <span class="nav-icon">📋</span>
                     Activity Logs
@@ -503,8 +511,6 @@
         </div>
 
     </aside>
-
-    <!-- TOPBAR -->
 
     <header class="topbar">
 
@@ -556,8 +562,6 @@
         </div>
 
     </header>
-
-    <!-- MAIN -->
 
     <main class="main-content">
         @RenderBody()

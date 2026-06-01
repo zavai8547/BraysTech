@@ -11,24 +11,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Publish
-        run: dotnet publish --configuration Release --output ./publish
+        run: dotnet publish BraysTech.csproj --configuration Release --output ./publish
 
       - name: Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           server: ${{ secrets.BRAYS_FTP_SERVER }}
           username: ${{ secrets.BRAYS_FTP_USERNAME }}
           password: ${{ secrets.BRAYS_FTP_PASSWORD }}
           local-dir: ./publish/
           server-dir: /site1/
-          timeout: 60000
+          timeout: 120000
+          retry-count: 3
           exclude: |
             **/.git*
             **/.git*/**

@@ -1,0 +1,148 @@
+﻿@{
+    ViewData["Title"] = "Submit Cash-Up";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <h4 class="fw-bold mb-4">Submit M- Pesa Sales</h4>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(
+                            135deg,#007A3D,#005C2E);">
+                <h5 class="text-white fw-bold mb-1">
+                    End of Shift Declaration
+                </h5>
+                <small style="color:rgba(255,255,255,0.75);">
+                    @DateTime.Today.ToString(
+                             "dddd, dd MMMM yyyy")
+                    &nbsp;|&nbsp;
+                    @(ViewBag.BranchName ?? "")
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/CashUp/New">
+                    @Html.AntiForgeryToken()
+
+                    @if (isAdmin &&
+                    ViewBag.Branches != null)
+                    {
+                        <div class="mb-4">
+                            <label class="form-label
+                                          fw-semibold">
+                                Branch *
+                            </label>
+                            <select name="branchID"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                <option value="">
+                                    -- Select Branch --
+                                </option>
+                                @foreach (var b in
+                               ViewBag.Branches)
+                                {
+                                    <option value="@b.BranchID">
+                                        @b.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden"
+                               name="branchID"
+                               value="@ViewBag.BranchID" />
+                    }
+
+                    <div class="mb-4">
+                        <label class="form-label
+                                      fw-semibold"
+                               style="font-size:1rem;">
+                            Cash in Hand (KES)
+                        </label>
+                        <small class="d-block
+                                      text-muted mb-2">
+                            Count the physical cash
+                            you have right now
+                        </small>
+                        <div class="input-group">
+                            <span class="input-group-text
+                                          fw-bold"
+                                  style="background:#f0f7f3;
+                                         color:#007A3D;">
+                                KES
+                            </span>
+                            <input type="number"
+                                   name="cashAmount"
+                                   class="form-control
+                                          form-control-lg"
+                                   style="font-weight:800;
+                                          font-size:1.3rem;"
+                                   min="0"
+                                   step="1"
+                                   placeholder="0"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label
+                                      fw-semibold"
+                               style="font-size:1rem;">
+                            M-Pesa Float (KES)
+                        </label>
+                        <small class="d-block
+                                      text-muted mb-2">
+                            Amount currently remaining
+                            in your M-Pesa number
+                        </small>
+                        <div class="input-group">
+                            <span class="input-group-text
+                                          fw-bold"
+                                  style="background:#eff6ff;
+                                         color:#2563eb;">
+                                KES
+                            </span>
+                            <input type="number"
+                                   name="mpesaFloat"
+                                   class="form-control
+                                          form-control-lg"
+                                   style="font-weight:800;
+                                          font-size:1.3rem;
+                                          color:#2563eb;"
+                                   min="0"
+                                   step="1"
+                                   placeholder="0"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Notes (optional)
+                        </label>
+                        <textarea name="notes"
+                                  class="form-control"
+                                  style="border-radius:10px;"
+                                  rows="2"
+                                  placeholder="Any notes about today...">
+                        </textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-lg w-100 fw-bold"
+                            style="background:#007A3D;
+                                   color:white;
+                                   border-radius:12px;">
+                        Submit Mpesa sales
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

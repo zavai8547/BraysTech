@@ -1,0 +1,314 @@
+﻿@model IEnumerable<BraysTech.Models.Accessory>
+@{
+    ViewData["Title"] = "Accessories Stock";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Sort by name for better organization
+    var sortedAccessories = Model.OrderBy(a => a.Name);
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Accessories Stock</h4>
+        <small class="text-muted">
+            Chargers, cables, cases and accessories
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/Accessories/NewSale"
+           class="btn fw-semibold rounded-pill px-4"
+           style="background:#007A3D;color:white;">
+            Sell Accessory
+        </a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a href="/Accessories/Add"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                + Add Stock
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total Items
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    @ViewBag.TotalItems
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #dc2626 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Low Stock
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#dc2626;">
+                    @ViewBag.LowStock
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Stock Value
+                </p>
+                <h5 class="fw-bold mb-0"
+                    style="color:#b45309;">
+                    KES @(((decimal)ViewBag.TotalValue).ToString("N0"))
+                </h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3 p-3"
+     style="border-radius:16px;">
+    <form method="get" action="/Accessories/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input name="search"
+                       class="form-control"
+                       placeholder="Search accessories..."
+                       value="@ViewBag.Search" />
+            </div>
+            <div class="col-md-3">
+                <select name="category"
+                        class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var c in ViewBag.Categories)
+                    {
+                        if (c == ViewBag.SelectedCategory)
+                        {
+                            <option value="@c" selected>
+                                @c
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn w-100 fw-semibold"
+                        style="background:#007A3D;
+                               color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="/Accessories/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    @if (!sortedAccessories.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <h5 class="fw-bold">No accessories yet</h5>
+            <a href="/Accessories/Add"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                Add First Item
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Item
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Category
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Branch
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Stock
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Buy Price (KES)
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Sell Price (KES)
+                        </th>
+                        <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                            Margin
+                        </th>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <th style="color:white; padding:13px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Actions
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in sortedAccessories)
+                    {
+                        var isLow = a.CurrentStock <= a.LowStockAlert;
+                        <tr style="@(isLow ? "background:#fff5f5;" : "")">
+                            <td style="padding:13px 16px; font-size:0.88rem; border-bottom:1px solid #f0f0f0;">
+                                <div class="fw-semibold">
+                                    @a.Name
+                                </div>
+                                @if (!string.IsNullOrEmpty(a.Brand))
+                                {
+                                    <small class="text-muted">
+                                        @a.Brand
+                                    </small>
+                                }
+                            </td>
+                            <td style="padding:13px 16px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                @(a.Category ?? "—")
+                            </td>
+                            <td style="padding:13px 16px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                @(a.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:13px 16px; border-bottom:1px solid #f0f0f0;">
+                                <span style="font-weight:700; color:@(isLow ? "#dc2626" : "#007A3D");">
+                                    @a.CurrentStock
+                                </span>
+                                @if (isLow)
+                                {
+                                    <span style="font-size:0.7rem; color:#dc2626; font-weight:600; margin-left:5px;">
+                                        LOW
+                                    </span>
+                                }
+                            </td>
+                            <td style="padding:13px 16px; font-size:0.88rem; border-bottom:1px solid #f0f0f0;">
+                                KES @a.BuyingPrice.ToString("N0")
+                            </td>
+                            <td style="padding:13px 16px; font-size:0.88rem; color:#007A3D; font-weight:700; border-bottom:1px solid #f0f0f0;">
+                                KES @a.SellingPrice.ToString("N0")
+                            </td>
+                            <td style="padding:13px 16px; font-size:0.88rem; border-bottom:1px solid #f0f0f0;">
+                                @a.Margin.ToString("N1")%
+                            </td>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                            {
+                                <td style="padding:13px 16px; border-bottom:1px solid #f0f0f0;">
+                                    <div class="d-flex gap-1">
+                                        <a href="/Accessories/Edit/@a.AccessoryID"
+                                           class="btn btn-sm btn-outline-secondary"
+                                           style="border-radius:7px; font-size:0.78rem;">
+                                            Edit
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm fw-semibold"
+                                                style="background:#007A3D; color:white; border-radius:7px; font-size:0.78rem;"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#restock_@a.AccessoryID">
+                                            Restock
+                                        </button>
+                                    </div>
+
+                                    <div class="modal fade"
+                                         id="restock_@a.AccessoryID"
+                                         tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header" style="background:#007A3D; color:white;">
+                                                    <h5 class="modal-title">
+                                                        Restock — @a.Name
+                                                    </h5>
+                                                    <button type="button"
+                                                            class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal">
+                                                    </button>
+                                                </div>
+                                                <form method="post"
+                                                      action="/Accessories/Restock">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden"
+                                                           name="id"
+                                                           value="@a.AccessoryID" />
+                                                    <div class="modal-body">
+                                                        <p class="text-muted small">
+                                                            Current stock:
+                                                            <strong>
+                                                                @a.CurrentStock units
+                                                            </strong>
+                                                        </p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">
+                                                                Quantity to Add
+                                                            </label>
+                                                            <input type="number"
+                                                                   name="quantity"
+                                                                   class="form-control"
+                                                                   min="1"
+                                                                   required />
+                                                        </div>
+                                                        <div>
+                                                            <label class="form-label fw-semibold">
+                                                                Notes (optional)
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="notes"
+                                                                   class="form-control"
+                                                                   placeholder="e.g. Restocked from supplier" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <button type="submit"
+                                                                class="btn fw-semibold"
+                                                                style="background:#007A3D; color:white; border-radius:8px;">
+                                                            Add Stock
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

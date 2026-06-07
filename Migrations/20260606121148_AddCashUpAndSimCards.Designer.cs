@@ -4,6 +4,7 @@ using BraysTech.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BraysTech.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606121148_AddCashUpAndSimCards")]
+    partial class AddCashUpAndSimCards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -832,35 +835,20 @@ namespace BraysTech.Migrations
                     b.Property<decimal>("BuyingPrice")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<string>("CustomerIDNumber")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("DateSold")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<bool>("IsReplacement")
+                    b.Property<bool>("IsNewSim")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("MpesaCode")
-                        .HasColumnType("longtext");
 
                     b.Property<int>("Network")
                         .HasColumnType("int");
 
-                    b.Property<string>("NewSimNumber")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Notes")
                         .HasColumnType("longtext");
-
-                    b.Property<string>("OldSimNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("PaymentMethod")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("SellingPrice")
                         .HasColumnType("decimal(65,30)");

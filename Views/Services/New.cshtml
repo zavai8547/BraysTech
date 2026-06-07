@@ -1,0 +1,298 @@
+﻿@{
+    ViewData["Title"] = "New Service Record";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Services/Index"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                Back
+            </a>
+            <h4 class="fw-bold mb-0">
+                New Service Record
+            </h4>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(
+                            135deg,#007A3D,#005C2E);">
+                <h5 class="text-white fw-bold mb-0">
+                    Record Service Transaction
+                </h5>
+                <small style="color:rgba(255,255,255,0.75);">
+                    SIM swap, replacement, new SIM or repair
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post"
+                      action="/Services/New">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Service Type *
+                        </label>
+                        <select name="serviceType"
+                                class="form-select"
+                                style="border-radius:10px;"
+                                onchange="handleServiceType(this.value)"
+                                required>
+                            <option value="">
+                                -- Select Service --
+                            </option>
+                            <option value="1">
+                                New SIM Card Sale
+                            </option>
+                            <option value="0">
+                                SIM Swap
+                            </option>
+                            <option value="2">
+                                Phone Repair
+                            </option>
+                            <option value="3">
+                                Screen Replacement
+                            </option>
+                            <option value="4">
+                                Battery Replacement
+                            </option>
+                            <option value="5">
+                                Data Transfer
+                            </option>
+                            <option value="6">
+                                Phone Unlocking
+                            </option>
+                            <option value="7">
+                                Other
+                            </option>
+                        </select>
+                        <small class="text-muted">
+                            Choose the type of service
+                            being provided
+                        </small>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Customer Name *
+                            </label>
+                            <input name="customerName"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Customer Phone *
+                            </label>
+                            <input name="customerPhone"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   placeholder="e.g. 0712345678"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="idDiv"
+                         style="display:none;">
+                        <label class="form-label fw-semibold">
+                            National ID Number
+                            <span class="text-muted
+                                          fw-normal
+                                          small">
+                                (required for SIM swap)
+                            </span>
+                        </label>
+                        <input name="customerIDNumber"
+                               id="customerIDNumber"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="ID or Passport number" />
+                    </div>
+
+                    <div id="simFields" style="display:none;">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    Old SIM Number
+                                </label>
+                                <input name="oldSimNumber"
+                                       class="form-control"
+                                       style="border-radius:10px;
+                                              font-family:monospace;" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    New SIM Number
+                                </label>
+                                <input name="newSimNumber"
+                                       class="form-control"
+                                       style="border-radius:10px;
+                                              font-family:monospace;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="repairFields"
+                         style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Phone IMEI
+                            </label>
+                            <input name="phoneIMEI"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          font-family:monospace;" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Fault Description
+                            </label>
+                            <textarea name="faultDescription"
+                                      class="form-control"
+                                      style="border-radius:10px;"
+                                      rows="2"
+                                      placeholder="Describe the fault...">
+                            </textarea>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Charge Amount (KES) *
+                            </label>
+                            <input name="chargeAmount"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          font-weight:700;
+                                          color:#007A3D;"
+                                   min="0"
+                                   placeholder="0"
+                                   required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Branch *
+                            </label>
+                            <select name="branchID"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                <option value="">
+                                    -- Select Branch --
+                                </option>
+                                @foreach (var b in
+                                ViewBag.Branches)
+                                {
+                                    <option value="@b.BranchID">
+                                        @b.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Payment Method *
+                        </label>
+                        <select name="paymentMethod"
+                                class="form-select"
+                                style="border-radius:10px;"
+                                onchange="toggleMpesa(this.value)">
+                            <option value="0">Cash</option>
+                            <option value="1">MPesa</option>
+                            <option value="3">Card</option>
+                        </select>
+                    </div>
+
+                    <div id="mpesaDiv"
+                         style="display:none;"
+                         class="mb-3">
+                        <label class="form-label fw-semibold">
+                            M-Pesa Code
+                        </label>
+                        <input name="mpesaCode"
+                               class="form-control"
+                               style="border-radius:10px;
+                                      font-family:monospace;
+                                      font-weight:700;
+                                      text-transform:uppercase;"
+                               placeholder="e.g. QHX4RT8K2P" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Notes (optional)
+                        </label>
+                        <textarea name="notes"
+                                  class="form-control"
+                                  style="border-radius:10px;"
+                                  rows="2">
+                        </textarea>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit"
+                                class="btn btn-lg flex-grow-1
+                                       fw-bold"
+                                style="background:#007A3D;
+                                       color:white;
+                                       border-radius:12px;">
+                            Save Service Record
+                        </button>
+                        <a href="/Services/Index"
+                           class="btn btn-lg
+                                  btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleServiceType(val) {
+        // SIM Swap = 0, SimReplacement/New SIM = 1
+        // Repairs = 2,3,4,5,6
+        var isSimSwap = val === '0';
+        var isSimNew = val === '1';
+        var isRepair = val === '2' || val === '3' ||
+            val === '4' || val === '5' ||
+            val === '6' || val === '7';
+
+        // Show ID for sim swap
+        document.getElementById('idDiv')
+            .style.display =
+            isSimSwap ? 'block' : 'none';
+        var idInput = document.getElementById(
+            'customerIDNumber');
+        if (idInput) idInput.required = isSimSwap;
+
+        // Show sim fields for swap or new sim
+        document.getElementById('simFields')
+            .style.display =
+            (isSimSwap || isSimNew) ? 'block' : 'none';
+
+        // Show repair fields for repairs
+        document.getElementById('repairFields')
+            .style.display =
+            isRepair ? 'block' : 'none';
+    }
+
+    function toggleMpesa(val) {
+        document.getElementById('mpesaDiv')
+            .style.display =
+            val === '1' ? 'block' : 'none';
+    }
+</script>

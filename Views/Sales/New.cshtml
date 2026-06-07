@@ -494,15 +494,7 @@
                             </div>
                             MPesa
                         </div>
-                        <div class="payment-option"
-                             onclick="selectPayment(
-                                 'MKOPA','2',this)">
-                            <div style="font-size:1rem;
-                                         margin-bottom:4px;">
-                                MK
-                            </div>
-                            MKOPA
-                        </div>
+                       
                         <div class="payment-option"
                              onclick="selectPayment(
                                  'Card','3',this)">
@@ -749,9 +741,7 @@
                 item.customPrice - item.discount;
             const profit = finalPrice - item.buyingPrice;
 
-            // ── BUG 1 FIX ──────────────────────────────
-            // isBelowMin is true only when customPrice
-            // is LESS than the minimum sellingPrice
+            // ── BUG 1 
             const isBelowMin =
                 item.customPrice < item.sellingPrice;
             // absDiff is always positive
@@ -911,12 +901,7 @@
         updateSummary();
     }
 
-    // ── BUG 1 FIX — updatePrice ────────────────────────────
-    // The original code had a broken comparison:
-    // cart[stockID].customPrice
-    // cart[stockID].sellingPrice
-    // (the < operator was missing — it was not a
-    // comparison at all, just two statements)
+    //
     function updatePrice(stockID, val) {
         cart[stockID].customPrice = parseFloat(val) || 0;
 

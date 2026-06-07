@@ -1,0 +1,284 @@
+﻿@model BraysTech.Models.Accessory
+@{
+    ViewData["Title"] = "Edit Accessory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Accessories/Index"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                Back
+            </a>
+            <h4 class="fw-bold mb-0">Edit Accessory</h4>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(
+                            135deg,#007A3D,#005C2E);">
+                <h5 class="text-white fw-bold mb-0">
+                    Edit — @Model.Name
+                </h5>
+                <small style="color:rgba(255,255,255,0.75);">
+                    Update accessory details and pricing
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post"
+                      action="/Accessories/Edit">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="AccessoryID"
+                           value="@Model.AccessoryID" />
+                    <input type="hidden"
+                           name="DateAdded"
+                           value="@Model.DateAdded
+                               .ToString(" o")" />
+                    <input type="hidden"
+                           name="CurrentStock"
+                           value="@Model.CurrentStock" />
+                    <input type="hidden"
+                           name="IsActive"
+                           value="true" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Item Name *
+                        </label>
+                        <input name="Name"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               value="@Model.Name"
+                               required />
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Category
+                            </label>
+                            <input name="Category"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.Category"
+                                   list="catList" />
+                            <datalist id="catList">
+                                <option value="Charger" />
+                                <option value="Cable" />
+                                <option value="Case" />
+                                <option value="Screen Protector" />
+                                <option value="Earphones" />
+                                <option value="Power Bank" />
+                                <option value="Memory Card" />
+                                <option value="Holder" />
+                                <option value="Other" />
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Brand
+                            </label>
+                            <input name="Brand"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.Brand" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Buying Price (KES) *
+                            </label>
+                            <input name="BuyingPrice"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.BuyingPrice"
+                                   min="0"
+                                   oninput="calcProfit()"
+                                   required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Selling Price (KES) *
+                            </label>
+                            <input name="SellingPrice"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          color:#007A3D;
+                                          font-weight:700;"
+                                   value="@Model.SellingPrice"
+                                   min="0"
+                                   oninput="calcProfit()"
+                                   required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Low Stock Alert
+                            </label>
+                            <input name="LowStockAlert"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.LowStockAlert"
+                                   min="0" />
+                        </div>
+                    </div>
+
+                    <div id="profitBox"
+                         class="mb-3 p-3 rounded"
+                         style="background:#f0f7f3;">
+                        <div style="display:flex;
+                                     justify-content:space-between;
+                                     font-size:0.88rem;">
+                            <div>
+                                <span style="color:#666;">
+                                    Profit per unit:
+                                </span>
+                                <strong id="profitDisplay"
+                                        style="color:#007A3D;
+                                               margin-left:6px;">
+                                    KES @((Model.SellingPrice -
+                                    Model.BuyingPrice)
+                                    .ToString("N0"))
+                                </strong>
+                            </div>
+                            <div>
+                                <span style="color:#666;">
+                                    Margin:
+                                </span>
+                                <strong id="marginDisplay"
+                                        style="color:#007A3D;
+                                               margin-left:6px;">
+                                    @(Model.SellingPrice > 0
+                                        ? ((Model.SellingPrice -
+                                        Model.BuyingPrice) /
+                                        Model.SellingPrice * 100)
+                                        .ToString("N1")
+                                        : "0")%
+                                </strong>
+                            </div>
+                            <div>
+                                <span style="color:#666;">
+                                    Current Stock:
+                                </span>
+                                <strong style="color:#007A3D;
+                                               margin-left:6px;">
+                                    @Model.CurrentStock units
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Branch *
+                            </label>
+                            <select name="BranchID"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                <option value="">
+                                    -- Select Branch --
+                                </option>
+                                @foreach (var b in
+                                ViewBag.Branches)
+                                {
+                                    if (b.BranchID ==
+                                    Model.BranchID)
+                                    {
+                                        <option value="@b.BranchID"
+                                                selected>
+                                            @b.Name
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@b.BranchID">
+                                            @b.Name
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Supplier
+                            </label>
+                            <input name="SupplierName"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.SupplierName"
+                                   placeholder="Optional" />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Description / Notes
+                        </label>
+                        <textarea name="Description"
+                                  class="form-control"
+                                  style="border-radius:10px;"
+                                  rows="2">@Model.Description</textarea>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit"
+                                class="btn btn-lg
+                                       flex-grow-1 fw-bold"
+                                style="background:#007A3D;
+                                       color:white;
+                                       border-radius:12px;">
+                            Save Changes
+                        </button>
+                        <a href="/Accessories/Index"
+                           class="btn btn-lg
+                                  btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcProfit() {
+        const buy = parseFloat(
+            document.querySelector(
+                '[name="BuyingPrice"]').value) || 0;
+        const sell = parseFloat(
+            document.querySelector(
+                '[name="SellingPrice"]').value) || 0;
+        const profit = sell - buy;
+        const margin = sell > 0
+            ? (profit / sell * 100) : 0;
+        const profitEl = document.getElementById(
+            'profitDisplay');
+        const marginEl = document.getElementById(
+            'marginDisplay');
+        if (profitEl) {
+            profitEl.textContent =
+                'KES ' + profit.toLocaleString();
+            profitEl.style.color =
+                profit >= 0 ? '#007A3D' : '#dc2626';
+        }
+        if (marginEl) {
+            marginEl.textContent =
+                margin.toFixed(1) + '%';
+            marginEl.style.color =
+                margin >= 0 ? '#007A3D' : '#dc2626';
+        }
+    }
+</script>

@@ -1,0 +1,352 @@
+﻿@model IEnumerable<BraysTech.Models.ServiceRecord>
+@{
+    ViewData["Title"] = "Services";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    decimal totalRevenue = ViewBag.TotalRevenue ?? 0m;
+    int totalRecords = ViewBag.TotalRecords ?? 0;
+    decimal todayRevenue = ViewBag.TodayRevenue ?? 0m;
+    int todayCount = ViewBag.TodayCount ?? 0;
+    int simSwapCount = ViewBag.SimSwapCount ?? 0;
+    int simNewCount = ViewBag.SimNewCount ?? 0;
+    int repairCount = ViewBag.RepairCount ?? 0;
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Services</h4>
+        <small class="text-muted">
+            SIM swaps, replacements, repairs
+            and new SIM sales
+        </small>
+    </div>
+    <a href="/Services/New"
+       class="btn fw-semibold rounded-pill px-4"
+       style="background:#007A3D;color:white;">
+        + New Service
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    Total Records
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    @totalRecords
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #2563eb !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    Today
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#2563eb;">
+                    @todayCount
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #7c3aed !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    SIM Swaps
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#7c3aed;">
+                    @simSwapCount
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #16a34a !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    New SIMs
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#16a34a;">
+                    @simNewCount
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #b45309 !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    Repairs
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#b45309;">
+                    @repairCount
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #0f172a !important;">
+            <div class="card-body text-center py-3">
+                <p class="text-muted small mb-1">
+                    Total Revenue
+                </p>
+                <h5 class="fw-bold mb-0">
+                    KES @totalRevenue.ToString("N0")
+                </h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3 p-3"
+     style="border-radius:16px;">
+    <form method="get" action="/Services/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                @{
+                    string selectedType = ViewBag.SelectedType?.ToString() ?? "";
+                }
+
+                <select name="type" class="form-select">
+
+                    @if (string.IsNullOrEmpty(selectedType))
+                    {
+                        <option value="" selected>All Service Types</option>
+                    }
+                    else
+                    {
+                        <option value="">All Service Types</option>
+                    }
+
+                    @if (selectedType == "SimSwap")
+                    {
+                        <option value="SimSwap" selected>SIM Swap</option>
+                    }
+                    else
+                    {
+                        <option value="SimSwap">SIM Swap</option>
+                    }
+
+                    @if (selectedType == "SimReplacement")
+                    {
+                        <option value="SimReplacement" selected>SIM Replacement / New SIM</option>
+                    }
+                    else
+                    {
+                        <option value="SimReplacement">SIM Replacement / New SIM</option>
+                    }
+
+                    @if (selectedType == "PhoneRepair")
+                    {
+                        <option value="PhoneRepair" selected>Phone Repair</option>
+                    }
+                    else
+                    {
+                        <option value="PhoneRepair">Phone Repair</option>
+                    }
+
+                    @if (selectedType == "ScreenReplacement")
+                    {
+                        <option value="ScreenReplacement" selected>Screen Replacement</option>
+                    }
+                    else
+                    {
+                        <option value="ScreenReplacement">Screen Replacement</option>
+                    }
+
+                    @if (selectedType == "BatteryReplacement")
+                    {
+                        <option value="BatteryReplacement" selected>Battery Replacement</option>
+                    }
+                    else
+                    {
+                        <option value="BatteryReplacement">Battery Replacement</option>
+                    }
+
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="from"
+                       class="form-control"
+                       value="@ViewBag.From" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="to"
+                       class="form-control"
+                       value="@ViewBag.To" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn w-100 fw-semibold"
+                        style="background:#007A3D;
+                               color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="/Services/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3rem;">🔧</div>
+            <h5 class="fw-bold mt-3">
+                No service records yet
+            </h5>
+            <a href="/Services/New"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                Record First Service
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        @foreach (var h in new[]
+                       {
+                    "Date","Customer","Phone",
+                    "ID No.","Service Type",
+                    "Branch","Staff",
+                    "Charge","Payment","Actions"
+                    })
+                        {
+                            <th style="color:white;
+                                       padding:12px 14px;
+                                       border:none;
+                                       font-size:0.8rem;
+                                       white-space:nowrap;">
+                                @h
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        string typeBg = r.ServiceType ==
+                        BraysTech.Models.ServiceType
+                        .SimSwap
+                        ? "#f3e8ff"
+                        : r.ServiceType ==
+                        BraysTech.Models.ServiceType
+                        .SimReplacement
+                        ? "#dcfce7"
+                        : "#dbeafe";
+                        string typeColor = r.ServiceType ==
+                        BraysTech.Models.ServiceType
+                        .SimSwap
+                        ? "#7c3aed"
+                        : r.ServiceType ==
+                        BraysTech.Models.ServiceType
+                        .SimReplacement
+                        ? "#16a34a"
+                        : "#2563eb";
+                        <tr>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;
+                                       white-space:nowrap;">
+                                @r.CreatedAt
+                                .ToString("dd MMM HH:mm")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-weight:600;
+                                       font-size:0.85rem;">
+                                @r.CustomerName
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.82rem;
+                                       font-family:monospace;">
+                                @r.CustomerPhone
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.8rem;
+                                       color:#888;">
+                                @(r.CustomerIDNumber ?? "—")
+                            </td>
+                            <td style="padding:12px 14px;">
+                                <span style="padding:3px 10px;
+                                              border-radius:20px;
+                                              font-size:0.73rem;
+                                              font-weight:700;
+                                              background:@typeBg;
+                                              color:@typeColor;
+                                              white-space:nowrap;">
+                                    @r.ServiceType.ToString()
+                                </span>
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                @(r.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                @(r.Staff?.FullName ?? "—")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-weight:700;
+                                       color:#007A3D;">
+                                KES @r.ChargeAmount.ToString("N0")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.82rem;">
+                                @r.PaymentMethod
+                            </td>
+                            <td style="padding:12px 14px;">
+                                <a href="/Services/Details/@r.RecordID"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background:#007A3D;
+                                          color:white;
+                                          border-radius:7px;
+                                          font-size:0.76rem;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

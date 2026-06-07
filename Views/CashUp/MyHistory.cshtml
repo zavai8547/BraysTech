@@ -1,0 +1,165 @@
+﻿@model IEnumerable<BraysTech.Models.CashUp>
+@{
+    ViewData["Title"] = "My Mpesa History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Sort the cash-ups by CreatedAt in descending order (latest first)
+    var sortedCashUps = Model.OrderByDescending(c => c.CreatedAt);
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">My Mpesa History</h4>
+        <small class="text-muted">
+            Your Mpesa submission history
+        </small>
+    </div>
+    <a href="/CashUp/New"
+       class="btn fw-semibold rounded-pill px-4"
+       style="background:#007A3D;color:white;">
+        Submit mpesa sales
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    @if (!sortedCashUps.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3rem;">📜</div>
+            <h5 class="fw-bold mt-3">
+                No M-pesa sales submitted yet
+            </h5>
+            <p>
+                Submit your first Mpesa sale at
+                end of shift.
+            </p>
+            <a href="/CashUp/New"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                Submit Now
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Date
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Branch
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Staff
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Cash Declared (KES)
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            M-Pesa Declared (KES)
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Total (KES)
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Notes
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Submitted At
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in sortedCashUps)
+                    {
+                        decimal total = c.CashAmount + c.MpesaFloat;
+                        <tr>
+                            <td style="padding:12px 16px;
+                                       font-size:0.88rem;
+                                       white-space:nowrap;
+                                       font-weight:600;
+                                       border-bottom:1px solid #f0f0f0;">
+                                @c.CashUpDate.ToString("dd MMM yyyy")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-size:0.85rem;
+                                       border-bottom:1px solid #f0f0f0;">
+                                @(c.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-size:0.85rem;
+                                       border-bottom:1px solid #f0f0f0;">
+                                @(c.Staff?.FullName ?? "—")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-weight:700;
+                                       color:#007A3D;
+                                       border-bottom:1px solid #f0f0f0;">
+                                KES @c.CashAmount.ToString("N0")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-weight:700;
+                                       color:#2563eb;
+                                       border-bottom:1px solid #f0f0f0;">
+                                KES @c.MpesaFloat.ToString("N0")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-weight:700;
+                                       color:#0f172a;
+                                       border-bottom:1px solid #f0f0f0;">
+                                KES @total.ToString("N0")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-size:0.82rem;
+                                       color:#888;
+                                       max-width:180px;
+                                       border-bottom:1px solid #f0f0f0;">
+                                @(c.Notes ?? "—")
+                            </td>
+                            <td style="padding:12px 16px;
+                                       font-size:0.8rem;
+                                       color:#555;
+                                       border-bottom:1px solid #f0f0f0;">
+                                @c.CreatedAt.ToString("HH:mm")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="padding:16px 20px; border-top:1px solid #e0e0e0; background-color:#f9f9f9;">
+            <div style="display:flex; gap:32px;">
+                <div>
+                    <span style="font-size:0.82rem; color:#666;">
+                        Total Cash:
+                    </span>
+                    <strong style="color:#007A3D; margin-left:8px;">
+                        KES @sortedCashUps.Sum(c => c.CashAmount).ToString("N0")
+                    </strong>
+                </div>
+                <div>
+                    <span style="font-size:0.82rem; color:#666;">
+                        Total M-Pesa:
+                    </span>
+                    <strong style="color:#2563eb; margin-left:8px;">
+                        KES @sortedCashUps.Sum(c => c.MpesaFloat).ToString("N0")
+                    </strong>
+                </div>
+                <div>
+                    <span style="font-size:0.82rem; color:#666;">
+                        Combined Total:
+                    </span>
+                    <strong style="color:#0f172a; margin-left:8px;">
+                        KES @(sortedCashUps.Sum(c => c.CashAmount + c.MpesaFloat).ToString("N0"))
+                    </strong>
+                </div>
+            </div>
+        </div>
+    }
+</div>

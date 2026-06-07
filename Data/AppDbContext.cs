@@ -19,6 +19,24 @@ namespace BraysTech.Data
 
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        // Accessories
+        public DbSet<Accessory> Accessories { get; set; }
+        public DbSet<AccessorySale> AccessorySales { get; set; }
+        public DbSet<AccessorySaleItem> AccessorySaleItems { get; set; }
+
+        // Services
+        public DbSet<ServiceRecord> ServiceRecords { get; set; }
+
+        // M-Pesa Float
+        public DbSet<MpesaFloat> MpesaFloats { get; set; }
+        public DbSet<FloatTransaction> FloatTransactions { get; set; }
+
+        // Cash Up
+        public DbSet<CashUp> CashUps { get; set; }
+
+        // SIM Cards
+        public DbSet<SimCard> SimCards { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

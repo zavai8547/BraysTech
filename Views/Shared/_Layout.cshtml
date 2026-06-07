@@ -7,30 +7,54 @@
 
     <script>
         (function () {
-            const t = localStorage.getItem('theme');
-            if (t === 'dark') document.documentElement.classList.add('dark-mode');
-            else if (t === 'system') {
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches)
-                    document.documentElement.classList.add('dark-mode');
-            }
+            const t = localStorage.getItem('brays_theme');
+            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         })();
     </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
     <style>
+        :root {
+            --bg-body: #F3F8F5;
+            --bg-card: #ffffff;
+            --bg-topbar: #ffffff;
+            --text-primary: #0f172a;
+            --text-muted: #6b7280;
+            --border-color: #e5f0e8;
+            --input-bg: #ffffff;
+            --input-text: #0f172a;
+            --input-border: #d1d5db;
+            --table-hover: #f9fef9;
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-topbar: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --input-text: #e2e8f0;
+            --input-border: #334155;
+            --table-hover: #1a2d1a;
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            background: #F3F8F5;
+            background: var(--bg-body);
+            color: var(--text-primary);
             font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
-
-        /* SIDEBAR */
 
         .sidebar {
             width: 260px;
@@ -74,16 +98,6 @@
                 font-size: 12px;
             }
 
-        .branch-badge {
-            margin-top: 12px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 10px 12px;
-            color: white;
-            font-size: 13px;
-        }
-
         .nav-wrapper {
             padding-bottom: 20px;
         }
@@ -110,8 +124,7 @@
             margin: 2px 0;
         }
 
-            .nav-link:hover,
-            .nav-link.active {
+            .nav-link:hover, .nav-link.active {
                 background: rgba(255,255,255,0.12);
                 color: white;
                 border-left: 3px solid #ffffff;
@@ -130,6 +143,8 @@
             padding: 2px 7px;
             border-radius: 20px;
             margin-left: auto;
+            color: rgba(255,255,255,0.9);
+            font-weight: 700;
         }
 
         .sidebar-footer {
@@ -146,12 +161,10 @@
                 opacity: .7;
             }
 
-        /* TOPBAR */
-
         .topbar {
             height: auto;
             min-height: 72px;
-            background: white;
+            background: var(--bg-topbar);
             margin-left: 260px;
             display: flex;
             align-items: center;
@@ -161,7 +174,8 @@
             position: sticky;
             top: 0;
             z-index: 150;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            box-shadow: var(--shadow);
+            transition: background 0.3s;
         }
 
         .page-title {
@@ -170,15 +184,15 @@
             justify-content: center;
         }
 
-        .page-title h5 {
-            margin: 0;
-            color: #007A3D;
-            font-weight: 800;
-        }
+            .page-title h5 {
+                margin: 0;
+                color: #007A3D;
+                font-weight: 800;
+            }
 
-        .page-title small {
-            color: #7b7b7b;
-        }
+            .page-title small {
+                color: var(--text-muted);
+            }
 
         .topbar-right {
             display: flex;
@@ -187,35 +201,80 @@
             flex-shrink: 0;
         }
 
-        .quick-btn {
+        .theme-btn {
             border: none;
-            background: #EFF7F1;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            transition: .2s;
+            background: var(--border-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-            .quick-btn:hover {
-                background: #dff2e5;
+            .theme-btn:hover {
+                opacity: 0.8;
             }
 
         .user-btn {
             border-radius: 14px;
             padding: 8px 14px;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
             font-weight: 600;
         }
-
-        /* MAIN */
 
         .main-content {
             margin-left: 260px;
             padding: 24px;
         }
 
-        /* TOAST */
+        .card {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .table {
+            color: var(--text-primary) !important;
+        }
+
+        .table-light th {
+            background: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .form-control, .form-select {
+            background: var(--input-bg) !important;
+            color: var(--input-text) !important;
+            border-color: var(--input-border) !important;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #007A3D !important;
+                box-shadow: 0 0 0 3px rgba(0,122,61,0.15) !important;
+            }
+
+        .dropdown-menu {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .dropdown-item {
+            color: var(--text-primary) !important;
+        }
+
+            .dropdown-item:hover {
+                background: var(--border-color) !important;
+            }
+
+        .modal-content {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
 
         .toast-container-custom {
             position: fixed;
@@ -229,14 +288,15 @@
 
         .toast-box {
             min-width: 320px;
-            background: white;
+            background: var(--bg-card);
             border-radius: 14px;
             padding: 14px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             animation: slideIn .3s ease;
+            color: var(--text-primary);
         }
 
         .toast-success {
@@ -258,8 +318,6 @@
                 transform: translateX(0);
             }
         }
-
-        /* MOBILE */
 
         .hamburger {
             display: none;
@@ -284,7 +342,6 @@
         }
 
         @@media(max-width: 1024px) {
-
             .hamburger {
                 display: block;
             }
@@ -297,28 +354,24 @@
                     transform: translateX(0);
                 }
 
-            /* Adds padding inside the open sidebar header so the hamburger button doesn't cover "Brays Technologies" */
-            .sidebar.open .brand {
-                padding-left: 65px; 
-            }
+                    .sidebar.open .brand {
+                        padding-left: 65px;
+                    }
 
             .overlay.open {
                 display: block;
             }
 
-            .topbar,
-            .main-content {
+            .topbar, .main-content {
                 margin-left: 0;
             }
 
-            /* Keeps text safe from hitting the user logout widget dropdown */
             .topbar {
                 padding-left: 70px;
                 padding-top: 14px;
                 padding-bottom: 14px;
             }
 
-            /* Hides the super lengthy sentence description only on mobiles to completely prevent crossline overlapping layout bugs */
             .page-title small {
                 display: none;
             }
@@ -349,218 +402,225 @@
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <div class="toast-container-custom">
-
         @if (TempData["Success"] != null)
         {
             <div class="toast-box toast-success" id="toastSuccess">
                 <div style="font-size:20px;">✅</div>
-                <div style="flex:1;">
-                    @TempData["Success"]
-                </div>
+                <div style="flex:1;">@TempData["Success"]</div>
                 <button onclick="this.parentElement.remove()"
                         style="border:none;background:none;font-size:18px;color:#999;">
                     ×
                 </button>
             </div>
         }
-
         @if (TempData["Error"] != null)
         {
             <div class="toast-box toast-error" id="toastError">
                 <div style="font-size:20px;">❌</div>
-                <div style="flex:1;">
-                    @TempData["Error"]
-                </div>
+                <div style="flex:1;">@TempData["Error"]</div>
                 <button onclick="this.parentElement.remove()"
                         style="border:none;background:none;font-size:18px;color:#999;">
                     ×
                 </button>
             </div>
         }
-
     </div>
 
     <aside class="sidebar" id="sidebar">
-
         <div class="brand">
             <h3>Brays Technologies</h3>
             <span>Smart Retail ERP System</span>
-
-            
         </div>
 
         <div class="nav-wrapper">
 
             <div class="nav-section">Main</div>
-
             <a href="/Dashboard/Index"
-               class="nav-link @(ViewData["Title"]?.ToString() == "Dashboard" ? "active" : "")">
-                <span class="nav-icon">📊</span>
-                Dashboard
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                <span class="nav-icon">📊</span> Dashboard
             </a>
 
-            <div class="nav-section">Sales & POS</div>
-
+            <div class="nav-section">Sales &amp; POS</div>
             <a href="/Sales/New" class="nav-link">
-                <span class="nav-icon">📱</span>
-                New Sale
+                <span class="nav-icon">📱</span> New Phone Sale
             </a>
-
             <a href="/Sales/Index" class="nav-link">
-                <span class="nav-icon">🧾</span>
-                Sales History
+                <span class="nav-icon">🧾</span> Phone Sales History
             </a>
             <a href="/Receipts/Index" class="nav-link">
-                <span class="nav-icon">🧾</span>
-                Receipts
+                <span class="nav-icon">🖨️</span> Receipts
             </a>
             <a href="/Customers/Index" class="nav-link">
-                <span class="nav-icon">👥</span>
-                Customers
+                <span class="nav-icon">👥</span> Customers
             </a>
 
             <div class="nav-section">Inventory</div>
-
             <a href="/Stock/Index" class="nav-link">
-                <span class="nav-icon">📦</span>
-                Phone Stock
+                <span class="nav-icon">📦</span> Phone Stock
+            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a href="/Stock/Add" class="nav-link">
+                    <span class="nav-icon">➕</span> Add IMEI Device
+                </a>
+                <a href="/Stock/Faulty" class="nav-link">
+                    <span class="nav-icon">⚠️</span> Faulty Devices
+                </a>
+            }
+
+            <div class="nav-section">Accessories</div>
+            <a href="/Accessories/Index" class="nav-link">
+                <span class="nav-icon">🔌</span> Accessories Stock
+            </a>
+            <a href="/Accessories/NewSale" class="nav-link">
+                <span class="nav-icon">🛒</span> Sell Accessory
+            </a>
+            <a href="/Accessories/Sales" class="nav-link">
+                <span class="nav-icon">📋</span> Accessory Sales
+            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a href="/Accessories/Add" class="nav-link">
+                    <span class="nav-icon">➕</span> Add Accessory
+                </a>
+            }
+
+            <div class="nav-section">SIM Cards</div>
+            <a href="/SimCard/Index" class="nav-link">
+                <span class="nav-icon">📶</span> SIM Card Stock
+            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a href="/SimCard/Add" class="nav-link">
+                    <span class="nav-icon">➕</span> Add SIM Cards
+                </a>
+            }
+
+            <div class="nav-section">Services</div>
+            <a href="/Services/Index" class="nav-link">
+                <span class="nav-icon">🔧</span> Service Records
+            </a>
+            <a href="/Services/New" class="nav-link">
+                <span class="nav-icon">➕</span> New Service
             </a>
 
-            <a href="/Stock/Add" class="nav-link">
-                <span class="nav-icon">➕</span>
-                Add IMEI Device
+            <div class="nav-section"> M-Pesa</div>
+            <a href="/CashUp/New" class="nav-link">
+                <span class="nav-icon">💵</span> Submit Mpesa sales
             </a>
-
-            <a href="/Stock/Faulty" class="nav-link">
-                <span class="nav-icon">⚠️</span>
-                Faulty Devices
+            <a href="/CashUp/MyHistory" class="nav-link">
+                <span class="nav-icon">📜</span> My Mpesa submission History
             </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
 
-            <div class="nav-section">Branch Management</div>
+            {
+                <a href="/CashUp/Overview" class="nav-link">
+                    <span class="nav-icon">📊</span> Mpesa Overview
+                </a>
+            }
 
-            <a href="/Branch/Index" class="nav-link">
-                <span class="nav-icon">🏪</span>
-                Branches
-            </a>
-
-            <a href="/Performance/Index" class="nav-link">
-                <span class="nav-icon">📈</span>
-                Staff Performance
-            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <div class="nav-section">Branch Management</div>
+                <a href="/Branch/Index" class="nav-link">
+                    <span class="nav-icon">🏪</span> Branches
+                </a>
+                <a href="/Performance/Index" class="nav-link">
+                    <span class="nav-icon">📈</span> Staff Performance
+                </a>
+            }
 
             <div class="nav-section">Finance</div>
-
             <a href="/Expenses/Index" class="nav-link">
-                <span class="nav-icon">💰</span>
-                Expenses
+                <span class="nav-icon">💰</span> Expenses
             </a>
-
             <a href="/Reports/Daily" class="nav-link">
-                <span class="nav-icon">📅</span>
-                Daily Reports
+                <span class="nav-icon">📅</span> Daily Reports
             </a>
-
             <a href="/Reports/Monthly" class="nav-link">
-                <span class="nav-icon">📊</span>
-                Monthly Reports
+                <span class="nav-icon">📊</span> Monthly Reports
             </a>
 
             @if (User.IsInRole("Admin"))
             {
                 <div class="nav-section">Administration</div>
-
                 <a href="/Staff/Index" class="nav-link">
-                    <span class="nav-icon">👤</span>
-                    Staff Accounts
+                    <span class="nav-icon">👤</span> Staff Accounts
                 </a>
-
                 <a href="/Audit/Index" class="nav-link">
-                    <span class="nav-icon">📋</span>
-                    Activity Logs
+                    <span class="nav-icon">📋</span> Activity Logs
                 </a>
-
+                <a href="/Mpesa/Performance" class="nav-link">
+                    <span class="nav-icon">📶</span>
+                    M-Pesa Performance
+                </a>
                 <a href="/Settings/Index" class="nav-link">
-                    <span class="nav-icon">⚙️</span>
-                    System Settings
+                    <span class="nav-icon">⚙️</span> System Settings
                 </a>
 
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">🔄</span>
-                    Stock Transfers
-                    <span class="coming-soon">PHASE 2</span>
+                <div class="nav-section">Phase 2</div>
+                <a href="/Home/ComingSoon?feature=Stock+Transfers"
+                   class="nav-link" style="opacity:0.65;">
+                    <span class="nav-icon">🔄</span> Stock Transfers
+                    <span class="coming-soon">SOON</span>
                 </a>
-
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">📦</span>
-                    Suppliers
-                    <span class="coming-soon">PHASE 2</span>
+                <a href="/Home/ComingSoon?feature=Supplier+Management"
+                   class="nav-link" style="opacity:0.65;">
+                    <span class="nav-icon">📦</span> Suppliers
+                    <span class="coming-soon">SOON</span>
                 </a>
-
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">💳</span>
-                    M-KOPA
-                    <span class="coming-soon">PHASE 2</span>
+                <a href="/Home/ComingSoon?feature=M-KOPA+Tracking"
+                   class="nav-link" style="opacity:0.65;">
+                    <span class="nav-icon">💳</span> M-KOPA Tracking
+                    <span class="coming-soon">SOON</span>
                 </a>
             }
 
         </div>
 
         <div class="sidebar-footer">
-            Brays Technologies ERP v1.0
+            Brays Technologies ERP v1.1.2
             <small>Multi-Branch Phone Shop System</small>
         </div>
-
     </aside>
 
     <header class="topbar">
-
         <div class="page-title">
             <h5>@ViewData["Title"]</h5>
-            <small>
-                Manage sales, inventory, staff and branch operations
-            </small>
+            <small>Manage sales, inventory, staff and branch operations</small>
         </div>
-
         <div class="topbar-right">
-
-
+            <button class="theme-btn" id="themeBtn"
+                    onclick="toggleTheme()"
+                    title="Toggle dark mode">
+                🌙
+            </button>
             <div class="dropdown">
-
                 <button class="user-btn dropdown-toggle"
                         data-bs-toggle="dropdown">
                     👤 @User.Identity!.Name
                 </button>
-
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-
                     <li>
                         <a class="dropdown-item"
                            href="/Auth/ChangePassword">
                             🔑 Change Password
                         </a>
                     </li>
-
                     <li><hr class="dropdown-divider"></li>
-
                     <li>
                         <form asp-controller="Auth"
                               asp-action="Logout"
                               method="post">
-
                             <button type="submit"
                                     class="dropdown-item text-danger">
                                 🚪 Logout
                             </button>
-
                         </form>
                     </li>
-
                 </ul>
-
             </div>
-
         </div>
-
     </header>
 
     <main class="main-content">
@@ -568,8 +628,25 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                const btn = document.getElementById('themeBtn');
+                if (btn) btn.textContent = '☀️';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                const btn = document.getElementById('themeBtn');
+                if (btn) btn.textContent = '🌙';
+            }
+        }
+        function toggleTheme() {
+            const current = localStorage.getItem('brays_theme') || 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('brays_theme', next);
+            applyTheme(next);
+        }
+        applyTheme(localStorage.getItem('brays_theme') || 'light');
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -577,30 +654,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-
             ['toastSuccess', 'toastError'].forEach(function (id) {
-
                 const el = document.getElementById(id);
-
                 if (el) {
-
                     setTimeout(function () {
-
                         el.style.transition = '0.3s';
                         el.style.opacity = '0';
-
-                        setTimeout(() => {
-                            el.remove();
-                        }, 300);
-
+                        setTimeout(function () { el.remove(); }, 300);
                     }, 4000);
-
                 }
-
             });
-
         });
-
     </script>
 
 </body>

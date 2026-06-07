@@ -1,0 +1,254 @@
+﻿@model BraysTech.Models.AccessorySale
+@{
+    ViewData["Title"] = "Accessory Receipt";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var settings = ViewBag.Settings as
+        Dictionary<string, string>
+        ?? new Dictionary<string, string>();
+    string businessName = settings.TryGetValue(
+        "BusinessName", out var bn)
+        ? bn : "Brays Technologies Systems";
+    string businessPhone = settings.TryGetValue(
+        "BusinessPhone", out var bp) ? bp : "";
+    string footer = settings.TryGetValue(
+        "ReceiptFooter", out var rf)
+        ? rf : "Thank you for shopping with us!";
+}
+
+<style>
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .topbar, .sidebar {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .receipt-wrapper {
+            max-width: 100%;
+            box-shadow: none !important;
+        }
+    }
+
+    .receipt-wrapper {
+        max-width: 420px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .receipt-header {
+        background: linear-gradient(135deg,#007A3D,#005C2E);
+        color: white;
+        padding: 28px 24px;
+        text-align: center;
+    }
+
+    .receipt-body {
+        padding: 24px;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 0.88rem;
+    }
+
+        .receipt-row:last-child {
+            border: none;
+        }
+
+    .receipt-label {
+        color: #888;
+    }
+
+    .receipt-value {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f7f3;
+        font-size: 0.88rem;
+    }
+
+    .total-section {
+        background: #f0f7f3;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .receipt-footer {
+        text-align: center;
+        padding: 20px 24px;
+        background: #f8fafc;
+        border-top: 2px dashed #e5e7eb;
+    }
+</style>
+
+<div class="no-print d-flex justify-content-between
+            align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Accessories/Sales"
+           class="btn btn-outline-secondary
+                  rounded-pill px-3">
+            Back
+        </a>
+        <h4 class="fw-bold mb-0">Accessory Receipt</h4>
+    </div>
+    <button onclick="window.print()"
+            class="btn fw-semibold rounded-pill px-4"
+            style="background:#007A3D;color:white;">
+        🖨️ Print Receipt
+    </button>
+</div>
+
+<div class="receipt-wrapper">
+    <div class="receipt-header">
+        <h4 class="fw-bold mb-1">@businessName</h4>
+        @if (!string.IsNullOrEmpty(businessPhone))
+        {
+            <div style="font-size:0.85rem;
+                         opacity:0.85;">
+                @businessPhone
+            </div>
+        }
+        <div style="margin-top:12px;
+                     font-size:0.82rem;
+                     opacity:0.7;">
+            ACCESSORIES RECEIPT
+        </div>
+        <div style="font-size:1.2rem;
+                     font-weight:800;
+                     margin-top:4px;">
+            ACC-@Model.SaleID.ToString("D5")
+        </div>
+    </div>
+
+    <div class="receipt-body">
+        <div class="receipt-row">
+            <span class="receipt-label">Date</span>
+            <span class="receipt-value">
+                @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")
+            </span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-label">Branch</span>
+            <span class="receipt-value">
+                @(Model.Branch?.Name ?? "—")
+            </span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-label">Staff</span>
+            <span class="receipt-value">
+                @(Model.Staff?.FullName ?? "—")
+            </span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-label">Customer</span>
+            <span class="receipt-value">
+                @(Model.CustomerName ?? "Walk-in")
+            </span>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+        {
+            <div class="receipt-row">
+                <span class="receipt-label">Phone</span>
+                <span class="receipt-value"
+                      style="font-family:monospace;">
+                    @Model.CustomerPhone
+                </span>
+            </div>
+        }
+        <div class="receipt-row">
+            <span class="receipt-label">Payment</span>
+            <span class="receipt-value">
+                @Model.PaymentMethod
+                @if (!string.IsNullOrEmpty(Model.MpesaCode))
+                {
+                    <span style="color:#2563eb;
+                                  font-family:monospace;
+                                  font-size:0.82rem;
+                                  margin-left:6px;">
+                        @Model.MpesaCode
+                    </span>
+                }
+            </span>
+        </div>
+
+        <div style="margin:16px 0 8px;
+                     font-weight:700;
+                     font-size:0.82rem;
+                     color:#007A3D;
+                     text-transform:uppercase;
+                     letter-spacing:1px;">
+            Items
+        </div>
+
+        @foreach (var item in Model.Items)
+        {
+            <div class="item-row">
+                <div>
+                    <div class="fw-semibold"
+                         style="color:#0f172a;">
+                        @item.AccessoryName
+                    </div>
+                    <small style="color:#888;">
+                        @item.Quantity x
+                        KES @item.UnitPrice.ToString("N0")
+                    </small>
+                </div>
+                <div class="fw-bold"
+                     style="color:#007A3D;">
+                    KES @item.Subtotal.ToString("N0")
+                </div>
+            </div>
+        }
+
+        <div class="total-section">
+            <div style="display:flex;
+                         justify-content:space-between;
+                         align-items:center;">
+                <span style="font-size:1rem;
+                              font-weight:700;
+                              color:#0f172a;">
+                    TOTAL
+                </span>
+                <span style="font-size:1.5rem;
+                              font-weight:800;
+                              color:#007A3D;">
+                    KES @Model.TotalAmount.ToString("N0")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="receipt-footer">
+        <p style="margin:0;font-size:0.85rem;
+                   color:#888;">
+            @footer
+        </p>
+        <small style="color:#aaa;margin-top:8px;
+                        display:block;">
+            Powered by Brays Technologies ERP
+        </small>
+    </div>
+</div>

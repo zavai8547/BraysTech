@@ -1,0 +1,596 @@
+﻿@{
+    ViewData["Title"] = "Sell Accessory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .pos-card {
+        background: white;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+        /* overflow: hidden;  <-- REMOVED to allow absolute dropdown elements to show outside the card */
+        margin-bottom: 20px;
+    }
+
+    .pos-header {
+        background: linear-gradient( 135deg,#007A3D,#005C2E);
+        color: white;
+        padding: 16px 20px;
+        font-weight: 700;
+        border-top-left-radius: 16px; /* Re-added radius since overflow:hidden was removed */
+        border-top-right-radius: 16px;
+    }
+
+    .pos-body {
+        padding: 20px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+        .search-input:focus {
+            border-color: #007A3D;
+        }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        z-index: 1050; /* Increased to stay well clear of container and cards */
+        max-height: 320px;
+        overflow-y: auto;
+        margin-top: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .acc-result {
+        padding: 14px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.15s;
+        gap: 12px;
+    }
+
+        .acc-result:last-child {
+            border-bottom: none;
+        }
+
+        .acc-result:hover {
+            background: #f0f7f3;
+        }
+
+    .acc-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .acc-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #1f2937;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    .acc-details {
+        font-size: 0.75rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+
+    .acc-price {
+        font-weight: 800;
+        color: #007A3D;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    .cart-item {
+        background: #f9fef9;
+        border: 1px solid #e5f0e8;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1.5px solid #007A3D;
+        background: white;
+        color: #007A3D;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: 0.15s;
+    }
+
+        .qty-btn:hover {
+            background: #007A3D;
+            color: white;
+        }
+
+    .total-box {
+        background: linear-gradient( 135deg,#007A3D,#005C2E);
+        color: white;
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+    }
+
+    .btn-complete {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient( 135deg,#007A3D,#005C2E);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 14px;
+        transition: 0.2s;
+    }
+
+        .btn-complete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .payment-opt {
+        flex: 1;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 8px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #555;
+        transition: 0.2s;
+        user-select: none;
+    }
+
+        .payment-opt:hover {
+            border-color: #007A3D;
+        }
+
+        .payment-opt.selected {
+            border-color: #007A3D;
+            background: #f0f7f3;
+            color: #007A3D;
+        }
+
+    .stock-badge {
+        display: inline-block;
+        background: #e5e7eb;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #4b5563;
+        margin-left: 8px;
+    }
+
+        .stock-badge.low {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    @@media(max-width:768px) {
+        .pos-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Sell Accessory</h4>
+    <a href="/Accessories/Index" class="btn btn-outline-secondary rounded-pill px-3">
+        Back to Stock
+    </a>
+</div>
+
+<form method="post" action="/Accessories/NewSale" id="saleForm">
+    @Html.AntiForgeryToken()
+
+    <div class="pos-grid" style="display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start;">
+
+        <div>
+            <div class="pos-card">
+                <div class="pos-header">
+                    Search Accessory
+                </div>
+                <div class="pos-body">
+                    <div style="position:relative;">
+                        <input type="text"
+                               id="accSearch"
+                               class="search-input"
+                               placeholder="Type name, category or brand..."
+                               autocomplete="off" />
+                        <div id="accResults"
+                             class="search-results"
+                             style="display:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pos-card" style="border-top-left-radius: 16px; border-top-right-radius: 16px; overflow: hidden;">
+                <div class="pos-header">
+                    Cart
+                    <span id="cartCount"
+                          style="background:rgba(255,255,255,0.2); border-radius:20px; padding:2px 10px; font-size:0.8rem; margin-left:8px;">
+                        0 items
+                    </span>
+                </div>
+                <div class="pos-body">
+                    <div id="cartItems">
+                        <div class="text-center text-muted py-4">
+                            Search for an accessory above to add it
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="pos-card" style="border-top-left-radius: 16px; border-top-right-radius: 16px; overflow: hidden;">
+                <div class="pos-header">
+                    Customer (optional)
+                </div>
+                <div class="pos-body">
+                    <div class="mb-3">
+                        <input type="text"
+                               name="customerName"
+                               class="search-input"
+                               placeholder="Customer name" />
+                    </div>
+                    <div>
+                        <input type="text"
+                               name="customerPhone"
+                               class="search-input"
+                               placeholder="Phone number" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="pos-card" style="border-top-left-radius: 16px; border-top-right-radius: 16px; overflow: hidden;">
+                <div class="pos-header">Branch</div>
+                <div class="pos-body">
+                    <select name="branchID"
+                            class="form-select"
+                            style="border-radius:10px; padding:12px;"
+                            required>
+                        <option value="">
+                            -- Select Branch --
+                        </option>
+                        @foreach (var b in ViewBag.Branches)
+                        {
+                            <option value="@b.BranchID">
+                                @b.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="pos-card" style="border-top-left-radius: 16px; border-top-right-radius: 16px; overflow: hidden;">
+                <div class="pos-header">Payment</div>
+                <div class="pos-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <div class="payment-opt selected"
+                             onclick="setPay('Cash','0',this)">
+                            Cash
+                        </div>
+                        <div class="payment-opt"
+                             onclick="setPay('MPesa','1',this)">
+                            MPesa
+                        </div>
+                        <div class="payment-opt"
+                             onclick="setPay('Card','3',this)">
+                            Card
+                        </div>
+                    </div>
+                    <input type="hidden"
+                           name="paymentMethod"
+                           id="payMethod" value="0" />
+                    <div id="mpesaDiv"
+                         style="display:none;">
+                        <input type="text"
+                               name="mpesaCode"
+                               class="search-input"
+                               style="font-family:monospace; font-weight:700; text-transform:uppercase;"
+                               placeholder="M-Pesa code (e.g., QWERTY123)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="pos-card" style="border-top-left-radius: 16px; border-top-right-radius: 16px; overflow: hidden;">
+                <div class="pos-header">Summary</div>
+                <div class="pos-body">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:0.9rem;">
+                        <span style="color:#666;">Items</span>
+                        <span class="fw-bold" id="sumCount">0</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:0.9rem;">
+                        <span style="color:#666;">
+                            Est. Profit
+                        </span>
+                        <span class="fw-bold"
+                              id="sumProfit"
+                              style="color:#b45309;">
+                            KES 0
+                        </span>
+                    </div>
+                    <div class="total-box">
+                        <span style="opacity:0.85;">
+                            TOTAL
+                        </span>
+                        <span style="font-size:1.6rem; font-weight:800;" id="sumTotal">
+                            KES 0
+                        </span>
+                    </div>
+                    <button type="submit"
+                            class="btn-complete"
+                            id="completeBtn"
+                            disabled>
+                        Complete Sale
+                    </button>
+                    <a href="/Accessories/Index" class="btn btn-outline-secondary w-100 mt-2 rounded-pill">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    let cart = {};
+
+    const accSearch = document.getElementById('accSearch');
+    const accResults = document.getElementById('accResults');
+    let timer;
+
+    accSearch.addEventListener('input', function () {
+        clearTimeout(timer);
+        const q = this.value.trim();
+        if (q.length < 2) {
+            accResults.style.display = 'none';
+            return;
+        }
+        timer = setTimeout(async function () {
+            try {
+                const res = await fetch(
+                    '/Accessories/Search?q=' +
+                    encodeURIComponent(q));
+                const data = await res.json();
+
+                if (!data || !data.length) {
+                    accResults.innerHTML =
+                        '<div style="padding:16px;' +
+                        'color:#aaa;text-align:center;">' +
+                        'No accessories found</div>';
+                } else {
+                    accResults.innerHTML = data.map(
+                        function (a) {
+                            const stockClass = a.currentStock <= 5 ? 'low' : '';
+                            const stockWarning = a.currentStock <= 5 ?
+                                '<span class="stock-badge low">Low Stock!</span>' :
+                                '<span class="stock-badge">' + a.currentStock + ' left</span>';
+
+                            return '<div class="acc-result"' +
+                                ' onclick="addItem(\'' +
+                                encodeURIComponent(JSON.stringify(a)) + '\')">' +
+                                '<div class="acc-info">' +
+                                '<div class="acc-name">' + escapeHtml(a.name) +
+                                stockWarning + '</div>' +
+                                '<div class="acc-details">' +
+                                (a.category || 'Uncategorized') +
+                                (a.brand ? ' &nbsp;|&nbsp; ' + escapeHtml(a.brand) : '') +
+                                '</div>' +
+                                '</div>' +
+                                '<div class="acc-price">KES ' +
+                                a.sellingPrice.toLocaleString() +
+                                '</div>' +
+                                '</div>';
+                        }).join('');
+                }
+                accResults.style.display = 'block';
+            } catch (error) {
+                console.error('Search error:', error);
+                accResults.innerHTML =
+                    '<div style="padding:16px;color:#dc2626;text-align:center;">' +
+                    'Error loading results</div>';
+                accResults.style.display = 'block';
+            }
+        }, 300);
+    });
+
+    // Helper function to escape HTML
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!accSearch.contains(e.target) &&
+            !accResults.contains(e.target))
+            accResults.style.display = 'none';
+    });
+
+    function addItem(enc) {
+        try {
+            const a = JSON.parse(decodeURIComponent(enc));
+
+            // Check if item is in stock
+            if (a.currentStock <= 0) {
+                alert('This item is out of stock!');
+                return;
+            }
+
+            if (cart[a.accessoryID]) {
+                // Check if adding one more would exceed stock
+                if (cart[a.accessoryID].qty + 1 > a.currentStock) {
+                    alert('Only ' + a.currentStock + ' units available in stock');
+                    return;
+                }
+                cart[a.accessoryID].qty++;
+            } else {
+                cart[a.accessoryID] = {
+                    id: a.accessoryID,
+                    name: a.name,
+                    buyPrice: a.buyingPrice,
+                    price: a.sellingPrice,
+                    customPrice: a.sellingPrice,
+                    maxStock: a.currentStock,
+                    qty: 1
+                };
+            }
+            accSearch.value = '';
+            accResults.style.display = 'none';
+            renderCart();
+        } catch (error) {
+            console.error('Error adding item:', error);
+        }
+    }
+
+    function removeItem(id) {
+        delete cart[id];
+        renderCart();
+    }
+
+    function changeQty(id, delta) {
+        if (!cart[id]) return;
+        const nq = cart[id].qty + delta;
+        if (nq <= 0) {
+            removeItem(id);
+            return;
+        }
+        if (nq > cart[id].maxStock) {
+            alert('Only ' + cart[id].maxStock + ' units available in stock');
+            return;
+        }
+        cart[id].qty = nq;
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        const items = Object.values(cart);
+        const count = items.length;
+
+        document.getElementById('cartCount').textContent = count + ' item' + (count !== 1 ? 's' : '');
+
+        // Remove hidden inputs
+        document.querySelectorAll('.cart-hidden').forEach(function (e) { e.remove(); });
+
+        if (!count) {
+            container.innerHTML =
+                '<div class="text-center text-muted py-4">' +
+                'Search for an accessory to add it</div>';
+            updateSummary();
+            return;
+        }
+
+        let html = '';
+        items.forEach(function (item) {
+            const sub = item.customPrice * item.qty;
+            html +=
+                '<div class="cart-item">' +
+                '<div style="flex:1;">' +
+                '<div class="fw-semibold" style="font-size:0.9rem;">' +
+                escapeHtml(item.name) + '</div>' +
+                '<div style="font-size:0.75rem;color:#888;">KES ' +
+                item.customPrice.toLocaleString() + ' each</div>' +
+                '</div>' +
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                '<button type="button" class="qty-btn" onclick="changeQty(' +
+                item.id + ',-1)">-</button>' +
+                '<span style="min-width:28px;text-align:center;font-weight:700;">' +
+                item.qty + '</span>' +
+                '<button type="button" class="qty-btn" onclick="changeQty(' +
+                item.id + ',1)">+</button>' +
+                '</div>' +
+                '<div style="min-width:80px;text-align:right;font-weight:700;color:#007A3D;">KES ' +
+                sub.toLocaleString() + '</div>' +
+                '<button type="button" onclick="removeItem(' + item.id +
+                ')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:4px;margin-left:8px;">✕' +
+                '</button>' +
+                '</div>';
+        });
+
+        container.innerHTML = html;
+
+        const form = document.getElementById('saleForm');
+        items.forEach(function (item) {
+            function addH(name, val) {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = name;
+                inp.value = val;
+                inp.className = 'cart-hidden';
+                form.appendChild(inp);
+            }
+            addH('accessoryIDs', item.id);
+            addH('quantities', item.qty);
+            addH('customPrices', item.customPrice);
+        });
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const items = Object.values(cart);
+        let total = 0, profit = 0, count = 0;
+        items.forEach(function (item) {
+            total += item.customPrice * item.qty;
+            profit += (item.customPrice - item.buyPrice) * item.qty;
+            count += item.qty;
+        });
+        document.getElementById('sumCount').textContent = count;
+        document.getElementById('sumTotal').textContent = 'KES ' + total.toLocaleString();
+        document.getElementById('sumProfit').textContent = 'KES ' + profit.toLocaleString();
+        document.getElementById('completeBtn').disabled = items.length === 0;
+    }
+
+    function setPay(name, val, el) {
+        document.querySelectorAll('.payment-opt').forEach(function (o) {
+            o.classList.remove('selected');
+        });
+        el.classList.add('selected');
+        document.getElementById('payMethod').value = val;
+        document.getElementById('mpesaDiv').style.display = name === 'MPesa' ? 'block' : 'none';
+    }
+</script>

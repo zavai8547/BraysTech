@@ -1,0 +1,224 @@
+﻿@model BraysTech.Models.Accessory
+@{
+    ViewData["Title"] = "Add Accessory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/Accessories/Index"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                Back
+            </a>
+            <h4 class="fw-bold mb-0">
+                Add Accessory
+            </h4>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(
+                            135deg,#007A3D,#005C2E);">
+                <h5 class="text-white fw-bold mb-0">
+                    New Accessory Item
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post"
+                      action="/Accessories/Add">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Item Name *
+                        </label>
+                        <input name="Name"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="e.g. Samsung 25W Charger"
+                               required />
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Category
+                            </label>
+                            <input name="Category"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   list="catList"
+                                   placeholder="e.g. Charger" />
+                            <datalist id="catList">
+                                <option value="Charger" />
+                                <option value="Cable" />
+                                <option value="Case" />
+                                <option value="Screen Protector" />
+                                <option value="Earphones" />
+                                <option value="Power Bank" />
+                                <option value="Memory Card" />
+                                <option value="Holder" />
+                                <option value="Other" />
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Brand
+                            </label>
+                            <input name="Brand"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   placeholder="e.g. Samsung, Generic" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Buying Price *
+                            </label>
+                            <input name="BuyingPrice"
+                                   type="number"
+                                   step="0.01"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   min="0" required
+                                   oninput="calcMargin()" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Selling Price *
+                            </label>
+                            <input name="SellingPrice"
+                                   type="number"
+                                   step="0.01"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          color:#007A3D;
+                                          font-weight:700;"
+                                   min="0" required
+                                   oninput="calcMargin()" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Initial Stock *
+                            </label>
+                            <input name="CurrentStock"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   min="0" required />
+                        </div>
+                    </div>
+
+                    <div id="marginBox"
+                         class="mt-3 p-3 rounded"
+                         style="background:#f0f7f3;
+                                display:none;">
+                        <span style="font-size:0.85rem;
+                                      color:#555;">
+                            Profit per unit:
+                        </span>
+                        <strong id="profitDisplay"
+                                style="color:#007A3D;">
+                        </strong>
+                        <span style="font-size:0.85rem;
+                                      color:#555;
+                                      margin-left:16px;">
+                            Margin:
+                        </span>
+                        <strong id="marginDisplay"
+                                style="color:#007A3D;">
+                        </strong>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Low Stock Alert
+                            </label>
+                            <input name="LowStockAlert"
+                                   type="number"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="5" min="0" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Branch *
+                            </label>
+                            <select name="BranchID"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                <option value="">
+                                    -- Select Branch --
+                                </option>
+                                @foreach (var b in ViewBag.Branches)
+                                {
+                                    <option value="@b.BranchID">
+                                        @b.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label fw-semibold">
+                            Supplier
+                        </label>
+                        <input name="SupplierName"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="Optional" />
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit"
+                                class="btn btn-lg
+                                       flex-grow-1 fw-bold"
+                                style="background:#007A3D;
+                                       color:white;
+                                       border-radius:12px;">
+                            Save Item
+                        </button>
+                        <a href="/Accessories/Index"
+                           class="btn btn-lg
+                                  btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcMargin() {
+        const buy = parseFloat(
+            document.querySelector(
+                '[name="BuyingPrice"]').value) || 0;
+        const sell = parseFloat(
+            document.querySelector(
+                '[name="SellingPrice"]').value) || 0;
+        if (buy > 0 || sell > 0) {
+            const profit = sell - buy;
+            const margin = sell > 0
+                ? (profit / sell * 100) : 0;
+            document.getElementById(
+                'profitDisplay').textContent =
+                'KES ' + profit.toLocaleString();
+            document.getElementById(
+                'marginDisplay').textContent =
+                margin.toFixed(1) + '%';
+            document.getElementById(
+                'marginBox').style.display = 'block';
+        }
+    }
+</script>

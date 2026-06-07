@@ -2,10 +2,50 @@
     ViewData["Title"] = "Staff Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var staff = ViewBag.Staff as BraysTech.Models.AppUser;
-    var sales = ViewBag.Sales as
-        IEnumerable<BraysTech.Models.PhoneSale>;
+    var sales = ViewBag.Sales as IEnumerable<BraysTech.Models.PhoneSale>;
     var trend = ViewBag.Trend as IEnumerable<dynamic>;
 }
+
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+    .trend-bar-container {
+        height: 120px;
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    .trend-bar {
+        flex: 1;
+        text-align: center;
+    }
+
+    .bar {
+        background: linear-gradient(180deg, #007A3D, #34d399);
+        border-radius: 6px 6px 0 0;
+        transition: height 0.5s ease;
+        min-height: 4px;
+        width: 100%;
+    }
+
+    .device-badge {
+        background: #f0f7f3;
+        color: #007A3D;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        margin: 2px;
+    }
+</style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center gap-3">
@@ -33,7 +73,7 @@
 <!-- MONTH STATS -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm"
+        <div class="card border-0 shadow-sm stat-card"
              style="border-radius:14px;
                     border-left:4px solid #007A3D !important;">
             <div class="card-body">
@@ -46,31 +86,31 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm"
+        <div class="card border-0 shadow-sm stat-card"
              style="border-radius:14px;
                     border-left:4px solid #1d4ed8 !important;">
             <div class="card-body">
                 <p class="text-muted small mb-1">Revenue</p>
                 <h4 class="fw-bold mb-0" style="color:#1d4ed8;">
-                    KES @((decimal)ViewBag.TotalRevenue).ToString("N0"))
+                    KES @(((decimal)ViewBag.TotalRevenue).ToString("N0"))
                 </h4>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm"
+        <div class="card border-0 shadow-sm stat-card"
              style="border-radius:14px;
                     border-left:4px solid #b45309 !important;">
             <div class="card-body">
                 <p class="text-muted small mb-1">Profit</p>
                 <h4 class="fw-bold mb-0" style="color:#b45309;">
-                    KES @((decimal)ViewBag.TotalProfit).ToString("N0"))
+                    KES @(((decimal)ViewBag.TotalProfit).ToString("N0"))
                 </h4>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm"
+        <div class="card border-0 shadow-sm stat-card"
              style="border-radius:14px;
                     border-left:4px solid #7c3aed !important;">
             <div class="card-body">
@@ -91,49 +131,45 @@
         📊 6 Month Trend
     </div>
     <div class="card-body">
-        <div class="d-flex align-items-end gap-3"
-             style="height:120px;">
-            @if (trend != null)
+        @if (trend != null && trend.Any())
+        {
+            var maxRev = 1m;
+            var trendList = new List<dynamic>();
+            foreach (var t in trend)
             {
-                var maxRev = 1m;
-                foreach (var t in trend)
+                decimal rev = (decimal)t.GetType().GetProperty("revenue").GetValue(t);
+                if (rev > maxRev) maxRev = rev;
+                trendList.Add(t);
+            }
+
+            <div class="trend-bar-container">
+                @foreach (var t in trendList)
                 {
-                    decimal rev = (decimal)t.GetType()
-                    .GetProperty("revenue").GetValue(t);
-                    if (rev > maxRev) maxRev = rev;
-                }
-                foreach (var t in trend)
-                {
-                    var monthLabel = (string)t.GetType()
-                    .GetProperty("month").GetValue(t);
-                    decimal rev = (decimal)t.GetType()
-                    .GetProperty("revenue").GetValue(t);
-                    int salesCount = (int)t.GetType()
-                    .GetProperty("sales").GetValue(t);
-                    var pct = (double)(rev / maxRev * 100);
+                    var monthLabel = (string)t.GetType().GetProperty("month").GetValue(t);
+                    decimal rev = (decimal)t.GetType().GetProperty("revenue").GetValue(t);
+                    int salesCount = (int)t.GetType().GetProperty("sales").GetValue(t);
+                    var pct = maxRev > 0 ? (double)(rev / maxRev * 100) : 0;
                     var barH = Math.Max(pct, 4);
-                    <div style="flex:1;text-align:center;">
-                        <div style="font-size:0.72rem;
-                                     font-weight:700;
-                                     color:#007A3D;
-                                     margin-bottom:4px;">
+
+                    <div class="trend-bar">
+                        <div style="font-size:0.72rem; font-weight:700; color:#007A3D; margin-bottom:4px;">
                             @salesCount
                         </div>
-                        <div style="height:@barH%;
-                                     background:linear-gradient(
-                                         180deg,#007A3D,#34d399);
-                                     border-radius:6px 6px 0 0;
-                                     min-height:4px;">
-                        </div>
-                        <div style="font-size:0.72rem;
-                                     color:#888;
-                                     margin-top:6px;">
+                        <div class="bar" style="height: @barH%;"></div>
+                        <div style="font-size:0.72rem; color:#888; margin-top:6px;">
                             @monthLabel
                         </div>
                     </div>
                 }
-            }
-        </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <div style="font-size: 2rem;">📊</div>
+                <p>No sales data available for the last 6 months</p>
+            </div>
+        }
     </div>
 </div>
 
@@ -153,82 +189,74 @@
         }
         else
         {
-            <table class="table table-hover mb-0">
-                <thead style="background:#007A3D;">
-                    <tr>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Date
-                        </th>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Customer
-                        </th>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Devices
-                        </th>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Payment
-                        </th>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Revenue
-                        </th>
-                        <th style="color:white;padding:12px 16px;
-                                   border:none;font-size:0.82rem;">
-                            Profit
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var s in sales)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background:#007A3D;">
                         <tr>
-                            <td style="padding:12px 16px;
-                                       font-size:0.85rem;">
-                                @s.CreatedAt.ToString("dd MMM HH:mm")
-                            </td>
-                            <td style="padding:12px 16px;
-                                       font-size:0.85rem;">
-                                @(s.CustomerName ?? "Walk-in")
-                            </td>
-                            <td style="padding:12px 16px;">
-                                @foreach (var item in s.Items)
-                                {
-                                    <span style="background:#f0f7f3;
-                                                 color:#007A3D;
-                                                 padding:2px 8px;
-                                                 border-radius:6px;
-                                                 font-size:0.75rem;
-                                                 font-weight:600;
-                                                 display:inline-block;
-                                                 margin:1px;">
-                                        @item.PhoneName
-                                    </span>
-                                }
-                            </td>
-                            <td style="padding:12px 16px;">
-                                <span style="font-size:0.78rem;
-                                             font-weight:700;">
-                                    @s.PaymentMethod
-                                </span>
-                            </td>
-                            <td style="padding:12px 16px;">
-                                <strong style="color:#007A3D;">
-                                    KES @s.TotalAmount.ToString("N0")
-                                </strong>
-                            </td>
-                            <td style="padding:12px 16px;">
-                                <strong style="color:#b45309;">
-                                    KES @s.TotalProfit.ToString("N0")
-                                </strong>
-                            </td>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Date
+                            </th>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Customer
+                            </th>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Devices
+                            </th>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Payment
+                            </th>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Revenue (KES)
+                            </th>
+                            <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; background-color:#007A3D;">
+                                Profit (KES)
+                            </th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in sales)
+                        {
+                            <tr>
+                                <td style="padding:12px 16px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                    @s.CreatedAt.ToString("dd MMM HH:mm")
+                                </td>
+                                <td style="padding:12px 16px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                    @(s.CustomerName ?? "Walk-in")
+                                </td>
+                                <td style="padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                                    @foreach (var item in s.Items.Take(3))
+                                    {
+                                        <span class="device-badge">
+                                            @item.PhoneName
+                                        </span>
+                                    }
+                                    @if (s.Items.Count > 3)
+                                    {
+                                        <span class="device-badge">
+                                            +@(s.Items.Count - 3) more
+                                        </span>
+                                    }
+                                </td>
+                                <td style="padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                                    <span class="badge" style="background:@(s.PaymentMethod.ToString() == "MPesa" ? "#dbeafe" : "#dcfce7"); color:@(s.PaymentMethod.ToString() == "MPesa" ? "#2563eb" : "#16a34a"); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">
+                                        @s.PaymentMethod
+                                    </span>
+                                </td>
+                                <td style="padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                                    <strong style="color:#007A3D;">
+                                        KES @s.TotalAmount.ToString("N0")
+                                    </strong>
+                                </td>
+                                <td style="padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                                    <strong style="color:#b45309;">
+                                        KES @s.TotalProfit.ToString("N0")
+                                    </strong>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
 </div>

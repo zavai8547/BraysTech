@@ -1,0 +1,158 @@
+﻿@model BraysTech.Models.ServiceRecord
+
+@{
+    ViewData["Title"] = "Service Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/Services/Index"
+       class="btn btn-outline-secondary rounded-pill px-3">
+        Back
+    </a>
+
+    <h4 class="fw-bold mb-0">
+        Service Record #@Model.RecordID
+    </h4>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:16px;">
+
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(135deg,#007A3D,#005C2E);">
+
+                <h5 class="text-white fw-bold mb-1">
+                    @Model.ServiceType
+                </h5>
+
+                <small style="color:rgba(255,255,255,.75);">
+                    @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")
+                </small>
+
+            </div>
+
+            <div class="card-body p-4">
+
+                <!-- Customer Name -->
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Customer Name</span>
+                    <span style="font-weight:600;">@Model.CustomerName</span>
+                </div>
+
+                <!-- Phone -->
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Phone Number</span>
+                    <span style="font-weight:600;">@Model.CustomerPhone</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.CustomerIDNumber))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                        <span style="color:#888;">National ID</span>
+                        <span style="font-weight:600;">@Model.CustomerIDNumber</span>
+                    </div>
+                }
+
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Service Type</span>
+                    <span style="font-weight:600;">@Model.ServiceType</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Branch</span>
+                    <span style="font-weight:600;">@(Model.Branch?.Name ?? "—")</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Staff</span>
+                    <span style="font-weight:600;">@(Model.Staff?.FullName ?? "—")</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Payment Method</span>
+                    <span style="font-weight:600;">@Model.PaymentMethod</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.MpesaCode))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                        <span style="color:#888;">M-Pesa Code</span>
+                        <span style="font-weight:600;color:#2563eb;">
+                            @Model.MpesaCode
+                        </span>
+                    </div>
+                }
+
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                    <span style="color:#888;">Charge Amount</span>
+                    <span style="font-weight:700;color:#007A3D;">
+                        KES @Model.ChargeAmount.ToString("N0")
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.OldSimNumber))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                        <span style="color:#888;">Old SIM Number</span>
+                        <span style="font-weight:600;">
+                            @Model.OldSimNumber
+                        </span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.NewSimNumber))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                        <span style="color:#888;">New SIM Number</span>
+                        <span style="font-weight:600;color:#007A3D;">
+                            @Model.NewSimNumber
+                        </span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.PhoneIMEI))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                        <span style="color:#888;">Phone IMEI</span>
+                        <span style="font-weight:600;">
+                            @Model.PhoneIMEI
+                        </span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.FaultDescription))
+                {
+                    <div style="padding:12px 0;border-bottom:1px solid #e5e7eb;">
+                        <div style="color:#888;margin-bottom:8px;">
+                            Fault Description
+                        </div>
+
+                        <div style="background:#f8fafc;padding:12px;border-radius:8px;">
+                            @Model.FaultDescription
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div style="padding:12px 0;">
+                        <div style="color:#888;margin-bottom:8px;">
+                            Notes
+                        </div>
+
+                        <div>
+                            @Model.Notes
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+</div>

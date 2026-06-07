@@ -4,6 +4,7 @@ using BraysTech.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BraysTech.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606045953_AddAccessoriesServicesFloat")]
+    partial class AddAccessoriesServicesFloat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,51 +339,6 @@ namespace BraysTech.Migrations
                     b.HasKey("BranchID");
 
                     b.ToTable("Branches");
-                });
-
-            modelBuilder.Entity("BraysTech.Models.CashUp", b =>
-                {
-                    b.Property<int>("CashUpID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("CashUpID"));
-
-                    b.Property<int>("BranchID")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("CashAmount")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<DateTime>("CashUpDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<decimal>("ExpectedCash")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<decimal>("ExpectedMpesa")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<decimal>("MpesaFloat")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("StaffID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("CashUpID");
-
-                    b.HasIndex("BranchID");
-
-                    b.HasIndex("StaffID");
-
-                    b.ToTable("CashUps");
                 });
 
             modelBuilder.Entity("BraysTech.Models.Customer", b =>
@@ -818,72 +776,6 @@ namespace BraysTech.Migrations
                     b.ToTable("Settings");
                 });
 
-            modelBuilder.Entity("BraysTech.Models.SimCard", b =>
-                {
-                    b.Property<int>("SimCardID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SimCardID"));
-
-                    b.Property<int>("BranchID")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("BuyingPrice")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("CustomerIDNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("DateAdded")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DateSold")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsReplacement")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("MpesaCode")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Network")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NewSimNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("OldSimNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("PaymentMethod")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("SellingPrice")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("SoldToName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("SoldToPhone")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("SimCardID");
-
-                    b.HasIndex("BranchID");
-
-                    b.ToTable("SimCards");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -1074,25 +966,6 @@ namespace BraysTech.Migrations
                     b.Navigation("Branch");
                 });
 
-            modelBuilder.Entity("BraysTech.Models.CashUp", b =>
-                {
-                    b.HasOne("BraysTech.Models.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BraysTech.Models.AppUser", "Staff")
-                        .WithMany()
-                        .HasForeignKey("StaffID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
-
-                    b.Navigation("Staff");
-                });
-
             modelBuilder.Entity("BraysTech.Models.Expense", b =>
                 {
                     b.HasOne("BraysTech.Models.Branch", "Branch")
@@ -1202,17 +1075,6 @@ namespace BraysTech.Migrations
                     b.Navigation("Branch");
 
                     b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("BraysTech.Models.SimCard", b =>
-                {
-                    b.HasOne("BraysTech.Models.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

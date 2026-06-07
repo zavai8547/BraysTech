@@ -59,6 +59,34 @@ namespace BraysTech.Controllers
                                 s.CreatedAt.Date == today)
                     .ToListAsync();
 
+                // Phone revenue
+                var phoneRevenue = salesThisMonth
+                    .Sum(s => s.TotalAmount);
+
+                // Accessory sales revenue
+                var accRevenue = await _db.AccessorySales
+                    .Where(s => s.StaffID == staff.Id &&
+                                s.CreatedAt >= firstOfMonth &&
+                                s.CreatedAt <= lastOfMonth)
+                    .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
+
+                // Service records revenue
+                var svcRevenue = await _db.ServiceRecords
+                    .Where(s => s.StaffID == staff.Id &&
+                                s.CreatedAt >= firstOfMonth &&
+                                s.CreatedAt <= lastOfMonth)
+                    .SumAsync(s => (decimal?)s.ChargeAmount) ?? 0;
+
+                // SIM card sales revenue (doesn't track StaffID yet)
+                var simRevenue = await _db.SimCards
+                    .Where(s => s.DateSold.HasValue &&
+                                s.DateSold.Value >= firstOfMonth &&
+                                s.DateSold.Value <= lastOfMonth)
+                    .SumAsync(s => (decimal?)s.SellingPrice) ?? 0;
+
+                // Total revenue per staff (including all modules)
+                var totalRevenue = phoneRevenue + accRevenue + svcRevenue + simRevenue;
+
                 var roles = await _userManager
                     .GetRolesAsync(staff);
 
@@ -74,8 +102,7 @@ namespace BraysTech.Controllers
 
                     // This month
                     SalesCountMonth = salesThisMonth.Count,
-                    RevenueMonth = salesThisMonth
-                        .Sum(s => s.TotalAmount),
+                    RevenueMonth = totalRevenue,
                     ProfitMonth = salesThisMonth
                         .Sum(s => s.TotalProfit),
                     DevicesSoldMonth = salesThisMonth
@@ -143,6 +170,34 @@ namespace BraysTech.Controllers
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
 
+            // Get accessory sales for this staff
+            var accessorySales = await _db.AccessorySales
+                .Where(s => s.StaffID == id &&
+                            s.CreatedAt >= firstOfMonth &&
+                            s.CreatedAt <= lastOfMonth)
+                .ToListAsync();
+
+            // Get service records for this staff
+            var serviceRecords = await _db.ServiceRecords
+                .Where(s => s.StaffID == id &&
+                            s.CreatedAt >= firstOfMonth &&
+                            s.CreatedAt <= lastOfMonth)
+                .ToListAsync();
+
+            // Get SIM card sales (doesn't track StaffID yet)
+            var simSales = await _db.SimCards
+                .Where(s => s.DateSold.HasValue &&
+                            s.DateSold.Value >= firstOfMonth &&
+                            s.DateSold.Value <= lastOfMonth)
+                .ToListAsync();
+
+            // Calculate total revenue including all modules
+            var phoneRevenue = sales.Sum(s => s.TotalAmount);
+            var accRevenue = accessorySales.Sum(s => s.TotalAmount);
+            var svcRevenue = serviceRecords.Sum(s => s.ChargeAmount);
+            var simRevenue = simSales.Sum(s => s.SellingPrice);
+            var totalRevenue = phoneRevenue + accRevenue + svcRevenue + simRevenue;
+
             // 6 month trend
             var trend = new List<object>();
             for (int i = 5; i >= 0; i--)
@@ -157,26 +212,52 @@ namespace BraysTech.Controllers
                                 s.CreatedAt <= mEnd)
                     .ToListAsync();
 
+                var mAccessorySales = await _db.AccessorySales
+                    .Where(s => s.StaffID == id &&
+                                s.CreatedAt >= mStart &&
+                                s.CreatedAt <= mEnd)
+                    .SumAsync(s => (decimal?)s.TotalAmount) ?? 0;
+
+                var mServiceRevenue = await _db.ServiceRecords
+                    .Where(s => s.StaffID == id &&
+                                s.CreatedAt >= mStart &&
+                                s.CreatedAt <= mEnd)
+                    .SumAsync(s => (decimal?)s.ChargeAmount) ?? 0;
+
+                var mSimRevenue = await _db.SimCards
+                    .Where(s => s.DateSold.HasValue &&
+                                s.DateSold.Value >= mStart &&
+                                s.DateSold.Value <= mEnd)
+                    .SumAsync(s => (decimal?)s.SellingPrice) ?? 0;
+
+                var mTotalRevenue = mSales.Sum(s => s.TotalAmount) + mAccessorySales + mServiceRevenue + mSimRevenue;
+
                 trend.Add(new
                 {
                     month = mStart.ToString("MMM"),
                     sales = mSales.Count,
-                    revenue = mSales.Sum(s => s.TotalAmount),
+                    revenue = mTotalRevenue,
                     profit = mSales.Sum(s => s.TotalProfit)
                 });
             }
 
             ViewBag.Staff = staff;
             ViewBag.Sales = sales;
+            ViewBag.AccessorySales = accessorySales;
+            ViewBag.ServiceRecords = serviceRecords;
+            ViewBag.SimSales = simSales;
             ViewBag.Trend = trend;
             ViewBag.SelectedMonth = selectedMonth;
             ViewBag.SelectedYear = selectedYear;
             ViewBag.SelectedMonthName = firstOfMonth
                 .ToString("MMMM yyyy");
-            ViewBag.TotalRevenue = sales.Sum(s => s.TotalAmount);
+            ViewBag.TotalRevenue = totalRevenue;
             ViewBag.TotalProfit = sales.Sum(s => s.TotalProfit);
             ViewBag.TotalSales = sales.Count;
             ViewBag.TotalDevices = sales.Sum(s => s.Items.Count);
+            ViewBag.TotalAccessoryRevenue = accRevenue;
+            ViewBag.TotalServiceRevenue = svcRevenue;
+            ViewBag.TotalSimRevenue = simRevenue;
 
             return View();
         }

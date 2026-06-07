@@ -1,0 +1,388 @@
+﻿@{
+    ViewData["Title"] = "M-Pesa Branch Performance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var summary = ViewBag.Summary as
+        IEnumerable<dynamic>;
+    DateTime dateFrom = ViewBag.DateFrom;
+    DateTime dateTo = ViewBag.DateTo;
+    decimal totalMpesa = ViewBag.TotalMpesa ?? 0m;
+    decimal totalCash = ViewBag.TotalCash ?? 0m;
+    string topBranch = ViewBag.TopMpesaBranch ?? "—";
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">
+            M-Pesa Branch Performance
+        </h4>
+        <small class="text-muted">
+            @dateFrom.ToString("dd MMM") to
+            @dateTo.ToString("dd MMM yyyy")
+            — Admin view only
+        </small>
+    </div>
+    <form method="get"
+          action="/Mpesa/Performance"
+          class="d-flex gap-2">
+        <input type="date" name="from"
+               class="form-control"
+               style="border-radius:10px;width:160px;"
+               value="@dateFrom.ToString("yyyy-MM-dd")" />
+        <input type="date" name="to"
+               class="form-control"
+               style="border-radius:10px;width:160px;"
+               value="@dateTo.ToString("yyyy-MM-dd")"
+               max="@DateTime.Today
+                   .ToString(" yyyy-MM-dd")" />
+        <button type="submit"
+                class="btn fw-semibold"
+                style="background:#007A3D;
+                       color:white;
+                       border-radius:10px;
+                       padding:8px 20px;">
+            View
+        </button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #2563eb !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total M-Pesa (All Branches)
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#2563eb;">
+                    KES @totalMpesa.ToString("N0")
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total Cash (All Branches)
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    KES @totalCash.ToString("N0")
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Top M-Pesa Branch
+                </p>
+                <h5 class="fw-bold mb-0"
+                    style="color:#b45309;">
+                    @topBranch
+                </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #0f172a !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Combined Total
+                </p>
+                <h4 class="fw-bold mb-0">
+                    KES @((totalMpesa + totalCash)
+                    .ToString("N0"))
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (summary != null && summary.Any())
+{
+    decimal maxMpesa = summary.Max(
+        s => (decimal)s.MpesaTotal);
+
+    <div class="card border-0 shadow-sm mb-4"
+         style="border-radius:16px;overflow:hidden;">
+        <div class="card-header bg-white border-0
+                     p-3 fw-bold"
+             style="color:#007A3D;">
+            Branch Comparison
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        @foreach (var h in new[]
+                       {
+                    "Rank","Branch",
+                    "M-Pesa Performance",
+                    "Total M-Pesa",
+                    "Phones M-Pesa",
+                    "Accessories M-Pesa",
+                    "Services M-Pesa",
+                    "Total Cash",
+                    "Combined"
+                    })
+                        {
+                            <th style="color:white;
+                                       padding:12px 14px;
+                                       border:none;
+                                       font-size:0.8rem;
+                                       white-space:nowrap;">
+                                @h
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int rank = 1;
+                    }
+                    @foreach (var s in summary)
+                    {
+                        decimal mpesa = s.MpesaTotal;
+                        decimal cash = s.CashTotal;
+                        decimal combined = mpesa + cash;
+                        decimal pct = maxMpesa > 0
+                        ? (mpesa / maxMpesa * 100) : 0;
+
+                        string rankStyle = rank == 1
+                        ? "background:#fef9c3;color:#92400e;font-weight:900;"
+                        : rank == 2
+                        ? "background:#f1f5f9;color:#475569;font-weight:800;"
+                        : rank == 3
+                        ? "background:#fef3c7;color:#b45309;font-weight:700;"
+                        : "color:#888;";
+
+
+                        <tr>
+                            <td style="padding:14px 14px;">
+                                <span style="width:32px;
+                                              height:32px;
+                                              border-radius:50%;
+                                              display:inline-flex;
+                                              align-items:center;
+                                              justify-content:center;
+                                              font-size:0.85rem;
+                                              @rankStyle">
+                                    @rank
+                                </span>
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-weight:700;
+                                       font-size:0.9rem;">
+                                @s.Branch.Name
+                            </td>
+                            <td style="padding:14px 14px;
+                                       min-width:160px;">
+                                <div style="background:#e2e8f0;
+                                             border-radius:20px;
+                                             height:10px;
+                                             overflow:hidden;">
+                                    <div style="width:@pct.ToString("F1")%;
+                                                 background:linear-gradient(
+                                                     90deg,#2563eb,#1d4ed8);
+                                                 height:100%;
+                                                 border-radius:20px;
+                                                 transition:0.3s;">
+                                    </div>
+                                </div>
+                                <small style="color:#888;
+                                               font-size:0.72rem;">
+                                    @pct.ToString("F1")%
+                                    of top branch
+                                </small>
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-weight:800;
+                                       color:#2563eb;
+                                       font-size:0.95rem;">
+                                KES @mpesa.ToString("N0")
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-size:0.85rem;">
+                                KES @(((decimal)s.PhoneMpesa).ToString("N0"))
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-size:0.85rem;">
+                                KES @(((decimal)s.AccMpesa).ToString("N0"))
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-size:0.85rem;">
+                                KES @(((decimal)s.SvcMpesa).ToString("N0"))
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-weight:700;
+                                       color:#007A3D;">
+                                KES @cash.ToString("N0")
+                            </td>
+                            <td style="padding:14px 14px;
+                                       font-weight:700;
+                                       color:#0f172a;">
+                                KES @combined.ToString("N0")
+                            </td>
+                        </tr>
+                        rank++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var s in summary)
+        {
+            decimal mpesa = s.MpesaTotal;
+            decimal cash = s.CashTotal;
+            decimal combined = mpesa + cash;
+            decimal mpesaPct = combined > 0
+            ? (mpesa / combined * 100) : 0;
+            decimal cashPct = combined > 0
+            ? (cash / combined * 100) : 0;
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm"
+                     style="border-radius:16px;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3"
+                            style="color:#007A3D;">
+                            @s.Branch.Name
+                        </h6>
+
+                        <div style="display:flex;
+                                     gap:8px;
+                                     margin-bottom:12px;">
+                            <div style="flex:1;
+                                         background:#eff6ff;
+                                         border-radius:12px;
+                                         padding:12px;
+                                         text-align:center;">
+                                <div style="font-size:0.72rem;
+                                             color:#2563eb;
+                                             font-weight:700;
+                                             text-transform:uppercase;
+                                             letter-spacing:0.5px;">
+                                    M-Pesa
+                                </div>
+                                <div style="font-size:1.1rem;
+                                             font-weight:800;
+                                             color:#2563eb;">
+                                    KES @mpesa.ToString("N0")
+                                </div>
+                                <div style="font-size:0.72rem;
+                                             color:#93c5fd;">
+                                    @mpesaPct.ToString("F1")%
+                                </div>
+                            </div>
+                            <div style="flex:1;
+                                         background:#f0f7f3;
+                                         border-radius:12px;
+                                         padding:12px;
+                                         text-align:center;">
+                                <div style="font-size:0.72rem;
+                                             color:#007A3D;
+                                             font-weight:700;
+                                             text-transform:uppercase;
+                                             letter-spacing:0.5px;">
+                                    Cash
+                                </div>
+                                <div style="font-size:1.1rem;
+                                             font-weight:800;
+                                             color:#007A3D;">
+                                    KES @cash.ToString("N0")
+                                </div>
+                                <div style="font-size:0.72rem;
+                                             color:#86efac;">
+                                    @cashPct.ToString("F1")%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8fafc;
+                                     border-radius:10px;
+                                     padding:8px 12px;
+                                     font-size:0.82rem;">
+                            <div style="display:flex;
+                                         justify-content:space-between;
+                                         margin-bottom:4px;">
+                                <span style="color:#888;">
+                                    Phones
+                                </span>
+                                <span class="fw-semibold">
+                                    KES @(((decimal)s.PhoneMpesa + (decimal)s.PhoneCash).ToString("N0"))
+                                </span>
+                            </div>
+                            <div style="display:flex;
+                                         justify-content:space-between;
+                                         margin-bottom:4px;">
+                                <span style="color:#888;">
+                                    Accessories
+                                </span>
+                                <span class="fw-semibold">
+                                    KES @(((decimal)s.AccMpesa + (decimal)s.AccCash).ToString("N0"))
+                                </span>
+                            </div>
+                            <div style="display:flex;
+                                         justify-content:space-between;">
+                                <span style="color:#888;">
+                                    Services
+                                </span>
+                                <span class="fw-semibold">
+                                    KES @(((decimal)s.SvcMpesa + (decimal)s.SvcCash).ToString("N0"))
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px;
+                                     padding-top:12px;
+                                     border-top:1px solid
+                                         var(--border-color);
+                                     display:flex;
+                                     justify-content:space-between;">
+                            <span style="color:#888;
+                                          font-size:0.85rem;">
+                                Combined Total
+                            </span>
+                            <span style="font-weight:800;
+                                          font-size:1rem;">
+                                KES @combined.ToString("N0")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm p-5
+                text-center"
+         style="border-radius:16px;">
+        <div style="font-size:3rem;">📊</div>
+        <h5 class="fw-bold mt-3">
+            No data for selected period
+        </h5>
+        <p class="text-muted">
+            Adjust the date range and try again.
+        </p>
+    </div>
+}

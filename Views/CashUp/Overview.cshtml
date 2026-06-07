@@ -1,0 +1,236 @@
+﻿@model IEnumerable<BraysTech.Models.CashUp>
+@{
+    ViewData["Title"] = "Cash and M-Pesa Overview";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    DateTime targetDate = ViewBag.TargetDate ?? DateTime.Today;
+    decimal totalCash = ViewBag.TotalCashDeclared ?? 0m;
+    decimal totalMpesa = ViewBag.TotalMpesaDeclared ?? 0m;
+    var mpesaByBranch = ViewBag.MpesaSalesByBranch
+        as IEnumerable<dynamic>;
+    var cashByBranch = ViewBag.CashSalesByBranch
+        as IEnumerable<dynamic>;
+
+    // Sort the cash-ups by CreatedAt in descending order (latest first)
+    var sortedCashUps = Model.OrderByDescending(c => c.CreatedAt);
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">
+            Cash and M-Pesa Overview
+        </h4>
+        <small class="text-muted">
+            @targetDate.ToString("dddd, dd MMMM yyyy")
+        </small>
+    </div>
+    <form method="get" action="/CashUp/Overview"
+          class="d-flex gap-2">
+        <input type="date"
+               name="date"
+               class="form-control"
+               style="border-radius:10px;width:180px;"
+               value="@targetDate.ToString("yyyy-MM-dd")"
+               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <button type="submit"
+                class="btn fw-semibold"
+                style="background:#007A3D;
+                       color:white;
+                       border-radius:10px;
+                       padding:8px 20px;">
+            View
+        </button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total Cash Declared
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    KES @totalCash.ToString("N0")
+                </h4>
+                <small class="text-muted">
+                    Combined from all branches
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #2563eb !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total M-Pesa Declared
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#2563eb;">
+                    KES @totalMpesa.ToString("N0")
+                </h4>
+                <small class="text-muted">
+                    Float across all tills
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #16a34a !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    M-Pesa Sales Today
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#16a34a;">
+                    KES @(mpesaByBranch != null
+                    ? ((IEnumerable<dynamic>)mpesaByBranch)
+                    .Sum(x => (decimal)x.Amount)
+                    .ToString("N0")
+                    : "0")
+                </h4>
+                <small class="text-muted">
+                    From phone sales records
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Cash Sales Today
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#b45309;">
+                    KES @(cashByBranch != null
+                    ? ((IEnumerable<dynamic>)cashByBranch)
+                    .Sum(x => (decimal)x.Amount)
+                    .ToString("N0")
+                    : "0")
+                </h4>
+                <small class="text-muted">
+                    From phone sales records
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4"
+     style="border-radius:16px;overflow:hidden;">
+    <div class="card-header bg-white border-0 p-3 fw-bold"
+         style="color:#007A3D;">
+        Staff Cash-Up Declarations
+        <span class="text-muted ms-2" style="font-size:0.75rem; font-weight:normal;">
+            (Latest first)
+        </span>
+    </div>
+    @if (!sortedCashUps.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:2.5rem;">💵</div>
+            <h5 class="fw-bold mt-3">
+                No cash-ups submitted for this date
+            </h5>
+            <p class="small">
+                Staff submit cash-ups at end of shift
+                from their menu.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Branch
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Staff
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Time
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Cash Declared (KES)
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            M-Pesa Declared (KES)
+                        </th>
+                        <th style="color:white; padding:12px 16px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">
+                            Notes
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in sortedCashUps)
+                    {
+                        <tr>
+                            <td style="padding:12px 16px; font-weight:600; font-size:0.88rem; border-bottom:1px solid #f0f0f0;">
+                                @(c.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 16px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                @(c.Staff?.FullName ?? "—")
+                            </td>
+                            <td style="padding:12px 16px; font-size:0.82rem; color:#555; border-bottom:1px solid #f0f0f0;">
+                                @c.CreatedAt.ToString("HH:mm")
+                            </td>
+                            <td style="padding:12px 16px; font-weight:700; color:#007A3D; font-size:0.95rem; border-bottom:1px solid #f0f0f0;">
+                                KES @c.CashAmount.ToString("N0")
+                            </td>
+                            <td style="padding:12px 16px; font-weight:700; color:#2563eb; font-size:0.95rem; border-bottom:1px solid #f0f0f0;">
+                                KES @c.MpesaFloat.ToString("N0")
+                            </td>
+                            <td style="padding:12px 16px; font-size:0.82rem; color:#888; max-width:200px; border-bottom:1px solid #f0f0f0;">
+                                @(c.Notes ?? "—")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="padding:16px 20px; border-top:1px solid #e0e0e0; display:flex; gap:32px; background-color:#f9f9f9;">
+            <div>
+                <span style="font-size:0.82rem; color:#666;">
+                    Total Cash:
+                </span>
+                <strong style="color:#007A3D; margin-left:8px;">
+                    KES @totalCash.ToString("N0")
+                </strong>
+            </div>
+            <div>
+                <span style="font-size:0.82rem; color:#666;">
+                    Total M-Pesa:
+                </span>
+                <strong style="color:#2563eb; margin-left:8px;">
+                    KES @totalMpesa.ToString("N0")
+                </strong>
+            </div>
+            <div>
+                <span style="font-size:0.82rem; color:#666;">
+                    Combined:
+                </span>
+                <strong style="color:#0f172a; margin-left:8px;">
+                    KES @((totalCash + totalMpesa).ToString("N0"))
+                </strong>
+            </div>
+        </div>
+    }
+</div>

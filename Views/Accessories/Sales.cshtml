@@ -1,0 +1,163 @@
+﻿@model IEnumerable<BraysTech.Models.AccessorySale>
+@{
+    ViewData["Title"] = "Accessory Sales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    decimal totalRevenue = ViewBag.TotalRevenue ?? 0m;
+    decimal totalProfit = ViewBag.TotalProfit ?? 0m;
+    int totalSales = ViewBag.TotalSales ?? 0;
+
+    // Sort by date descending (latest first)
+    var sortedSales = Model.OrderByDescending(s => s.CreatedAt);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Accessory Sales</h4>
+        <small class="text-muted">
+            @totalSales sales — KES @totalRevenue.ToString("N0") revenue
+        </small>
+    </div>
+    <a href="/Accessories/NewSale" class="btn fw-semibold rounded-pill px-4" style="background:#007A3D;color:white;">
+        New Sale
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Sales</p>
+                <h4 class="fw-bold mb-0" style="color:#007A3D;">@totalSales</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #1d4ed8 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Revenue</p>
+                <h4 class="fw-bold mb-0" style="color:#1d4ed8;">KES @totalRevenue.ToString("N0")</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; border-left:4px solid #b45309 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Profit</p>
+                <h4 class="fw-bold mb-0" style="color:#b45309;">KES @totalProfit.ToString("N0")</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
+    @if (!sortedSales.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <h5 class="fw-bold">No accessory sales yet</h5>
+            <a href="/Accessories/NewSale" class="btn mt-2 rounded-pill px-4" style="background:#007A3D;color:white;">
+                Record First Sale
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">#</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Date</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Customer</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Branch</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Staff</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Items</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Payment</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Amount (KES)</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Profit (KES)</th>
+                        <th style="color:white; padding:12px 14px; border:none; font-size:0.82rem; white-space:nowrap; background-color:#007A3D;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in sortedSales)
+                    {
+                        <tr>
+                            <td style="padding:12px 14px; font-size:0.82rem; color:#888; border-bottom:1px solid #f0f0f0;">
+                                #@s.SaleID
+                            </td>
+                            <td style="padding:12px 14px; font-size:0.85rem; white-space:nowrap; border-bottom:1px solid #f0f0f0;">
+                                @s.CreatedAt.ToString("dd MMM HH:mm")
+                            </td>
+                            <td style="padding:12px 14px; font-size:0.85rem; font-weight:600; border-bottom:1px solid #f0f0f0;">
+                                @(s.CustomerName ?? "Walk-in")
+                                @if (!string.IsNullOrEmpty(s.CustomerPhone))
+                                {
+                                    <div style="font-size:0.75rem; color:#888; font-weight:400; font-family:monospace;">
+                                        @s.CustomerPhone
+                                    </div>
+                                }
+                            </td>
+                            <td style="padding:12px 14px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                @(s.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 14px; font-size:0.85rem; border-bottom:1px solid #f0f0f0;">
+                                @(s.Staff?.FullName ?? "—")
+                            </td>
+                            <td style="padding:12px 14px; font-size:0.82rem; max-width:180px; border-bottom:1px solid #f0f0f0;">
+                                @foreach (var item in s.Items.Take(2))
+                                {
+                                    <div>
+                                        @item.AccessoryName x @item.Quantity
+                                    </div>
+                                }
+                                @if (s.Items.Count > 2)
+                                {
+                                    <small class="text-muted">
+                                        +@(s.Items.Count - 2) more
+                                    </small>
+                                }
+                            </td>
+                            <td style="padding:12px 14px; border-bottom:1px solid #f0f0f0;">
+                                <span style="padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; background:@(s.PaymentMethod == BraysTech.Models.SalePaymentMethod.MPesa ? "#dbeafe" : "#dcfce7"); color:@(s.PaymentMethod == BraysTech.Models.SalePaymentMethod.MPesa ? "#2563eb" : "#16a34a");">
+                                    @s.PaymentMethod
+                                </span>
+                            </td>
+                            <td style="padding:12px 14px; font-weight:700; color:#007A3D; border-bottom:1px solid #f0f0f0;">
+                                KES @s.TotalAmount.ToString("N0")
+                            </td>
+                            <td style="padding:12px 14px; font-weight:700; color:#b45309; border-bottom:1px solid #f0f0f0;">
+                                KES @s.TotalProfit.ToString("N0")
+                            </td>
+                            <td style="padding:12px 14px; border-bottom:1px solid #f0f0f0;">
+                                <div class="d-flex gap-1">
+                                    <a href="/Accessories/SaleDetails/@s.SaleID" class="btn btn-sm fw-semibold" style="background:#007A3D; color:white; border-radius:7px; font-size:0.78rem;">
+                                        View
+                                    </a>
+                                    <a href="/Accessories/Receipt/@s.SaleID" class="btn btn-sm btn-outline-secondary" style="border-radius:7px; font-size:0.78rem;" title="Print Receipt">
+                                        🖨️
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="padding:16px 20px; border-top:1px solid #e0e0e0; background-color:#f9f9f9;">
+            <div class="d-flex gap-4">
+                <div>
+                    <span class="text-muted small">Total Sales:</span>
+                    <strong class="ms-2" style="color:#007A3D;">@totalSales</strong>
+                </div>
+                <div>
+                    <span class="text-muted small">Total Revenue:</span>
+                    <strong class="ms-2" style="color:#1d4ed8;">KES @totalRevenue.ToString("N0")</strong>
+                </div>
+                <div>
+                    <span class="text-muted small">Total Profit:</span>
+                    <strong class="ms-2" style="color:#b45309;">KES @totalProfit.ToString("N0")</strong>
+                </div>
+            </div>
+        </div>
+    }
+</div>

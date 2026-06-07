@@ -6,7 +6,7 @@ using BraysTech.Models;
 
 namespace BraysTech.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Manager")]  // CHANGED: Restrict to Admin and Manager only
     public class BranchController : Controller
     {
         private readonly AppDbContext _db;

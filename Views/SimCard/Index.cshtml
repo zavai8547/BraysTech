@@ -1,0 +1,521 @@
+﻿@model IEnumerable<BraysTech.Models.SimCard>
+@{
+    ViewData["Title"] = "SIM Cards";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int totalInStock = ViewBag.TotalInStock ?? 0;
+    int soldToday = ViewBag.SoldToday ?? 0;
+    int totalSold = ViewBag.TotalSold ?? 0;
+    int replacementsToday = ViewBag.ReplacementsToday ?? 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">SIM Cards</h4>
+        <small class="text-muted">
+            Safaricom, Airtel and Telkom SIM stock
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a href="/SimCard/Add"
+               class="btn btn-outline-secondary rounded-pill px-3">
+                + Add SIMs
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #007A3D !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">In Stock</p>
+                <h3 class="fw-bold mb-0" style="color:#007A3D;">
+                    @totalInStock
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #2563eb !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">Sold Today</p>
+                <h3 class="fw-bold mb-0" style="color:#2563eb;">
+                    @soldToday
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #7c3aed !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">
+                    Replacements Today
+                </p>
+                <h3 class="fw-bold mb-0" style="color:#7c3aed;">
+                    @replacementsToday
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid #b45309 !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">Total Sold</p>
+                <h3 class="fw-bold mb-0" style="color:#b45309;">
+                    @totalSold
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    var byNetwork = ViewBag.ByNetwork as IEnumerable<dynamic>;
+}
+@if (byNetwork != null && byNetwork.Any())
+{
+    <div class="row g-3 mb-4">
+        @foreach (var n in byNetwork)
+        {
+            string netName = n.Network.ToString();
+            string netColor = netName == "Safaricom"
+            ? "#007A3D"
+            : netName == "Airtel" ? "#dc2626" : "#2563eb";
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm"
+                     style="border-radius:14px;
+                            border-left:4px solid @netColor !important;">
+                    <div class="card-body d-flex
+                                 justify-content-between
+                                 align-items-center">
+                        <div>
+                            <div class="fw-bold"
+                                 style="color:@netColor;">
+                                @netName
+                            </div>
+                            <small class="text-muted">
+                                In stock
+                            </small>
+                        </div>
+                        <div style="font-size:2rem;
+                                     font-weight:800;
+                                     color:@netColor;">
+                            @n.Count
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="card border-0 shadow-sm mb-3 p-3"
+     style="border-radius:16px;">
+    <form method="get" action="/SimCard/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <select name="network" class="form-select">
+                    <option value="">All Networks</option>
+                    @foreach (var n in (string[])ViewBag.Networks)
+                    {
+                        if (n == ViewBag.SelectedNetwork)
+                        {
+                            <option value="@n" selected>@n</option>
+                        }
+                        else
+                        {
+                            <option value="@n">@n</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in (string[])ViewBag.Statuses)
+                    {
+                        if (s == ViewBag.SelectedStatus)
+                        {
+                            <option value="@s" selected>@s</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn w-100 fw-semibold"
+                        style="background:#007A3D;color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="/SimCard/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3rem;">📶</div>
+            <h5 class="fw-bold mt-3">No SIM cards yet</h5>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a href="/SimCard/Add"
+                   class="btn mt-2 rounded-pill px-4"
+                   style="background:#007A3D;color:white;">
+                    Add SIM Cards
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        @foreach (var h in new[]
+                       {
+                    "Network","Status","Branch",
+                    "Buy Price","Sell Price",
+                    "Date Added","Customer",
+                    "Type","Date Sold","Actions"
+                    })
+                        {
+                            <th style="color:white;padding:12px 14px;
+                                       border:none;font-size:0.8rem;
+                                       white-space:nowrap;">@h</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        string netColor = s.Network ==
+                        BraysTech.Models.SimNetwork.Safaricom
+                        ? "#007A3D"
+                        : s.Network ==
+                        BraysTech.Models.SimNetwork.Airtel
+                        ? "#dc2626" : "#2563eb";
+
+                        string statusBg = s.Status ==
+                        BraysTech.Models.SimCardStatus.InStock
+                        ? "#dcfce7"
+                        : s.Status ==
+                        BraysTech.Models.SimCardStatus.Sold
+                        ? "#dbeafe" : "#fee2e2";
+                        string statusColor = s.Status ==
+                        BraysTech.Models.SimCardStatus.InStock
+                        ? "#16a34a"
+                        : s.Status ==
+                        BraysTech.Models.SimCardStatus.Sold
+                        ? "#2563eb" : "#dc2626";
+
+                        <tr>
+                            <td style="padding:12px 14px;
+                                       font-weight:700;
+                                       color:@netColor;">
+                                @s.Network
+                            </td>
+                            <td style="padding:12px 14px;">
+                                <span style="padding:3px 10px;
+                                              border-radius:20px;
+                                              font-size:0.75rem;
+                                              font-weight:700;
+                                              background:@statusBg;
+                                              color:@statusColor;">
+                                    @s.Status
+                                </span>
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                @(s.Branch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                KES @s.BuyingPrice.ToString("N0")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-weight:700;
+                                       color:#007A3D;">
+                                KES @s.SellingPrice.ToString("N0")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.82rem;
+                                       color:#888;">
+                                @s.DateAdded.ToString("dd MMM yyyy")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                @if (!string.IsNullOrEmpty(s.SoldToName))
+                                {
+                                    <div class="fw-semibold">
+                                        @s.SoldToName
+                                    </div>
+                                    <small class="text-muted"
+                                           style="font-family:monospace;">
+                                        @s.SoldToPhone
+                                    </small>
+                                }
+                                else
+                                {
+                                    <span style="color:#ccc;">—</span>
+                                }
+                            </td>
+                            <td style="padding:12px 14px;">
+                                @if (s.Status ==
+                               BraysTech.Models.SimCardStatus.Sold)
+                                {
+                                    <span style="padding:3px 10px;
+                                                  border-radius:20px;
+                                                  font-size:0.73rem;
+                                                  font-weight:700;
+                                                  background:@(s.IsReplacement ? "#f3e8ff" : "#dcfce7");
+                                                  color:@(s.IsReplacement ? "#7c3aed" : "#16a34a");">
+                                        @(s.IsReplacement
+                                            ? "Replacement"
+                                            : "New Sale")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:#ccc;">—</span>
+                                }
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.82rem;
+                                       color:#888;">
+                                @(s.DateSold.HasValue
+                                    ? s.DateSold.Value
+                                    .ToString("dd MMM HH:mm")
+                                    : "—")
+                            </td>
+                            <td style="padding:12px 14px;">
+                                @if (s.Status ==
+                               BraysTech.Models.SimCardStatus.InStock)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm fw-semibold"
+                                            style="background:#007A3D;
+                                                   color:white;
+                                                   border-radius:7px;
+                                                   font-size:0.76rem;"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#sell_@s.SimCardID">
+                                        Sell / Replace
+                                    </button>
+
+                                    <div class="modal fade"
+                                         id="sell_@s.SimCardID"
+                                         tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header border-0"
+                                                     style="background:#007A3D;color:white;">
+                                                    <h5 class="modal-title">
+                                                        Sell @s.Network SIM
+                                                    </h5>
+                                                    <button type="button"
+                                                            class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form method="post"
+                                                      action="/SimCard/Sell">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden"
+                                                           name="simCardID"
+                                                           value="@s.SimCardID" />
+                                                    <input type="hidden"
+                                                           name="branchID"
+                                                           value="@s.BranchID" />
+                                                    <div class="modal-body">
+                                                        <p class="text-muted small mb-3">
+                                                            Price:
+                                                            <strong>
+                                                                KES @s.SellingPrice.ToString("N0")
+                                                            </strong>
+                                                            &nbsp;|&nbsp; Network:
+                                                            <strong>@s.Network</strong>
+                                                        </p>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">
+                                                                Is this a SIM Replacement?
+                                                            </label>
+                                                            <div class="d-flex gap-3">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input"
+                                                                           type="radio"
+                                                                           name="isReplacement"
+                                                                           value="false"
+                                                                           id="newSim_@s.SimCardID"
+                                                                           checked
+                                                                           onchange="toggleReplacement(@s.SimCardID, false)" />
+
+                                                                    <label class="form-check-label"
+                                                                           for="newSim_@s.SimCardID">
+                                                                        New SIM Sale
+                                                                    </label>
+                                                                </div>
+
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input"
+                                                                           type="radio"
+                                                                           name="isReplacement"
+                                                                           value="true"
+                                                                           id="replacement_@s.SimCardID"
+                                                                           onchange="toggleReplacement(@s.SimCardID, true)" />
+
+                                                                    <label class="form-check-label"
+                                                                           for="replacement_@s.SimCardID">
+                                                                        SIM Replacement
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">
+                                                                Customer Name *
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="customerName"
+                                                                   class="form-control"
+                                                                   required />
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">
+                                                                Phone Number *
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="customerPhone"
+                                                                   class="form-control"
+                                                                   required />
+                                                        </div>
+
+                                                        <div id="idDiv_@s.SimCardID"
+                                                             style="display:none;">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">
+                                                                    National ID Number *
+                                                                </label>
+                                                                <input type="text"
+                                                                       name="customerIDNumber"
+                                                                       id="idInput_@s.SimCardID"
+                                                                       class="form-control"
+                                                                       placeholder="Required for replacements" />
+                                                            </div>
+                                                            <div class="row g-2 mb-3">
+                                                                <div class="col-6">
+                                                                    <label class="form-label fw-semibold">
+                                                                        Old SIM Number
+                                                                    </label>
+                                                                    <input type="text"
+                                                                           name="oldSimNumber"
+                                                                           class="form-control"
+                                                                           style="font-family:monospace;" />
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <label class="form-label fw-semibold">
+                                                                        New SIM Number
+                                                                    </label>
+                                                                    <input type="text"
+                                                                           name="newSimNumber"
+                                                                           class="form-control"
+                                                                           style="font-family:monospace;" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">
+                                                                Payment *
+                                                            </label>
+                                                            <select name="paymentMethod"
+                                                                    class="form-select"
+                                                                        onchange="toggleMpesa(@s.SimCardID, this.value)">
+                                                                <option value="0">Cash</option>
+                                                                <option value="1">MPesa</option>
+                                                                <option value="3">Card</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="mpesaDiv_@s.SimCardID"
+                                                             style="display:none;">
+                                                            <label class="form-label fw-semibold">
+                                                                M-Pesa Code
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="mpesaCode"
+                                                                   class="form-control"
+                                                                   style="font-family:monospace;
+                                                                          text-transform:uppercase;
+                                                                          font-weight:700;"
+                                                                   placeholder="e.g. QHX4RT8K2P" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <button type="submit"
+                                                                class="btn fw-semibold"
+                                                                style="background:#007A3D;
+                                                                       color:white;
+                                                                       border-radius:8px;">
+                                                            Confirm Sale
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        function toggleReplacement(id, isReplace) {
+                                            var div = document.getElementById('idDiv_' + id);
+                                            if (div) {
+                                                div.style.display = isReplace ? 'block' : 'none';
+                                            }
+
+                                            var idInput = document.getElementById('idInput_' + id);
+                                            if (idInput) {
+                                                idInput.required = isReplace;
+                                            }
+                                        }
+
+                                        function toggleMpesa(id, val) {
+                                            var div = document.getElementById('mpesaDiv_' + id);
+                                            if (div) {
+                                                div.style.display = val === '1' ? 'block' : 'none';
+                                            }
+                                        }
+                                    </script>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

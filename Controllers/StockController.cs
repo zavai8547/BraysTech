@@ -87,6 +87,7 @@ namespace BraysTech.Controllers
 
         // ── ADD DEVICE ─────────────────────────────────────
         [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]  // ADDED: Restrict to Admin/Manager
         public async Task<IActionResult> Add()
         {
             ViewBag.Branches = await _db.Branches
@@ -97,6 +98,7 @@ namespace BraysTech.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]  // ADDED: Restrict to Admin/Manager
         public async Task<IActionResult> Add(
             string IMEI, string PhoneName, string? Brand,
             string? Model, string? Color, string? Storage,
@@ -186,7 +188,7 @@ namespace BraysTech.Controllers
 
         // ── EDIT DEVICE ────────────────────────────────────
         [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]  // Already present, keeping as is
         public async Task<IActionResult> Edit(int id)
         {
             var device = await _db.IMEIStock.FindAsync(id);
@@ -199,7 +201,7 @@ namespace BraysTech.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]  // Already present, keeping as is
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(IMEIStock device)
         {

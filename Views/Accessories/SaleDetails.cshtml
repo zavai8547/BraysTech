@@ -1,0 +1,123 @@
+﻿@model BraysTech.Models.AccessorySale
+@{
+    ViewData["Title"] = "Accessory Sale Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/Accessories/Sales"
+       class="btn btn-outline-secondary
+              rounded-pill px-3">
+        Back
+    </a>
+    <h4 class="fw-bold mb-0">
+        Sale #@Model.SaleID
+    </h4>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:16px;">
+            <div class="card-header bg-white border-0
+                         pt-3 fw-bold"
+                 style="color:#007A3D;">
+                Sale Information
+            </div>
+            <div class="card-body pt-0">
+                @{
+                    var rows = new[]
+                    {
+                ("Date", Model.CreatedAt.ToString("dd MMM yyyy HH:mm")),
+                ("Customer", Model.CustomerName ?? "Walk-in"),
+                ("Phone", Model.CustomerPhone ?? "—"),
+                ("Staff", Model.Staff?.FullName ?? "—"),
+                ("Branch", Model.Branch?.Name ?? "—"),
+                ("Payment", Model.PaymentMethod.ToString()),
+                ("M-Pesa Code", Model.MpesaCode ?? "—"),
+                ("Notes", Model.Notes ?? "—")
+                };
+                }
+                @foreach (var r in rows)
+                {
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:9px 0;
+                                 border-bottom:1px solid #f0f7f3;
+                                 font-size:0.88rem;">
+                        <span style="color:#666;">
+                            @r.Item1
+                        </span>
+                        <span class="fw-semibold">
+                            @r.Item2
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:16px;">
+            <div class="card-header bg-white border-0
+                         pt-3 fw-bold"
+                 style="color:#007A3D;">
+                Items Sold
+            </div>
+            <div class="card-body pt-0">
+                @foreach (var item in Model.Items)
+                {
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 align-items:center;
+                                 padding:12px 0;
+                                 border-bottom:1px solid #f0f7f3;">
+                        <div>
+                            <div class="fw-semibold"
+                                 style="font-size:0.9rem;">
+                                @item.AccessoryName
+                            </div>
+                            <small class="text-muted">
+                                @item.Quantity x KES @item.UnitPrice.ToString("N0")
+                            </small>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="fw-bold"
+                                 style="color:#007A3D;">
+                                KES @item.Subtotal.ToString("N0")
+                            </div>
+                            <small style="color:#b45309;">
+                                Profit: KES @item.Profit.ToString("N0")
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <div style="display:flex;
+                             justify-content:space-between;
+                             padding:14px 0 0;
+                             font-size:1rem;">
+                    <span class="fw-bold">Total</span>
+                    <span class="fw-bold"
+                          style="color:#007A3D;
+                                 font-size:1.2rem;">
+                        KES @Model.TotalAmount.ToString("N0")
+                    </span>
+                </div>
+                <div style="display:flex;
+                             justify-content:space-between;
+                             padding:4px 0;
+                             font-size:0.9rem;">
+                    <span style="color:#888;">
+                        Total Profit
+                    </span>
+                    <span style="color:#b45309;
+                                  font-weight:700;">
+                        KES @Model.TotalProfit.ToString("N0")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

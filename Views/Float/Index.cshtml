@@ -1,0 +1,307 @@
+﻿@model IEnumerable<BraysTech.Models.MpesaFloat>
+@{
+    ViewData["Title"] = "M-Pesa Float";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">M-Pesa Float</h4>
+        <small class="text-muted">
+            Float balances across all branches
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Admin"))
+        {
+            <a href="/Float/Setup"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                + Add Till
+            </a>
+        }
+        <a href="/Float/Topup"
+           class="btn fw-semibold rounded-pill px-4"
+           style="background:#007A3D;color:white;">
+            Top Up Float
+        </a>
+    </div>
+</div>
+
+<!-- TOTALS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Total Float Balance
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    KES @((decimal)ViewBag.TotalFloat)
+                    .ToString("N0"))
+                </h4>
+                <small class="text-muted">
+                    All tills combined
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #dc2626 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Low Float Alerts
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#dc2626;">
+                    @ViewBag.LowFloat
+                </h4>
+                <small class="text-muted">
+                    Tills below alert threshold
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #1d4ed8 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    M-Pesa Sales Today
+                </p>
+                <h4 class="fw-bold mb-0"
+                    style="color:#1d4ed8;">
+                    KES @{
+                        var todaySales = ViewBag
+                        .TodayMpesaSales as
+                        IEnumerable<dynamic>;
+                        decimal todayTotal = 0;
+                        if (todaySales != null)
+                        {
+                            foreach (var ts in todaySales)
+                            {
+                                todayTotal += (decimal)
+                                ts.GetType()
+                                .GetProperty("Amount")
+                                .GetValue(ts);
+                            }
+                        }
+                        @todayTotal.ToString("N0")
+                    }
+                </h4>
+                <small class="text-muted">
+                    Received via M-Pesa
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card border-0 shadow-sm p-5
+                text-center"
+         style="border-radius:16px;">
+        <h5 class="fw-bold">
+            No float accounts set up yet
+        </h5>
+        <p class="text-muted">
+            Add your M-Pesa till numbers to
+            start tracking float.
+        </p>
+        @if (User.IsInRole("Admin"))
+        {
+            <a href="/Float/Setup"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                Add First Till
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var f in Model)
+        {
+            var isLow = f.CurrentBalance <=
+            f.LowBalanceAlert;
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"
+                     style="border-radius:16px;
+                            overflow:hidden;
+                            @(isLow ? "border:2px solid #dc2626 !important;" : "")">
+                    <div style="background:linear-gradient(
+                                    135deg,#007A3D,#005C2E);
+                                padding:18px 20px;
+                                color:white;">
+                        <div class="fw-bold fs-6">
+                            @f.TillName ?? f.TillNumber
+                        </div>
+                        <div style="font-size:0.82rem;
+                                     opacity:0.8;
+                                     font-family:monospace;">
+                            @f.TillNumber
+                        </div>
+                        <div style="font-size:0.78rem;
+                                     opacity:0.7;
+                                     margin-top:4px;">
+                            @(f.Branch?.Name ?? "—")
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div style="font-size:0.78rem;
+                                         color:#888;">
+                                Current Balance
+                            </div>
+                            <div style="font-size:2rem;
+                                         font-weight:800;
+                                         color:@(isLow ? "#dc2626" : "#007A3D");">
+                                KES @f.CurrentBalance
+                                .ToString("N0")
+                            </div>
+                            @if (isLow)
+                            {
+                                <span style="background:#fee2e2;
+                                              color:#dc2626;
+                                              padding:3px 10px;
+                                              border-radius:20px;
+                                              font-size:0.75rem;
+                                              font-weight:700;">
+                                    LOW FLOAT
+                                </span>
+                            }
+                        </div>
+
+                        <div style="font-size:0.8rem;
+                                     color:#888;
+                                     margin-bottom:12px;">
+                            Alert below KES
+                            @f.LowBalanceAlert.ToString("N0")
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="/Float/Topup?floatID=@f.FloatID"
+                               class="btn btn-sm flex-grow-1
+                                      fw-semibold"
+                               style="background:#007A3D;
+                                      color:white;
+                                      border-radius:8px;">
+                                Top Up
+                            </a>
+                            <button type="button"
+                                    class="btn btn-sm
+                                           btn-outline-secondary"
+                                    style="border-radius:8px;"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#withdraw_@f.FloatID">
+                                Withdraw
+                            </button>
+                            <a href="/Float/History/@f.FloatID"
+                               class="btn btn-sm
+                                      btn-outline-secondary"
+                               style="border-radius:8px;">
+                                History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Modal -->
+                <div class="modal fade"
+                     id="withdraw_@f.FloatID"
+                     tabindex="-1">
+                    <div class="modal-dialog
+                                 modal-dialog-centered">
+                        <div class="modal-content
+                                     border-0 shadow">
+                            <div class="modal-header"
+                                 style="background:#007A3D;
+                                        color:white;">
+                                <h5 class="modal-title">
+                                    Withdraw —
+                                    @(f.TillName ??
+                                        f.TillNumber)
+                                </h5>
+                                <button type="button"
+                                        class="btn-close btn-close-white"
+                                        data-bs-dismiss="modal">
+                                </button>
+                            </div>
+                            <form method="post"
+                                  action="/Float/Withdrawal">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="floatID"
+                                       value="@f.FloatID" />
+                                <div class="modal-body">
+                                    <p class="text-muted small">
+                                        Balance:
+                                        <strong>
+                                            KES @f.CurrentBalance
+                                            .ToString("N0")
+                                        </strong>
+                                    </p>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            Amount (KES)
+                                        </label>
+                                        <input type="number"
+                                               name="amount"
+                                               class="form-control"
+                                               min="1"
+                                               max="@f.CurrentBalance"
+                                               required />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            Reference
+                                        </label>
+                                        <input type="text"
+                                               name="reference"
+                                               class="form-control"
+                                               placeholder="e.g. Bank deposit ref" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label fw-semibold">
+                                            Notes
+                                        </label>
+                                        <input type="text"
+                                               name="notes"
+                                               class="form-control"
+                                               placeholder="Reason for withdrawal" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary"
+                                            data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                            class="btn fw-semibold"
+                                            style="background:#007A3D;
+                                                   color:white;
+                                                   border-radius:8px;">
+                                        Confirm Withdrawal
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

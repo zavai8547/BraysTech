@@ -463,13 +463,11 @@ namespace BraysTech.Controllers
             if (sale == null) return NotFound();
 
             // Load settings for receipt header
-            var settings = new Dictionary<string, string>();
-            if (await _db.Settings.AnyAsync())
-            {
-                settings = await _db.Settings
-                    .ToDictionaryAsync(s => s.SettingKey, s => s.SettingValue);
-            }
-
+            // CORRECT — handle nullable SettingValue
+            var settings = await _db.Settings
+                .ToDictionaryAsync(
+                    s => s.SettingKey,
+                    s => s.SettingValue ?? string.Empty);
             ViewBag.Settings = settings;
 
             return View(sale);

@@ -20,17 +20,23 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # 1. Clean compilation targeting the project directly
       - name: Publish
         run: dotnet publish BraysTech.csproj --configuration Release --output ./publish
 
-      # 2. Inject the offline file into the publish folder right before syncing.
-      # When FTP uploads this first, IIS will catch it and release the lock on your DLLs.
-      - name: Inject App Offline File
-        run: echo "<h3>Site is updating. Please refresh in a few moments...</h3>" > ./publish/app_offline.htm
+      - name: Upload app_offline.htm via curl
+        run: |
+          echo "<h3>Updating. Back in a moment.</h3>" > /tmp/app_offline.htm
+          curl -T /tmp/app_offline.htm \
+            ftp://${{ secrets.BRAYS_FTP_SERVER }}/site1/app_offline.htm \
+            --user "${{ secrets.BRAYS_FTP_USERNAME }}:${{ secrets.BRAYS_FTP_PASSWORD }}" \
+            --ftp-create-dirs \
+            --retry 3 \
+            --silent
 
-      # 3. Main Deployment (Uploads everything, including app_offline.htm)
-      - name: Deploy Application Files
+      - name: Wait for IIS to release files
+        run: sleep 20
+
+      - name: Deploy all files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.BRAYS_FTP_SERVER }}
@@ -39,8 +45,16 @@ jobs:
           local-dir: ./publish/
           server-dir: /site1/
           timeout: 120000
+          retry-count: 3
           exclude: |
             **/.git*
             **/.git*/**
             **/appsettings.Development.json
             **/appsettings.json
+
+      - name: Remove app_offline.htm via curl
+        run: |
+          curl -X DELETE \
+            ftp://${{ secrets.BRAYS_FTP_SERVER }}/site1/app_offline.htm \
+            --user "${{ secrets.BRAYS_FTP_USERNAME }}:${{ secrets.BRAYS_FTP_PASSWORD }}" \
+            --silent || true

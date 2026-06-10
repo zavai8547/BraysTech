@@ -14,7 +14,8 @@ namespace BraysTech.Controllers
         private readonly AppDbContext _db;
         private readonly AuditService _audit;
 
-        public StockController(AppDbContext db, AuditService audit)
+        public StockController(
+            AppDbContext db, AuditService audit)
         {
             _db = db;
             _audit = audit;
@@ -25,6 +26,12 @@ namespace BraysTech.Controllers
             string? brand, string? status,
             int? branchID, string? search)
         {
+            var currentUserID = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+            var isManager = User.IsInRole("Manager");
+            var isSalesperson = !isAdmin && !isManager;
+
             var query = _db.IMEIStock
                 .Include(i => i.Branch)
                 .AsQueryable();
@@ -35,38 +42,57 @@ namespace BraysTech.Controllers
                     i.Brand.ToLower() == brand.ToLower());
 
             if (!string.IsNullOrEmpty(status) &&
-                Enum.TryParse<PhoneStatus>(status, out var ps))
-                query = query.Where(i => i.Status == ps);
+                Enum.TryParse<PhoneStatus>(
+                    status, out var ps))
+                query = query.Where(i =>
+                    i.Status == ps);
 
             if (branchID.HasValue)
-                query = query.Where(i => i.BranchID == branchID);
+                query = query.Where(i =>
+                    i.BranchID == branchID);
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(i =>
                     i.IMEI.Contains(search) ||
                     i.PhoneName.Contains(search) ||
-                    (i.Brand != null && i.Brand.Contains(search)) ||
-                    (i.Model != null && i.Model.Contains(search)));
+                    (i.Brand != null &&
+                     i.Brand.Contains(search)) ||
+                    (i.Model != null &&
+                     i.Model.Contains(search)));
 
             var stock = await query
                 .OrderByDescending(i => i.DateAdded)
                 .ToListAsync();
 
-            // Stats
+            // Stat cards
             ViewBag.TotalInStock = await _db.IMEIStock
-                .CountAsync(i => i.Status == PhoneStatus.InStock);
+                .CountAsync(i =>
+                    i.Status == PhoneStatus.InStock);
             ViewBag.TotalSold = await _db.IMEIStock
-                .CountAsync(i => i.Status == PhoneStatus.Sold);
+                .CountAsync(i =>
+                    i.Status == PhoneStatus.Sold);
             ViewBag.TotalFaulty = await _db.IMEIStock
-                .CountAsync(i => i.Status == PhoneStatus.Faulty);
+                .CountAsync(i =>
+                    i.Status == PhoneStatus.Faulty);
             ViewBag.TotalDisplay = await _db.IMEIStock
-                .CountAsync(i => i.Status == PhoneStatus.DisplayUnit);
+                .CountAsync(i =>
+                    i.Status == PhoneStatus.DisplayUnit);
 
-            var inStockItems = await _db.IMEIStock
-                .Where(i => i.Status == PhoneStatus.InStock)
-                .ToListAsync();
-            ViewBag.StockValue = inStockItems.Sum(i => i.BuyingPrice);
-            ViewBag.PotentialRevenue = inStockItems.Sum(i => i.SellingPrice);
+            // Stock value — hide from salespersons
+            if (!isSalesperson)
+            {
+                var inStockItems = await _db.IMEIStock
+                    .Where(i =>
+                        i.Status == PhoneStatus.InStock)
+                    .ToListAsync();
+                ViewBag.StockValue =
+                    inStockItems.Sum(i => i.BuyingPrice);
+                ViewBag.PotentialRevenue =
+                    inStockItems.Sum(i => i.SellingPrice);
+            }
+
+            ViewBag.IsAdminOrManager =
+                isAdmin || isManager;
 
             // Filter options
             ViewBag.Brands = await _db.IMEIStock
@@ -87,7 +113,7 @@ namespace BraysTech.Controllers
 
         // ── ADD DEVICE ─────────────────────────────────────
         [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]  // ADDED: Restrict to Admin/Manager
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Add()
         {
             ViewBag.Branches = await _db.Branches
@@ -98,19 +124,22 @@ namespace BraysTech.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]  // ADDED: Restrict to Admin/Manager
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Add(
-            string IMEI, string PhoneName, string? Brand,
-            string? Model, string? Color, string? Storage,
+            string IMEI, string PhoneName,
+            string? Brand, string? Model,
+            string? Color, string? Storage,
             decimal BuyingPrice, decimal SellingPrice,
-            string? SupplierName, string? Notes, int BranchID)
+            string? SupplierName, string? Notes,
+            int BranchID)
         {
-            // Branch validation
             if (BranchID == 0)
             {
-                TempData["Error"] = "❌ Please select a branch.";
+                TempData["Error"] =
+                    "Please select a branch.";
                 ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive).ToListAsync();
+                    .Where(b => b.IsActive)
+                    .ToListAsync();
                 return View();
             }
 
@@ -119,22 +148,22 @@ namespace BraysTech.Controllers
             if (!branchExists)
             {
                 TempData["Error"] =
-                    $"❌ Branch ID {BranchID} not found. " +
-                    $"Please select a valid branch.";
+                    $"Branch ID {BranchID} not found.";
                 ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive).ToListAsync();
+                    .Where(b => b.IsActive)
+                    .ToListAsync();
                 return View();
             }
 
-            // IMEI uniqueness
             var exists = await _db.IMEIStock
                 .AnyAsync(i => i.IMEI == IMEI.Trim());
             if (exists)
             {
                 TempData["Error"] =
-                    $"❌ IMEI {IMEI} already exists in the system.";
+                    $"IMEI {IMEI} already exists.";
                 ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive).ToListAsync();
+                    .Where(b => b.IsActive)
+                    .ToListAsync();
                 return View();
             }
 
@@ -158,20 +187,19 @@ namespace BraysTech.Controllers
             _db.IMEIStock.Add(device);
             await _db.SaveChangesAsync();
 
-            // After Add POST saves:
             await _audit.LogAsync(
                 AuditAction.StockAdded,
                 "Inventory",
-                $"New device added: {device.PhoneName} " +
+                $"New device: {device.PhoneName} " +
                 $"IMEI: {device.IMEI}. " +
-                $"Branch: {device.BranchID}. " +
                 $"Buy: KES {device.BuyingPrice:N0}. " +
                 $"Sell: KES {device.SellingPrice:N0}.",
                 recordType: "IMEIStock",
                 recordID: device.StockID.ToString());
 
             TempData["Success"] =
-                $"✅ {device.PhoneName} (IMEI: {device.IMEI}) added to stock!";
+                $"{device.PhoneName} " +
+                $"(IMEI: {device.IMEI}) added.";
             return RedirectToAction("Index");
         }
 
@@ -180,46 +208,60 @@ namespace BraysTech.Controllers
         {
             var device = await _db.IMEIStock
                 .Include(i => i.Branch)
-                .FirstOrDefaultAsync(i => i.StockID == id);
+                .FirstOrDefaultAsync(i =>
+                    i.StockID == id);
 
             if (device == null) return NotFound();
             return View(device);
         }
 
         // ── EDIT DEVICE ────────────────────────────────────
+        // Admin and Manager can edit any phone
+        // including Sold phones to fix data entry errors
         [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]  // Already present, keeping as is
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(int id)
         {
-            var device = await _db.IMEIStock.FindAsync(id);
+            var device = await _db.IMEIStock
+                .Include(i => i.Branch)
+                .FirstOrDefaultAsync(i =>
+                    i.StockID == id);
+
             if (device == null) return NotFound();
+
             ViewBag.Branches = await _db.Branches
                 .Where(b => b.IsActive)
                 .OrderBy(b => b.Name)
                 .ToListAsync();
+
             return View(device);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]  // Already present, keeping as is
+        [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(IMEIStock device)
+        public async Task<IActionResult> Edit(
+            IMEIStock device)
         {
             ModelState.Remove("Branch");
+
             if (device.BranchID <= 0)
             {
-                TempData["Error"] = "Please select a valid branch.";
+                TempData["Error"] =
+                    "Please select a valid branch.";
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive)
                     .OrderBy(b => b.Name)
                     .ToListAsync();
                 return View(device);
             }
-            var existing = await _db.IMEIStock
+
+            var duplicate = await _db.IMEIStock
                 .FirstOrDefaultAsync(i =>
                     i.IMEI == device.IMEI &&
                     i.StockID != device.StockID);
-            if (existing != null)
+
+            if (duplicate != null)
             {
                 TempData["Error"] =
                     "Another device already has this IMEI.";
@@ -229,39 +271,50 @@ namespace BraysTech.Controllers
                     .ToListAsync();
                 return View(device);
             }
-            try
-            {
-                _db.IMEIStock.Update(device);
-                await _db.SaveChangesAsync();
-                await _audit.LogAsync(
-                    AuditAction.StockEdited,
-                    "Inventory",
-                    $"{device.PhoneName} (IMEI: {device.IMEI}) edited.",
-                    recordType: "IMEIStock",
-                    recordID: device.StockID.ToString());
-                TempData["Success"] = "Device updated.";
-                return RedirectToAction("Index");
-            }
-            catch (DbUpdateException ex)
-            {
-                TempData["Error"] =
-                    $"Database error: " +
-                    $"{ex.InnerException?.Message ?? ex.Message}";
-                ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive)
-                    .OrderBy(b => b.Name)
-                    .ToListAsync();
-                return View(device);
-            }
+
+            var existing = await _db.IMEIStock
+                .FindAsync(device.StockID);
+
+            if (existing == null) return NotFound();
+
+            // Update editable fields only
+            // Status, DateAdded, DateSold,
+            // FaultReason etc are preserved
+            existing.PhoneName = device.PhoneName;
+            existing.Brand = device.Brand;
+            existing.Model = device.Model;
+            existing.Color = device.Color;
+            existing.Storage = device.Storage;
+            existing.BuyingPrice = device.BuyingPrice;
+            existing.SellingPrice = device.SellingPrice;
+            existing.SupplierName = device.SupplierName;
+            existing.Notes = device.Notes;
+            existing.BranchID = device.BranchID;
+
+            await _db.SaveChangesAsync();
+
+            await _audit.LogAsync(
+                AuditAction.StockEdited,
+                "Inventory",
+                $"{existing.PhoneName} " +
+                $"(IMEI: {existing.IMEI}) edited.",
+                recordType: "IMEIStock",
+                recordID: existing.StockID.ToString());
+
+            TempData["Success"] =
+                "Device updated successfully.";
+            return RedirectToAction("Index");
         }
 
         // ── MARK FAULTY ────────────────────────────────────
         [HttpGet]
-        public async Task<IActionResult> MarkFaulty(int id)
+        public async Task<IActionResult> MarkFaulty(
+            int id)
         {
             var device = await _db.IMEIStock
                 .Include(i => i.Branch)
-                .FirstOrDefaultAsync(i => i.StockID == id);
+                .FirstOrDefaultAsync(i =>
+                    i.StockID == id);
             if (device == null) return NotFound();
             return View(device);
         }
@@ -270,9 +323,11 @@ namespace BraysTech.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkFaulty(
             int id, string faultReason,
-            string? technicianNotes, bool warrantyClaim)
+            string? technicianNotes,
+            bool warrantyClaim)
         {
-            var device = await _db.IMEIStock.FindAsync(id);
+            var device = await _db.IMEIStock
+                .FindAsync(id);
             if (device == null) return NotFound();
 
             device.Status = PhoneStatus.Faulty;
@@ -284,18 +339,19 @@ namespace BraysTech.Controllers
 
             await _db.SaveChangesAsync();
 
-            // After MarkFaulty POST:
             await _audit.LogAsync(
                 AuditAction.StockMarkedFaulty,
                 "Inventory",
-                $"{device.PhoneName} (IMEI: {device.IMEI}) " +
-                $"marked faulty. Reason: {faultReason}.",
+                $"{device.PhoneName} " +
+                $"(IMEI: {device.IMEI}) marked faulty. " +
+                $"Reason: {faultReason}.",
                 oldValue: "InStock",
                 newValue: "Faulty",
                 recordType: "IMEIStock",
                 recordID: id.ToString());
 
-            TempData["Success"] = $"⚠️ {device.PhoneName} marked as faulty.";
+            TempData["Success"] =
+                $"{device.PhoneName} marked as faulty.";
             return RedirectToAction("Faulty");
         }
 
@@ -307,13 +363,13 @@ namespace BraysTech.Controllers
             int id, string repairStatus,
             string? technicianNotes)
         {
-            var device = await _db.IMEIStock.FindAsync(id);
+            var device = await _db.IMEIStock
+                .FindAsync(id);
             if (device == null) return NotFound();
 
             device.RepairStatus = repairStatus;
             device.TechnicianNotes = technicianNotes;
 
-            // If repaired — restore to InStock
             if (repairStatus == "Repaired")
             {
                 device.Status = PhoneStatus.InStock;
@@ -324,27 +380,37 @@ namespace BraysTech.Controllers
 
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = $"✅ Repair status updated for {device.PhoneName}.";
+            TempData["Success"] =
+                $"Repair status updated for " +
+                $"{device.PhoneName}.";
             return RedirectToAction("Faulty");
         }
 
         // ── MARK AS DISPLAY ────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkDisplay(int id)
+        public async Task<IActionResult> MarkDisplay(
+            int id)
         {
-            var device = await _db.IMEIStock.FindAsync(id);
+            var device = await _db.IMEIStock
+                .FindAsync(id);
             if (device == null) return NotFound();
 
-            device.Status = device.Status == PhoneStatus.DisplayUnit
+            device.Status =
+                device.Status ==
+                    PhoneStatus.DisplayUnit
                 ? PhoneStatus.InStock
                 : PhoneStatus.DisplayUnit;
 
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = device.Status == PhoneStatus.DisplayUnit
-                ? $"🪟 {device.PhoneName} set as display unit."
-                : $"✅ {device.PhoneName} restored to stock.";
+            TempData["Success"] =
+                device.Status ==
+                    PhoneStatus.DisplayUnit
+                ? $"{device.PhoneName} " +
+                  $"set as display unit."
+                : $"{device.PhoneName} " +
+                  $"restored to stock.";
 
             return RedirectToAction("Index");
         }
@@ -354,13 +420,17 @@ namespace BraysTech.Controllers
         {
             var devices = await _db.IMEIStock
                 .Include(i => i.Branch)
-                .Where(i => i.Status == PhoneStatus.Faulty)
-                .OrderByDescending(i => i.DateMarkedFaulty)
+                .Where(i =>
+                    i.Status == PhoneStatus.Faulty)
+                .OrderByDescending(i =>
+                    i.DateMarkedFaulty)
                 .ToListAsync();
 
             ViewBag.TotalFaulty = devices.Count;
-            ViewBag.WarrantyClaims = devices.Count(d => d.WarrantyClaim);
-            ViewBag.TotalLoss = devices.Sum(d => d.BuyingPrice);
+            ViewBag.WarrantyClaims =
+                devices.Count(d => d.WarrantyClaim);
+            ViewBag.TotalLoss =
+                devices.Sum(d => d.BuyingPrice);
 
             return View(devices);
         }
@@ -370,7 +440,8 @@ namespace BraysTech.Controllers
         {
             var devices = await _db.IMEIStock
                 .Include(i => i.Branch)
-                .Where(i => i.Status == PhoneStatus.DisplayUnit)
+                .Where(i =>
+                    i.Status == PhoneStatus.DisplayUnit)
                 .OrderByDescending(i => i.DateAdded)
                 .ToListAsync();
 

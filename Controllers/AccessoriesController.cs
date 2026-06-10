@@ -142,49 +142,50 @@ namespace BraysTech.Controllers
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Edit(Accessory model)
         {
+            // Remove navigation properties from validation
+            ModelState.Remove("Branch");
+            ModelState.Remove("SaleItems");
+
             if (model.BranchID == 0)
             {
-                ModelState.AddModelError("BranchID", "Please select a branch.");
+                TempData["Error"] = "Please select a branch.";
                 ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive)
-                    .OrderBy(b => b.Name)
-                    .ToListAsync();
+                    .Where(b => b.IsActive).ToListAsync();
                 return View(model);
             }
 
-            if (ModelState.IsValid)
-            {
-                var original = await _db.Accessories.AsNoTracking()
-                    .FirstOrDefaultAsync(a => a.AccessoryID == model.AccessoryID);
+            // Load existing record and update fields manually
+            // to avoid overwriting CurrentStock or DateAdded
+            var existing = await _db.Accessories
+                .FindAsync(model.AccessoryID);
 
-                if (original == null) return NotFound();
+            if (existing == null) return NotFound();
 
-                _db.Accessories.Update(model);
-                await _db.SaveChangesAsync();
+            existing.Name = model.Name;
+            existing.Category = model.Category;
+            existing.Brand = model.Brand;
+            existing.Description = model.Description;
+            existing.BuyingPrice = model.BuyingPrice;
+            existing.SellingPrice = model.SellingPrice;
+            existing.LowStockAlert = model.LowStockAlert;
+            existing.BranchID = model.BranchID;
+            existing.SupplierName = model.SupplierName;
+            // CurrentStock and DateAdded are NOT updated here
+            // they are managed by Add and Restock actions
 
-                var changes = new List<string>();
-                if (original.Name != model.Name) changes.Add($"Name: {original.Name} → {model.Name}");
-                if (original.BuyingPrice != model.BuyingPrice) changes.Add($"Buy Price: {original.BuyingPrice:N0} → {model.BuyingPrice:N0}");
-                if (original.SellingPrice != model.SellingPrice) changes.Add($"Sell Price: {original.SellingPrice:N0} → {model.SellingPrice:N0}");
-                if (original.CurrentStock != model.CurrentStock) changes.Add($"Stock: {original.CurrentStock} → {model.CurrentStock}");
+            await _db.SaveChangesAsync();
 
-                // BUG FIX: Aligned with standard tracking action or fallback definition if missing from the enum context
-                await _audit.LogAsync(
-                    AuditAction.StockAdded,
-                    "Accessories",
-                    $"Accessory edited: {model.Name}. Changes: {string.Join(", ", changes)}",
-                    recordType: "Accessory",
-                    recordID: model.AccessoryID.ToString());
+            await _audit.LogAsync(
+                AuditAction.StockEdited,
+                "Accessories",
+                $"Accessory updated: {existing.Name}. " +
+                $"Sell: KES {existing.SellingPrice:N0}.",
+                recordType: "Accessory",
+                recordID: existing.AccessoryID.ToString());
 
-                TempData["Success"] = $"{model.Name} updated successfully.";
-                return RedirectToAction("Index");
-            }
-
-            ViewBag.Branches = await _db.Branches
-                .Where(b => b.IsActive)
-                .OrderBy(b => b.Name)
-                .ToListAsync();
-            return View(model);
+            TempData["Success"] =
+                $"{existing.Name} updated successfully.";
+            return RedirectToAction("Index");
         }
 
         // ── RESTOCK ────────────────────────────────────
@@ -515,24 +516,35 @@ namespace BraysTech.Controllers
 
         // ── DELETE ACCESSORY (Soft Delete) ──────────────
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _db.Accessories.FindAsync(id);
+            var item = await _db.Accessories
+                .Include(a => a.SaleItems)
+                .FirstOrDefaultAsync(a =>
+                    a.AccessoryID == id);
+
             if (item == null) return NotFound();
 
-            item.IsActive = false;
-            await _db.SaveChangesAsync();
+            // If it has sales history, deactivate instead
+            // of deleting to protect records
+            if (item.SaleItems.Any())
+            {
+                item.IsActive = false;
+                await _db.SaveChangesAsync();
+                TempData["Success"] =
+                    $"{item.Name} deactivated. " +
+                    $"It has sales history so it cannot " +
+                    $"be fully deleted.";
+            }
+            else
+            {
+                _db.Accessories.Remove(item);
+                await _db.SaveChangesAsync();
+                TempData["Success"] =
+                    $"{item.Name} deleted successfully.";
+            }
 
-            // BUG FIX: Resolved undefined enum issue
-            await _audit.LogAsync(
-                AuditAction.SaleCreated, // Replaced with existing operational tracking action context
-                "Accessories",
-                $"Accessory deactivated: {item.Name}",
-                recordType: "Accessory",
-                recordID: item.AccessoryID.ToString());
-
-            TempData["Success"] = $"{item.Name} has been deactivated.";
             return RedirectToAction("Index");
         }
     }

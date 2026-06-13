@@ -1,0 +1,323 @@
+﻿@model BraysTech.Models.SimCard
+@{
+    ViewData["Title"] = "Edit SIM Card";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center
+                    gap-3 mb-4">
+            <a href="/SimCard/Index"
+               class="btn btn-outline-secondary
+                      rounded-pill px-3">
+                Back
+            </a>
+            <h4 class="fw-bold mb-0">
+                Edit SIM Card
+            </h4>
+        </div>
+
+        <div class="card border-0 shadow-sm"
+             style="border-radius:20px;
+                    overflow:hidden;">
+            <div class="card-header border-0 p-4"
+                 style="background:linear-gradient(
+                            135deg,#007A3D,#005C2E);">
+                <h5 class="text-white fw-bold mb-0">
+                    Edit SIM #@Model.SimCardID
+                    — @Model.Network
+                </h5>
+                <small style="color:rgba(255,255,255,0.75);">
+                    Correct any data entry mistakes
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post"
+                      action="/SimCard/Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden"
+                           name="simCardID"
+                           value="@Model.SimCardID" />
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Network *
+                            </label>
+                            <select name="network"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                @foreach (var n in
+                                Enum.GetValues(typeof(
+                                BraysTech.Models
+                                .SimNetwork)))
+                                {
+                                    if ((int)n ==
+                                    (int)Model.Network)
+                                    {
+                                        <option value="@((int)n)"
+                                                selected>
+                                            @n.ToString()
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@((int)n)">
+                                            @n.ToString()
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Status *
+                            </label>
+                            <select name="status"
+                                    class="form-select"
+                                    style="border-radius:10px;"
+                                    required>
+                                @foreach (var s in
+                                Enum.GetValues(typeof(
+                                BraysTech.Models
+                                .SimCardStatus)))
+                                {
+                                    if ((int)s ==
+                                    (int)Model.Status)
+                                    {
+                                        <option value="@((int)s)"
+                                                selected>
+                                            @s.ToString()
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@((int)s)">
+                                            @s.ToString()
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">
+                                Set to InStock to
+                                return to available stock
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Buying Price (KES)
+                            </label>
+                            <input type="number"
+                                   name="buyingPrice"
+                                   class="form-control"
+                                   style="border-radius:10px;"
+                                   value="@Model.BuyingPrice"
+                                   min="0" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Selling Price (KES) *
+                            </label>
+                            <input type="number"
+                                   name="sellingPrice"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          color:#007A3D;
+                                          font-weight:700;"
+                                   value="@Model.SellingPrice"
+                                   min="0"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold">
+                            Branch *
+                        </label>
+                        <select name="branchID"
+                                class="form-select"
+                                style="border-radius:10px;"
+                                required>
+                            <option value="">
+                                -- Select Branch --
+                            </option>
+                            @foreach (var b in
+                            ViewBag.Branches)
+                            {
+                                if (b.BranchID ==
+                                Model.BranchID)
+                                {
+                                    <option value="@b.BranchID"
+                                            selected>
+                                        @b.Name
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@b.BranchID">
+                                        @b.Name
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    @if (Model.Status ==
+                    BraysTech.Models.SimCardStatus.Sold)
+                    {
+                        <div class="p-3 mb-3 rounded"
+                             style="background:#f0f7f3;
+                                    border-left:4px solid
+                                        #007A3D;">
+                            <div class="fw-semibold mb-3"
+                                 style="color:#007A3D;">
+                                Sale Information
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label
+                                                  fw-semibold">
+                                        Customer Name
+                                    </label>
+                                    <input type="text"
+                                           name="soldToName"
+                                           class="form-control"
+                                           style="border-radius:10px;"
+                                           value="@Model.SoldToName" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label
+                                                  fw-semibold">
+                                        Customer Phone
+                                    </label>
+                                    <input type="text"
+                                           name="soldToPhone"
+                                           class="form-control"
+                                           style="border-radius:10px;"
+                                           value="@Model.SoldToPhone" />
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label
+                                              fw-semibold">
+                                    National ID
+                                </label>
+                                <input type="text"
+                                       name="customerIDNumber"
+                                       class="form-control"
+                                       style="border-radius:10px;"
+                                       value="@Model.CustomerIDNumber" />
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label
+                                                  fw-semibold">
+                                        Old SIM Number
+                                    </label>
+                                    <input type="text"
+                                           name="oldSimNumber"
+                                           class="form-control"
+                                           style="border-radius:10px;
+                                                  font-family:monospace;"
+                                           value="@Model.OldSimNumber" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label
+                                                  fw-semibold">
+                                        New SIM Number
+                                    </label>
+                                    <input type="text"
+                                           name="newSimNumber"
+                                           class="form-control"
+                                           style="border-radius:10px;
+                                                  font-family:monospace;"
+                                           value="@Model.NewSimNumber" />
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="isReplacement"
+                                           value="true"
+                                           id="isReplacement"
+                                    @(Model.IsReplacement
+                                        ? "checked" : "") />
+                                    <label class="form-check-label"
+                                           for="isReplacement">
+                                        This was a SIM Replacement
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden"
+                               name="soldToName"
+                               value="@Model.SoldToName" />
+                        <input type="hidden"
+                               name="soldToPhone"
+                               value="@Model.SoldToPhone" />
+                        <input type="hidden"
+                               name="customerIDNumber"
+                               value="@Model.CustomerIDNumber" />
+                        <input type="hidden"
+                               name="oldSimNumber"
+                               value="@Model.OldSimNumber" />
+                        <input type="hidden"
+                               name="newSimNumber"
+                               value="@Model.NewSimNumber" />
+                        <input type="hidden"
+                               name="isReplacement"
+                               value="false" />
+                    }
+
+                    <div class="mb-4">
+                        <label class="form-label
+                                      fw-semibold">
+                            Notes
+                        </label>
+                        <input type="text"
+                               name="notes"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               value="@Model.Notes" />
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit"
+                                class="btn btn-lg
+                                       flex-grow-1
+                                       fw-bold"
+                                style="background:#007A3D;
+                                       color:white;
+                                       border-radius:12px;">
+                            Save Changes
+                        </button>
+                        <a href="/SimCard/Index"
+                           class="btn btn-lg
+                                  btn-outline-secondary
+                                  rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

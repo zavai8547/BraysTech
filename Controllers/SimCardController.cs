@@ -76,14 +76,16 @@ namespace BraysTech.Controllers
                     s.DateSold.Value.Date == today);
             ViewBag.TotalSold = sims.Count(s =>
                 s.Status == SimCardStatus.Sold);
-            ViewBag.ReplacementsToday = await _db.SimCards
-                .CountAsync(s =>
-                    s.IsReplacement &&
-                    s.DateSold.HasValue &&
-                    s.DateSold.Value.Date == today);
+            ViewBag.ReplacementsToday =
+                await _db.SimCards
+                    .CountAsync(s =>
+                        s.IsReplacement &&
+                        s.DateSold.HasValue &&
+                        s.DateSold.Value.Date == today);
 
             ViewBag.ByNetwork = sims
-                .Where(s => s.Status == SimCardStatus.InStock)
+                .Where(s =>
+                    s.Status == SimCardStatus.InStock)
                 .GroupBy(s => s.Network)
                 .Select(g => new
                 {
@@ -126,7 +128,8 @@ namespace BraysTech.Controllers
         {
             if (quantity <= 0)
             {
-                TempData["Error"] = "Quantity must be at least 1.";
+                TempData["Error"] =
+                    "Quantity must be at least 1.";
                 ViewBag.Branches = await _db.Branches
                     .Where(b => b.IsActive).ToListAsync();
                 return View();
@@ -148,18 +151,89 @@ namespace BraysTech.Controllers
 
             await _db.SaveChangesAsync();
 
-            await _audit.LogAsync(
-                AuditAction.StockAdded,
-                "SimCards",
-                $"{quantity} {network} SIM card(s) added. " +
-                $"Sell: KES {sellingPrice:N0}.",
-                recordType: "SimCard");
-
             TempData["Success"] =
-                $"{quantity} {network} SIM card(s) added to stock.";
+                $"{quantity} {network} SIM card(s) " +
+                $"added to stock.";
             return RedirectToAction("Index");
         }
 
+        // ── EDIT SIM CARD ──────────────────────────────
+        [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var sim = await _db.SimCards
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s =>
+                    s.SimCardID == id);
+            if (sim == null) return NotFound();
+
+            ViewBag.Branches = await _db.Branches
+                .Where(b => b.IsActive).ToListAsync();
+            return View(sim);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> Edit(
+            int simCardID,
+            SimNetwork network,
+            SimCardStatus status,
+            decimal buyingPrice,
+            decimal sellingPrice,
+            int branchID,
+            string? soldToName,
+            string? soldToPhone,
+            string? customerIDNumber,
+            string? oldSimNumber,
+            string? newSimNumber,
+            bool isReplacement,
+            string? notes)
+        {
+            var sim = await _db.SimCards
+                .FindAsync(simCardID);
+            if (sim == null) return NotFound();
+
+            sim.Network = network;
+            sim.Status = status;
+            sim.BuyingPrice = buyingPrice;
+            sim.SellingPrice = sellingPrice;
+            sim.BranchID = branchID;
+            sim.SoldToName = soldToName?.Trim();
+            sim.SoldToPhone = soldToPhone?.Trim();
+            sim.CustomerIDNumber =
+                customerIDNumber?.Trim();
+            sim.OldSimNumber = oldSimNumber?.Trim();
+            sim.NewSimNumber = newSimNumber?.Trim();
+            sim.IsReplacement = isReplacement;
+            sim.Notes = notes?.Trim();
+
+            // If status changed back to InStock,
+            // clear sale fields
+            if (status == SimCardStatus.InStock)
+            {
+                sim.DateSold = null;
+                sim.SoldToName = null;
+                sim.SoldToPhone = null;
+                sim.CustomerIDNumber = null;
+            }
+
+            await _db.SaveChangesAsync();
+
+            await _audit.LogAsync(
+                AuditAction.StockEdited,
+                "SimCards",
+                $"SIM card #{simCardID} " +
+                $"({sim.Network}) edited.",
+                recordType: "SimCard",
+                recordID: simCardID.ToString());
+
+            TempData["Success"] =
+                $"{sim.Network} SIM card updated.";
+            return RedirectToAction("Index");
+        }
+
+        // ── SELL / REPLACE ─────────────────────────────
         [HttpPost]
         public async Task<IActionResult> Sell(
             int simCardID,
@@ -173,20 +247,28 @@ namespace BraysTech.Controllers
             string? mpesaCode,
             int branchID)
         {
-            var sim = await _db.SimCards.FindAsync(simCardID);
+            var sim = await _db.SimCards
+                .FindAsync(simCardID);
+
             if (sim == null ||
                 sim.Status != SimCardStatus.InStock)
             {
-                TempData["Error"] = "SIM card not available.";
+                TempData["Error"] =
+                    "SIM card not available.";
                 return RedirectToAction("Index");
             }
 
-            // Update SIM record
+            var staffID = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            // ── BUG FIX: update ALL fields before
+            // SaveChangesAsync ─────────────────────────
             sim.Status = SimCardStatus.Sold;
             sim.DateSold = DateTime.Now;
-            sim.SoldToName = customerName?.Trim();
-            sim.SoldToPhone = customerPhone?.Trim();
-            sim.CustomerIDNumber = customerIDNumber?.Trim();
+            sim.SoldToName = customerName.Trim();
+            sim.SoldToPhone = customerPhone.Trim();
+            sim.CustomerIDNumber =
+                customerIDNumber?.Trim();
             sim.IsReplacement = isReplacement;
             sim.OldSimNumber = oldSimNumber?.Trim();
             sim.NewSimNumber = newSimNumber?.Trim();
@@ -196,23 +278,26 @@ namespace BraysTech.Controllers
                 ? mpesaCode?.Trim().ToUpper()
                 : null;
 
-            // Auto-create or update customer record
-            if (!string.IsNullOrEmpty(customerPhone))
+            // Auto-create or update customer
+            var phone = customerPhone.Trim();
+            if (!string.IsNullOrEmpty(phone))
             {
                 var existing = await _db.Customers
                     .FirstOrDefaultAsync(c =>
-                        c.Phone == customerPhone.Trim());
+                        c.Phone == phone);
                 if (existing != null)
                 {
                     existing.TotalPurchases++;
-                    existing.TotalSpent += sim.SellingPrice;
+                    existing.TotalSpent +=
+                        sim.SellingPrice;
                 }
-                else if (!string.IsNullOrEmpty(customerName))
+                else if (!string.IsNullOrEmpty(
+                    customerName))
                 {
                     _db.Customers.Add(new Customer
                     {
                         FullName = customerName.Trim(),
-                        Phone = customerPhone.Trim(),
+                        Phone = phone,
                         TotalPurchases = 1,
                         TotalSpent = sim.SellingPrice,
                         CreatedAt = DateTime.Now
@@ -220,30 +305,34 @@ namespace BraysTech.Controllers
                 }
             }
 
-            // If replacement, create a service record too
+            // If replacement, create service record
             if (isReplacement)
             {
-                var staffID = User.FindFirstValue(
-                    ClaimTypes.NameIdentifier);
-                _db.ServiceRecords.Add(new ServiceRecord
-                {
-                    ServiceType = ServiceType.SimReplacement,
-                    StaffID = staffID!,
-                    BranchID = branchID,
-                    CustomerName = customerName?.Trim()
-                        ?? "Unknown",
-                    CustomerPhone = customerPhone?.Trim()
-                        ?? "N/A",
-                    CustomerIDNumber = customerIDNumber,
-                    OldSimNumber = oldSimNumber,
-                    NewSimNumber = newSimNumber,
-                    ChargeAmount = sim.SellingPrice,
-                    PaymentMethod = paymentMethod,
-                    MpesaCode = sim.MpesaCode,
-                    CreatedAt = DateTime.Now
-                });
+                _db.ServiceRecords.Add(
+                    new ServiceRecord
+                    {
+                        ServiceType =
+                            ServiceType.SimReplacement,
+                        StaffID = staffID!,
+                        BranchID = branchID,
+                        CustomerName =
+                            customerName.Trim(),
+                        CustomerPhone =
+                            customerPhone.Trim(),
+                        CustomerIDNumber =
+                            customerIDNumber?.Trim(),
+                        OldSimNumber =
+                            oldSimNumber?.Trim(),
+                        NewSimNumber =
+                            newSimNumber?.Trim(),
+                        ChargeAmount = sim.SellingPrice,
+                        PaymentMethod = paymentMethod,
+                        MpesaCode = sim.MpesaCode,
+                        CreatedAt = DateTime.Now
+                    });
             }
 
+            // ── ONE SaveChangesAsync saves everything
             await _db.SaveChangesAsync();
 
             await _audit.LogAsync(
@@ -259,7 +348,7 @@ namespace BraysTech.Controllers
             TempData["Success"] =
                 $"{sim.Network} SIM " +
                 $"{(isReplacement ? "replacement" : "sold")} " +
-                $"to {customerName}. " +
+                $"to {customerName.Trim()}. " +
                 $"KES {sim.SellingPrice:N0}";
             return RedirectToAction("Index");
         }

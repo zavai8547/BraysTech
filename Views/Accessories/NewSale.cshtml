@@ -107,8 +107,8 @@
         padding: 14px;
         margin-bottom: 10px;
         display: flex;
-        align-items: center;
-        gap: 12px;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .qty-btn {
@@ -527,28 +527,41 @@
         let html = '';
         items.forEach(function (item) {
             const sub = item.customPrice * item.qty;
-            html +=
-                '<div class="cart-item">' +
-                '<div style="flex:1;">' +
-                '<div class="fw-semibold" style="font-size:0.9rem;">' +
-                escapeHtml(item.name) + '</div>' +
-                '<div style="font-size:0.75rem;color:#888;">KES ' +
-                item.customPrice.toLocaleString() + ' each</div>' +
+            const profit = (item.customPrice - item.buyPrice) * item.qty;
+            const isBelowMin = item.customPrice < item.price;
+            const borderColor = isBelowMin ? '#dc2626' : '#007A3D';
+
+            // FIXED: Changed 'oninput' to 'onchange' so it doesn't break focus while typing numbers like 800
+            html += '<div class="cart-item">' +
+                '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+                '<div>' +
+                '<div class="fw-semibold" style="font-size:0.9rem;">' + escapeHtml(item.name) + '</div>' +
+                '<small class="text-muted">Default: KES ' + item.price.toLocaleString() + '</small>' +
                 '</div>' +
+                '<button type="button" onclick="removeItem(' + item.id + ')" ' +
+                'style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:0;">✕</button>' +
+                '</div>' +
+
+                '<div style="margin-bottom:10px;">' +
+                '<label style="font-size:0.75rem;color:#888;font-weight:600;display:block;margin-bottom:3px;">Selling Price (KES)</label>' +
+                '<input type="number" id="priceInput_' + item.id + '" ' +
+                'class="form-control form-control-sm" value="' + item.customPrice + '" ' +
+                'min="0" style="border:2px solid ' + borderColor + ';font-weight:700;font-size:0.95rem;color:' + borderColor + ';" ' +
+                'onchange="updateItemPrice(' + item.id + ', this.value)" />' +
+                (isBelowMin ? '<small id="warning_' + item.id + '" style="color:#dc2626;font-weight:600;">Below default by KES ' + (item.price - item.customPrice).toLocaleString() + '</small>' : '') +
+                '</div>' +
+
+                '<div style="display:flex;align-items:center;justify-content:space-between;">' +
                 '<div style="display:flex;align-items:center;gap:8px;">' +
-                '<button type="button" class="qty-btn" onclick="changeQty(' +
-                item.id + ',-1)">-</button>' +
-                '<span style="min-width:28px;text-align:center;font-weight:700;">' +
-                item.qty + '</span>' +
-                '<button type="button" class="qty-btn" onclick="changeQty(' +
-                item.id + ',1)">+</button>' +
+                '<button type="button" class="qty-btn" onclick="changeQty(' + item.id + ',-1)">-</button>' +
+                '<span style="min-width:28px;text-align:center;font-weight:700;">' + item.qty + '</span>' +
+                '<button type="button" class="qty-btn" onclick="changeQty(' + item.id + ',1)">+</button>' +
+                '<small class="text-muted">units</small>' +
                 '</div>' +
-                '<div style="min-width:80px;text-align:right;font-weight:700;color:#007A3D;">KES ' +
-                sub.toLocaleString() + '</div>' +
-                '<button type="button" onclick="removeItem(' + item.id +
-                ')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:4px;margin-left:8px;">✕' +
-                '</button>' +
-                '</div>';
+                '<div style="text-align:right;">' +
+                '<div style="font-weight:800;color:#007A3D;font-size:1rem;">KES ' + sub.toLocaleString() + '</div>' +
+                '<small style="color:#b45309;">Profit: KES ' + profit.toLocaleString() + '</small>' +
+                '</div></div></div>';
         });
 
         container.innerHTML = html;
@@ -583,6 +596,18 @@
         document.getElementById('sumTotal').textContent = 'KES ' + total.toLocaleString();
         document.getElementById('sumProfit').textContent = 'KES ' + profit.toLocaleString();
         document.getElementById('completeBtn').disabled = items.length === 0;
+    }
+
+    function updateItemPrice(id, val) {
+        const newPrice = parseFloat(val);
+        if (isNaN(newPrice) || newPrice < 0) {
+            cart[id].customPrice = 0;
+        } else {
+            cart[id].customPrice = newPrice;
+        }
+
+        // Let renderCart update everything smoothly now that it runs on change completion
+        renderCart();
     }
 
     function setPay(name, val, el) {

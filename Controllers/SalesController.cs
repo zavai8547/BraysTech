@@ -132,23 +132,26 @@ namespace BraysTech.Controllers
         {
             var sale = await _db.PhoneSales
                 .Include(s => s.Items)
-                    .ThenInclude(i => i.Phone)
                 .FirstOrDefaultAsync(s => s.SaleID == id);
 
             if (sale == null) return NotFound();
 
             var saleID = sale.SaleID;
             var totalAmount = sale.TotalAmount;
-            var customerName =
-                sale.CustomerName ?? "Walk-in";
+            var customerName = sale.CustomerName ?? "Walk-in";
 
-            // Restore phone statuses
+            // Load and reset each phone directly
+            // Do NOT rely on item.Phone navigation property
+            // — load each phone explicitly by StockID
             foreach (var item in sale.Items)
             {
-                if (item.Phone != null)
+                var phone = await _db.IMEIStock
+                    .FindAsync(item.StockID);
+
+                if (phone != null)
                 {
-                    item.Phone.Status = PhoneStatus.InStock;
-                    item.Phone.DateSold = null;
+                    phone.Status = PhoneStatus.InStock;
+                    phone.DateSold = null;
                 }
             }
 
@@ -176,12 +179,16 @@ namespace BraysTech.Controllers
                 "Sales",
                 $"Sale #{saleID} deleted. " +
                 $"KES {totalAmount:N0}. " +
-                $"Customer: {customerName}.",
+                $"Customer: {customerName}. " +
+                $"Stock restored for {sale.Items.Count} " +
+                $"device(s).",
                 recordType: "PhoneSale",
                 recordID: saleID.ToString());
 
             TempData["Success"] =
-                $"Sale #{saleID} deleted and stock restored.";
+                $"Sale #{saleID} deleted and " +
+                $"{sale.Items.Count} phone(s) " +
+                $"returned to stock.";
             return RedirectToAction("Index");
         }
 

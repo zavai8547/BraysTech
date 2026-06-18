@@ -80,9 +80,6 @@
                            name="StockID"
                            value="@Model.StockID" />
                     <input type="hidden"
-                           name="IMEI"
-                           value="@Model.IMEI" />
-                    <input type="hidden"
                            name="Status"
                            value="@((int)Model.Status)" />
                     <input type="hidden"
@@ -98,7 +95,62 @@
                         Device Information
                     </div>
 
-                    <div class="row g-3">
+                    <!-- IMEI Field - Admin editable, Manager locked -->
+                    <div class="mt-3">
+                        <label class="form-label fw-semibold">
+                            IMEI Number
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <span class="text-muted fw-normal small">
+                                    (Admin only — editable)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted fw-normal small">
+                                    (locked — contact Admin to change)
+                                </span>
+                            }
+                        </label>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <input name="IMEI"
+                                   class="form-control"
+                                   style="border-radius:10px;
+                                          font-family:monospace;
+                                          font-weight:700;
+                                          color:#007A3D;
+                                          border:2px solid #007A3D;"
+                                   value="@Model.IMEI"
+                                   maxlength="20"
+                                   required />
+                            <small class="text-muted">
+                                Only change this to correct a typo.
+                                IMEI must be unique across all devices.
+                            </small>
+                        }
+                        else
+                        {
+                            <input type="hidden"
+                                   name="IMEI"
+                                   value="@Model.IMEI" />
+                            <div class="form-control"
+                                 style="border-radius:10px;
+                                        font-family:monospace;
+                                        font-weight:700;
+                                        color:#888;
+                                        background:var(--input-bg);
+                                        cursor:not-allowed;">
+                                @Model.IMEI
+                            </div>
+                            <small class="text-muted">
+                                IMEI can only be edited by Admin.
+                            </small>
+                        }
+                    </div>
+
+                    <div class="row g-3 mt-1">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
                                 Brand

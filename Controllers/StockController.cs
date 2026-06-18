@@ -256,22 +256,6 @@ namespace BraysTech.Controllers
                 return View(device);
             }
 
-            var duplicate = await _db.IMEIStock
-                .FirstOrDefaultAsync(i =>
-                    i.IMEI == device.IMEI &&
-                    i.StockID != device.StockID);
-
-            if (duplicate != null)
-            {
-                TempData["Error"] =
-                    "Another device already has this IMEI.";
-                ViewBag.Branches = await _db.Branches
-                    .Where(b => b.IsActive)
-                    .OrderBy(b => b.Name)
-                    .ToListAsync();
-                return View(device);
-            }
-
             var existing = await _db.IMEIStock
                 .FindAsync(device.StockID);
 
@@ -290,6 +274,33 @@ namespace BraysTech.Controllers
             existing.SupplierName = device.SupplierName;
             existing.Notes = device.Notes;
             existing.BranchID = device.BranchID;
+
+            // Admin only can correct a wrong IMEI
+            // First check the new IMEI is not already
+            // taken by another device
+            if (User.IsInRole("Admin") &&
+                !string.IsNullOrEmpty(device.IMEI) &&
+                device.IMEI.Trim() != existing.IMEI)
+            {
+                var imeiTaken = await _db.IMEIStock
+                    .AnyAsync(i =>
+                        i.IMEI == device.IMEI.Trim() &&
+                        i.StockID != existing.StockID);
+
+                if (imeiTaken)
+                {
+                    TempData["Error"] =
+                        $"IMEI {device.IMEI} is already " +
+                        $"assigned to another device.";
+                    ViewBag.Branches = await _db.Branches
+                        .Where(b => b.IsActive)
+                        .OrderBy(b => b.Name)
+                        .ToListAsync();
+                    return View(device);
+                }
+
+                existing.IMEI = device.IMEI.Trim();
+            }
 
             await _db.SaveChangesAsync();
 

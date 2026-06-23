@@ -324,6 +324,73 @@
                                         </a>
                                     }
 
+                                    @if ((User.IsInRole("Admin") ||
+                                   User.IsInRole("Manager")) &&
+                                   s.Status != BraysTech.Models
+                                   .SimCardStatus.Sold)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                style="border-radius:7px;
+                                                       font-size:0.76rem;"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#delSim_@s.SimCardID">
+                                            Delete
+                                        </button>
+
+                                        <div class="modal fade"
+                                             id="delSim_@s.SimCardID"
+                                             tabindex="-1">
+                                            <div class="modal-dialog modal-sm
+                                                         modal-dialog-centered">
+                                                <div class="modal-content
+                                                             border-0 shadow">
+                                                    <div class="modal-header border-0"
+                                                         style="background:#dc2626;
+                                                                color:white;">
+                                                        <h6 class="modal-title fw-bold">
+                                                            Delete SIM Card
+                                                        </h6>
+                                                        <button type="button"
+                                                                class="btn-close
+                                                                       btn-close-white"
+                                                                data-bs-dismiss="modal">
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="mb-0" style="font-size:0.88rem;">
+                                                            Delete this
+                                                            <strong>@s.Network</strong>
+                                                            SIM card? This cannot be undone.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="button"
+                                                                class="btn btn-sm
+                                                                       btn-outline-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <form method="post"
+                                                              action="/SimCard/Delete">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden"
+                                                                   name="id"
+                                                                   value="@s.SimCardID" />
+                                                            <button type="submit"
+                                                                    class="btn btn-sm
+                                                                           btn-danger
+                                                                           fw-semibold"
+                                                                    style="border-radius:7px;">
+                                                                Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
                                     @if (s.Status ==
                                    BraysTech.Models.SimCardStatus.InStock)
                                     {
@@ -521,7 +588,7 @@
                                                 if (div) {
                                                     div.style.display = val === '1' ? 'block' : 'none';
                                                 }
-                                            }S
+                                            }
                                         </script>
                                     }
                                 </div>

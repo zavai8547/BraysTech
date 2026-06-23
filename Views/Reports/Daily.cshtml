@@ -1,435 +1,573 @@
-﻿@model IEnumerable<BraysTech.Models.PhoneSale>
-@{
+﻿@{
     ViewData["Title"] = "Daily Report";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     DateTime selectedDate = ViewBag.SelectedDate;
-    var sales = ViewBag.Sales as IEnumerable<BraysTech.Models.PhoneSale>;
+    decimal phoneRevenue = ViewBag.PhoneRevenue ?? 0m;
+    decimal phoneProfit = ViewBag.PhoneProfit ?? 0m;
+    decimal accRevenue = ViewBag.AccRevenue ?? 0m;
+    decimal accProfit = ViewBag.AccProfit ?? 0m;
+    decimal serviceRevenue =
+        ViewBag.ServiceRevenue ?? 0m;
+    decimal simRevenue = ViewBag.SimRevenue ?? 0m;
+    decimal simProfit = ViewBag.SimProfit ?? 0m;
+    decimal totalRevenue = ViewBag.TotalRevenue ?? 0m;
+    decimal grossProfit = ViewBag.GrossProfit ?? 0m;
+    decimal totalExpenses =
+        ViewBag.TotalExpenses ?? 0m;
+    decimal netProfit = ViewBag.NetProfit ?? 0m;
+    decimal cashTotal = ViewBag.CashTotal ?? 0m;
+    decimal mpesaTotal = ViewBag.MpesaTotal ?? 0m;
+    decimal cardTotal = ViewBag.CardTotal ?? 0m;
+    decimal totalCashDeclared =
+        ViewBag.TotalCashDeclared ?? 0m;
+    decimal totalMpesaDeclared =
+        ViewBag.TotalMpesaDeclared ?? 0m;
+    int phoneSalesCount =
+        ViewBag.PhoneSalesCount ?? 0;
+    int accSalesCount = ViewBag.AccSalesCount ?? 0;
+    int servicesCount = ViewBag.ServicesCount ?? 0;
+    int simSalesCount = ViewBag.SimSalesCount ?? 0;
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+
+    var phoneSales = ViewBag.PhoneSales as
+        IEnumerable<BraysTech.Models.PhoneSale>
+        ?? Enumerable.Empty<BraysTech.Models.PhoneSale>();
+    var accSales = ViewBag.AccSales as
+        IEnumerable<BraysTech.Models.AccessorySale>
+        ?? Enumerable.Empty<BraysTech.Models.AccessorySale>();
+    var services = ViewBag.Services as
+        IEnumerable<BraysTech.Models.ServiceRecord>
+        ?? Enumerable.Empty<BraysTech.Models.ServiceRecord>();
+    var simSales = ViewBag.SimSales as
+        IEnumerable<BraysTech.Models.SimCard>
+        ?? Enumerable.Empty<BraysTech.Models.SimCard>();
+    var expenses = ViewBag.Expenses as
+        IEnumerable<BraysTech.Models.Expense>
+        ?? Enumerable.Empty<BraysTech.Models.Expense>();
+    var cashUps = ViewBag.CashUps as
+        IEnumerable<BraysTech.Models.CashUp>
+        ?? Enumerable.Empty<BraysTech.Models.CashUp>();
 }
 
 <style>
     .report-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         border: none;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        box-shadow: var(--shadow);
         overflow: hidden;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
     }
 
     .report-header {
-        background: #007A3D;
-        color: white;
         padding: 14px 20px;
         font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-    .report-body {
-        padding: 20px;
-    }
-
-    .stat-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f7f3;
-        font-size: 0.9rem;
-    }
-
-        .stat-row:last-child {
-            border: none;
-        }
-
-    .stat-label {
-        color: #666;
-    }
-
-    .stat-value {
-        font-weight: 700;
-    }
-
-    .net-profit-row {
-        background: #f0f7f3;
-        border-radius: 10px;
-        padding: 14px 16px;
+        font-size: 0.95rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 12px;
     }
 
     .report-table thead th {
         background: #007A3D;
         color: white;
-        font-weight: 600;
-        font-size: 0.82rem;
-        padding: 12px 14px;
+        padding: 11px 14px;
         border: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     .report-table tbody td {
-        padding: 12px 14px;
-        font-size: 0.86rem;
-        border-color: #f0f7f3;
+        padding: 10px 14px;
         vertical-align: middle;
+        border-color: var(--border-color);
+        font-size: 0.85rem;
     }
 
-    .report-table tbody tr:hover {
-        background: #f9fef9;
-    }
-
-    .method-badge {
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+    .section-divider {
+        background: linear-gradient( 135deg, #007A3D, #005C2E);
+        color: white;
+        padding: 10px 20px;
         font-weight: 700;
+        font-size: 0.88rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .topbar, .sidebar,
+        .hamburger {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body {
+            background: white !important;
+        }
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between
+            align-items-center mb-4 no-print">
     <div>
         <h4 class="fw-bold mb-1">Daily Report</h4>
         <small class="text-muted">
             @selectedDate.ToString("dddd, dd MMMM yyyy")
         </small>
     </div>
-    <button onclick="window.print()"
-            class="btn btn-outline-secondary rounded-pill px-4"
-            style="font-size:0.85rem;">
-        Print Report
-    </button>
-</div>
-
-<div class="report-card">
-    <div class="report-body">
-        <form method="get" action="/Reports/Daily">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-semibold text-muted">
-                        Date
-                    </label>
-                    <input type="date"
-                           name="date"
-                           class="form-control"
-                           value="@selectedDate.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-semibold text-muted">
-                        Branch
-                    </label>
-                    <select name="branchID" class="form-select">
-                        <option value="">All Branches</option>
-                        @foreach (var b in ViewBag.Branches)
+    <div class="d-flex gap-2 align-items-center">
+        <form method="get" action="/Reports/Daily"
+              class="d-flex gap-2">
+            <input type="date"
+                   name="date"
+                   class="form-control"
+                   style="border-radius:10px;
+                          width:180px;"
+                   value="@selectedDate
+                       .ToString(" yyyy-MM-dd")"
+                   max="@DateTime.Today
+                       .ToString(" yyyy-MM-dd")" />
+            @if (isAdmin)
+            {
+                <select name="branchID"
+                        class="form-select"
+                        style="border-radius:10px;
+                               width:180px;">
+                    <option value="">All Branches</option>
+                    @foreach (var b in ViewBag.Branches)
+                    {
+                        if (b.BranchID ==
+                        ViewBag.SelectedBranch)
                         {
-                            if (b.BranchID == ViewBag.SelectedBranch)
-                            {
-                                <option value="@b.BranchID" selected>
-                                    @b.Name
-                                </option>
-                            }
-                            else
-                            {
-                                <option value="@b.BranchID">@b.Name</option>
-                            }
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit"
-                            class="btn w-100 fw-semibold"
-                            style="background:#007A3D;color:white;
-                                   border-radius:8px;">
-                        View
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <a href="/Reports/Daily"
-                       class="btn btn-outline-secondary w-100"
-                       style="border-radius:8px;">
-                        Today
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="row g-3 mb-3">
-    <div class="col-md-4">
-        <div class="report-card mb-0">
-            <div class="report-header">Financial Summary</div>
-            <div class="report-body">
-                <div class="stat-row">
-                    <span class="stat-label">Total Revenue</span>
-                    <span class="stat-value" style="color:#007A3D;">
-                        KES @(((decimal)ViewBag.TotalRevenue).ToString("N0"))
-                    </span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Gross Profit</span>
-                    <span class="stat-value">
-                        KES @(((decimal)ViewBag.TotalProfit).ToString("N0"))
-                    </span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Expenses</span>
-                    <span class="stat-value" style="color:#dc2626;">
-                        KES @(((decimal)ViewBag.TotalExpenses).ToString("N0"))
-                    </span>
-                </div>
-                <div class="net-profit-row">
-                    <span class="fw-bold" style="color:#007A3D;">
-                        Net Profit / Loss
-                    </span>
-                    <span class="fw-bold"
-                          style="font-size:1.3rem;
-                                 color:@((decimal)ViewBag.NetProfit >= 0 ? "#007A3D" : "#dc2626");">
-                        @((decimal)ViewBag.NetProfit >= 0 ? "+" : "")KES @(((decimal)ViewBag.NetProfit).ToString("N0"))
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="report-card mb-0">
-            <div class="report-header">Sales Summary</div>
-            <div class="report-body">
-                <div class="stat-row">
-                    <span class="stat-label">Total Transactions</span>
-                    <span class="stat-value">@ViewBag.TotalSales</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Devices Sold</span>
-                    <span class="stat-value">@ViewBag.TotalDevices</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Average Sale Value</span>
-                    <span class="stat-value">
-                        @if ((int)ViewBag.TotalSales > 0)
-                        {
-                            <text>
-                                KES @(((decimal)ViewBag.TotalRevenue / (int)ViewBag.TotalSales).ToString("N0"))
-                            </text>
+                            <option value="@b.BranchID"
+                                    selected>
+                                @b.Name
+                            </option>
                         }
                         else
                         {
-                            <text>KES 0</text>
+                            <option value="@b.BranchID">
+                                @b.Name
+                            </option>
                         }
-                    </span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Expenses Recorded</span>
-                    <span class="stat-value">
-                        @((ViewBag.Expenses as IEnumerable<BraysTech.Models.Expense>)?.Count() ?? 0)
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="report-card mb-0">
-            <div class="report-header">Payment Methods</div>
-            <div class="report-body">
-                @foreach (var p in ViewBag.PaymentBreakdown)
-                {
-                    var method = (string)p.GetType().GetProperty("Method").GetValue(p);
-                    var count = (int)p.GetType().GetProperty("Count").GetValue(p);
-                    var total = (decimal)p.GetType().GetProperty("Total").GetValue(p);
-                    var badgeStyle = method switch
-                    {
-                        "Cash" => "background:#dcfce7;color:#16a34a;",
-                        "MPesa" => "background:#fef9c3;color:#ca8a04;",
-                        "MKOPA" => "background:#dbeafe;color:#2563eb;",
-                        _ => "background:#f3f4f6;color:#374151;"
-                    };
-                    <div class="stat-row">
-                        <span>
-                            <span class="method-badge"
-                                  style="@badgeStyle">
-                                @method
-                            </span>
-                            <small class="text-muted ms-1">
-                                @count txns
-                            </small>
-                        </span>
-                        <span class="stat-value">
-                            KES @total.ToString("N0")
-                        </span>
-                    </div>
-                }
-                @if (!(ViewBag.PaymentBreakdown as IEnumerable<dynamic>)?.Any() ?? true)
-                {
-                    <div class="text-center text-muted py-3">
-                        No sales recorded
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="report-card">
-    <div class="report-header">Staff Performance Today</div>
-    <div class="table-responsive">
-        <table class="table table-hover report-table mb-0">
-            <thead>
-                <tr>
-                    <th>Staff Member</th>
-                    <th>Sales</th>
-                    <th>Devices Sold</th>
-                    <th>Revenue</th>
-                    <th>Profit</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var s in ViewBag.StaffBreakdown)
-                {
-                    var name = (string)s.GetType().GetProperty("StaffName").GetValue(s);
-                    var count = (int)s.GetType().GetProperty("SalesCount").GetValue(s);
-                    var rev = (decimal)s.GetType().GetProperty("Revenue").GetValue(s);
-                    var prof = (decimal)s.GetType().GetProperty("Profit").GetValue(s);
-                    <tr>
-                        <td class="fw-semibold">@name</td>
-                        <td>@count</td>
-                        <td>—</td>
-                        <td style="color:#007A3D;font-weight:700;">
-                            KES @rev.ToString("N0")
-                        </td>
-                        <td style="color:#b45309;font-weight:700;">
-                            KES @prof.ToString("N0")
-                        </td>
-                    </tr>
-                }
-                @if (!(ViewBag.StaffBreakdown as IEnumerable<dynamic>)?.Any() ?? true)
-                {
-                    <tr>
-                        <td colspan="5"
-                            class="text-center text-muted py-4">
-                            No sales recorded for this date
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="report-card">
-    <div class="report-header">Devices Sold Today</div>
-    <div class="table-responsive">
-        <table class="table table-hover report-table mb-0">
-            <thead>
-                <tr>
-                    <th>Device</th>
-                    <th>Units Sold</th>
-                    <th>Revenue</th>
-                    <th>Profit</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var d in ViewBag.DeviceBreakdown)
-                {
-                    var name = (string)d.GetType().GetProperty("PhoneName").GetValue(d);
-                    var units = (int)d.GetType().GetProperty("UnitsSold").GetValue(d);
-                    var rev = (decimal)d.GetType().GetProperty("Revenue").GetValue(d);
-                    var prof = (decimal)d.GetType().GetProperty("Profit").GetValue(d);
-                    <tr>
-                        <td class="fw-semibold">@name</td>
-                        <td>@units</td>
-                        <td style="color:#007A3D;font-weight:700;">
-                            KES @rev.ToString("N0")
-                        </td>
-                        <td style="color:#b45309;font-weight:700;">
-                            KES @prof.ToString("N0")
-                        </td>
-                    </tr>
-                }
-                @if (!(ViewBag.DeviceBreakdown as IEnumerable<dynamic>)?.Any() ?? true)
-                {
-                    <tr>
-                        <td colspan="4"
-                            class="text-center text-muted py-4">
-                            No devices sold today
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="report-card">
-    <div class="report-header">
-        Transaction Log — @selectedDate.ToString("dd MMMM yyyy")
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover report-table mb-0">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Customer</th>
-                    <th>Staff</th>
-                    <th>Branch</th>
-                    <th>Devices</th>
-                    <th>Payment</th>
-                    <th>Amount</th>
-                    <th>Profit</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (sales != null && sales.Any())
-                {
-                    @foreach (var s in sales)
-                    {
-                        var badgeStyle = s.PaymentMethod.ToString() switch
-                        {
-                            "Cash" => "background:#dcfce7;color:#16a34a;",
-                            "MPesa" => "background:#fef9c3;color:#ca8a04;",
-                            "MKOPA" => "background:#dbeafe;color:#2563eb;",
-                            _ => "background:#f3f4f6;color:#374151;"
-                        };
-                        <tr>
-                            <td style="font-family:monospace; font-size:0.82rem;">
-                                @s.CreatedAt.ToString("HH:mm")
-                            </td>
-                            <td>@(s.CustomerName ?? "Walk-in")</td>
-                            <td>@(s.Staff?.FullName ?? "—")</td>
-                            <td>@(s.Branch?.Name ?? "—")</td>
-                            <td>
-                                @foreach (var item in s.Items)
-                                {
-                                    <div style="font-size:0.78rem; font-weight:600; color:#007A3D;">
-                                        @item.PhoneName
-                                    </div>
-                                }
-                            </td>
-                            <td>
-                                <span class="method-badge"
-                                      style="@badgeStyle">
-                                    @s.PaymentMethod
-                                </span>
-                            </td>
-                            <td class="fw-bold"
-                                style="color:#007A3D;">
-                                KES @s.TotalAmount.ToString("N0")
-                            </td>
-                            <td class="fw-bold"
-                                style="color:#b45309;">
-                                KES @s.TotalProfit.ToString("N0")
-                            </td>
-                        </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8"
-                            class="text-center text-muted py-4">
-                            No transactions recorded for this date
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </select>
+            }
+            <button type="submit"
+                    class="btn fw-semibold"
+                    style="background:#007A3D;
+                           color:white;
+                           border-radius:10px;">
+                View
+            </button>
+        </form>
+        <button onclick="window.print()"
+                class="btn btn-outline-secondary
+                       rounded-pill px-3">
+            🖨️ Print
+        </button>
+    </div>
+</div>
+
+<!-- ── FINANCIAL SUMMARY ───────────────────────── -->
+<div class="report-card">
+    <div class="section-divider">
+        Financial Summary —
+        @selectedDate.ToString("dd MMM yyyy")
+    </div>
+    <div class="p-4">
+        <div class="row g-3 mb-3">
+            <div class="col-md-2">
+                <div style="background:#f0f7f3;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#888;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        Phone Sales
+                    </div>
+                    <div style="font-weight:800;
+                                 color:#007A3D;
+                                 font-size:1.1rem;">
+                        KES @phoneRevenue.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#888;">
+                        @phoneSalesCount txns
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div style="background:#f0f0ff;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#888;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        Accessories
+                    </div>
+                    <div style="font-weight:800;
+                                 color:#7c3aed;
+                                 font-size:1.1rem;">
+                        KES @accRevenue.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#888;">
+                        @accSalesCount txns
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div style="background:#eff6ff;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#888;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        Services
+                    </div>
+                    <div style="font-weight:800;
+                                 color:#2563eb;
+                                 font-size:1.1rem;">
+                        KES @serviceRevenue.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#888;">
+                        @servicesCount records
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div style="background:#f0fdf4;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#888;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        SIM Cards
+                    </div>
+                    <div style="font-weight:800;
+                                 color:#16a34a;
+                                 font-size:1.1rem;">
+                        KES @simRevenue.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#888;">
+                        @simSalesCount sold
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div style="background:#fff7ed;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#888;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        Expenses
+                    </div>
+                    <div style="font-weight:800;
+                                 color:#dc2626;
+                                 font-size:1.1rem;">
+                        KES @totalExpenses.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#888;">
+                        @expenses.Count() records
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div style="background:#0f172a;
+                             border-radius:12px;
+                             padding:14px;
+                             text-align:center;">
+                    <div style="font-size:0.72rem;
+                                 color:#94a3b8;
+                                 text-transform:uppercase;
+                                 letter-spacing:0.5px;">
+                        Net Profit
+                    </div>
+                    <div style="font-weight:800;
+                                 color:@(netProfit >= 0
+                                     ? "#4ade80"
+                                     : "#f87171");
+                                 font-size:1.1rem;">
+                        KES @netProfit.ToString("N0")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                 color:#94a3b8;">
+                        after expenses
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div style="background:#f8fafc;
+                             border-radius:12px;
+                             padding:14px;">
+                    <div style="font-size:0.75rem;
+                                 color:#888;
+                                 font-weight:600;
+                                 margin-bottom:10px;">
+                        TOTAL REVENUE BREAKDOWN
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Phone Sales</span>
+                        <span class="fw-bold">
+                            KES @phoneRevenue.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Accessories</span>
+                        <span class="fw-bold">
+                            KES @accRevenue.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Services</span>
+                        <span class="fw-bold">
+                            KES @serviceRevenue.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>SIM Cards</span>
+                        <span class="fw-bold">
+                            KES @simRevenue.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:8px 0 4px;
+                                 font-size:0.9rem;">
+                        <span class="fw-bold">
+                            Total Revenue
+                        </span>
+                        <span class="fw-bold"
+                              style="color:#007A3D;">
+                            KES @totalRevenue.ToString("N0")
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div style="background:#f8fafc;
+                             border-radius:12px;
+                             padding:14px;">
+                    <div style="font-size:0.75rem;
+                                 color:#888;
+                                 font-weight:600;
+                                 margin-bottom:10px;">
+                        PAYMENT METHODS
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Cash</span>
+                        <span class="fw-bold"
+                              style="color:#007A3D;">
+                            KES @cashTotal.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>M-Pesa</span>
+                        <span class="fw-bold"
+                              style="color:#2563eb;">
+                            KES @mpesaTotal.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Card</span>
+                        <span class="fw-bold">
+                            KES @cardTotal.ToString("N0")
+                        </span>
+                    </div>
+                    @if (cashUps.Any())
+                    {
+                        <div style="margin-top:10px;
+                                     padding-top:8px;
+                                     border-top:2px dashed
+                                         var(--border-color);
+                                     font-size:0.75rem;
+                                     color:#888;
+                                     font-weight:600;">
+                            CASH-UP DECLARED
+                        </div>
+                        <div style="display:flex;
+                                     justify-content:
+                                         space-between;
+                                     padding:4px 0;
+                                     font-size:0.85rem;">
+                            <span>Cash in Hand</span>
+                            <span class="fw-bold">
+                                KES @totalCashDeclared.ToString("N0")
+                            </span>
+                        </div>
+                        <div style="display:flex;
+                                     justify-content:
+                                         space-between;
+                                     padding:4px 0;
+                                     font-size:0.85rem;">
+                            <span>M-Pesa Float</span>
+                            <span class="fw-bold"
+                                  style="color:#2563eb;">
+                                KES @totalMpesaDeclared.ToString("N0")
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div style="background:#f8fafc;
+                             border-radius:12px;
+                             padding:14px;">
+                    <div style="font-size:0.75rem;
+                                 color:#888;
+                                 font-weight:600;
+                                 margin-bottom:10px;">
+                        PROFIT SUMMARY
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Phone Profit</span>
+                        <span class="fw-bold">
+                            KES @phoneProfit.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Accessory Profit</span>
+                        <span class="fw-bold">
+                            KES @accProfit.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>SIM Profit</span>
+                        <span class="fw-bold">
+                            KES @simProfit.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Service Revenue</span>
+                        <span class="fw-bold">
+                            KES @serviceRevenue.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 border-bottom:2px solid
+                                     var(--border-color);
+                                 font-size:0.85rem;">
+                        <span>Gross Profit</span>
+                        <span class="fw-bold"
+                              style="color:#007A3D;">
+                            KES @grossProfit.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:6px 0;
+                                 font-size:0.85rem;">
+                        <span>Expenses</span>
+                        <span class="fw-bold"
+                              style="color:#dc2626;">
+                            -KES @totalExpenses.ToString("N0")
+                        </span>
+                    </div>
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 padding:8px 0 4px;
+                                 border-top:2px solid
+                                     var(--border-color);
+                                 font-size:0.95rem;">
+                        <span class="fw-bold">
+                            Net Profit
+                        </span>
+                        <span class="fw-bold"
+                              style="color:@(netProfit >= 0
+                                     ? "#007A3D"
+                                     : "#dc2626");">
+                            KES @netProfit.ToString("N0")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

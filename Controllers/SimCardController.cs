@@ -233,6 +233,39 @@ namespace BraysTech.Controllers
             return RedirectToAction("Index");
         }
 
+        // ── DELETE SIM CARD ─────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var sim = await _db.SimCards.FindAsync(id);
+            if (sim == null) return NotFound();
+
+            // Cannot delete a sold SIM —
+            // it has customer and sales history
+            if (sim.Status == SimCardStatus.Sold)
+            {
+                TempData["Error"] =
+                    "Cannot delete a sold SIM card. " +
+                    "It has a customer record attached.";
+                return RedirectToAction("Index");
+            }
+
+            _db.SimCards.Remove(sim);
+            await _db.SaveChangesAsync();
+
+            await _audit.LogAsync(
+                AuditAction.StockEdited,
+                "SimCards",
+                $"{sim.Network} SIM card #{id} deleted.",
+                recordType: "SimCard",
+                recordID: id.ToString());
+
+            TempData["Success"] =
+                $"{sim.Network} SIM card deleted.";
+            return RedirectToAction("Index");
+        }
+
         // ── SELL / REPLACE ─────────────────────────────
         [HttpPost]
         public async Task<IActionResult> Sell(

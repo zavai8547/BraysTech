@@ -128,6 +128,7 @@ namespace BraysTech.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var sale = await _db.PhoneSales
@@ -219,6 +220,7 @@ namespace BraysTech.Controllers
         // CustomerPhone is now always saved even for
         // walk-in customers who have a phone number.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> New(
             string? customerName,
             string? customerPhone,
@@ -252,16 +254,72 @@ namespace BraysTech.Controllers
 
             var staffID = User
                 .FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUser = await _userManager
+                .FindByIdAsync(staffID!);
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin &&
+                currentUser?.BranchID != branchID)
+            {
+                TempData["Error"] =
+                    "You can only sell stock from your " +
+                    "assigned branch.";
+                var assignedBranchID =
+                    currentUser?.BranchID ?? 0;
+                ViewBag.Branches = await _db.Branches
+                    .Where(b => b.IsActive &&
+                                b.BranchID ==
+                                    assignedBranchID)
+                    .ToListAsync();
+                return View();
+            }
+
             var saleItems = new List<PhoneSaleItem>();
             decimal totalAmount = 0;
             decimal totalProfit = 0;
+            var selectedStockIDs = stockIDs
+                .Distinct()
+                .ToList();
+
+            if (selectedStockIDs.Count != stockIDs.Count)
+            {
+                TempData["Error"] =
+                    "The same device was added more " +
+                    "than once.";
+                ViewBag.Branches = await _db.Branches
+                    .Where(b => b.IsActive).ToListAsync();
+                return View();
+            }
+
+            var reservedStockIDs = await _db
+                .StockTransferItems
+                .Where(i =>
+                    selectedStockIDs.Contains(i.StockID) &&
+                    i.Transfer != null &&
+                    (i.Transfer.Status ==
+                        TransferStatus.Pending ||
+                     i.Transfer.Status ==
+                        TransferStatus.InTransit))
+                .Select(i => i.StockID)
+                .ToListAsync();
+
+            if (reservedStockIDs.Any())
+            {
+                TempData["Error"] =
+                    "One or more devices are already " +
+                    "reserved for a stock transfer.";
+                ViewBag.Branches = await _db.Branches
+                    .Where(b => b.IsActive).ToListAsync();
+                return View();
+            }
 
             for (int i = 0; i < stockIDs.Count; i++)
             {
                 var phone = await _db.IMEIStock
                     .FirstOrDefaultAsync(p =>
                         p.StockID == stockIDs[i] &&
-                        p.Status == PhoneStatus.InStock);
+                        p.Status == PhoneStatus.InStock &&
+                        p.BranchID == branchID);
 
                 if (phone == null)
                 {
@@ -467,6 +525,19 @@ namespace BraysTech.Controllers
                       p.Brand.Contains(q)) ||
                      (p.Model != null &&
                       p.Model.Contains(q))));
+
+            var reservedStockIDs = _db
+                .StockTransferItems
+                .Where(i =>
+                    i.Transfer != null &&
+                    (i.Transfer.Status ==
+                        TransferStatus.Pending ||
+                     i.Transfer.Status ==
+                        TransferStatus.InTransit))
+                .Select(i => i.StockID);
+
+            query = query.Where(p =>
+                !reservedStockIDs.Contains(p.StockID));
 
             if (!isAdmin && currentUser?.BranchID != null)
                 query = query.Where(p =>

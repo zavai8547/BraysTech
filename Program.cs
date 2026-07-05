@@ -8,13 +8,12 @@ using BraysTech.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
+// Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(
-            builder.Configuration.GetConnectionString("DefaultConnection"))
+        new MySqlServerVersion(new Version(8, 0, 0))
     ));
-
 // Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -22,11 +21,15 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
+    options.Lockout.DefaultLockoutTimeSpan =
+        TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// Cookie config — works with Cloudflare
+// Cookie config
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Auth/Login";
@@ -36,8 +39,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 
     options.Cookie.HttpOnly = true;
 
-    // Change to Always in production with HTTPS
-    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+    options.Cookie.SecurePolicy =
+        builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
 
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
@@ -70,7 +75,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// DO NOT use HTTPS redirection — Cloudflare handles it
+// DO NOT use HTTPS redirection; Cloudflare handles it.
 // app.UseHttpsRedirection();
 
 app.UseStaticFiles();

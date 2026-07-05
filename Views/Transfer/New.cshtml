@@ -1,0 +1,396 @@
+﻿@{
+    ViewData["Title"] = "New Stock Transfer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    int? userBranchID = ViewBag.UserBranchID;
+}
+
+<style>
+    .phone-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+        .phone-card:hover {
+            background: #f0f7f3;
+            border-color: #007A3D;
+        }
+
+        .phone-card.selected {
+            background: #f0f7f3;
+            border: 2px solid #007A3D;
+        }
+
+    .transfer-cart {
+        background: var(--bg-card);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 14px;
+        min-height: 120px;
+    }
+
+    .cart-phone {
+        background: #f0f7f3;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/Transfer/Index"
+       class="btn btn-outline-secondary
+              rounded-pill px-3">
+        Back
+    </a>
+    <h4 class="fw-bold mb-0">New Stock Transfer</h4>
+</div>
+
+<form method="post" action="/Transfer/New"
+      id="transferForm">
+    @Html.AntiForgeryToken()
+
+    <div class="row g-4">
+
+        <!-- LEFT — Phone Selection -->
+        <div class="col-md-7">
+
+            <div class="card border-0 shadow-sm mb-4"
+                 style="border-radius:16px;
+                        overflow:hidden;">
+                <div class="card-header border-0 p-3"
+                     style="background:linear-gradient(
+                                135deg,#007A3D,#005C2E);">
+                    <h6 class="text-white fw-bold mb-0">
+                        Step 1 — Select Source Branch
+                        and Phones
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold">
+                            Transfer FROM *
+                        </label>
+                        <select name="fromBranchID"
+                                id="fromBranch"
+                                class="form-select"
+                                style="border-radius:10px;"
+                                onchange="loadPhones()"
+                                required>
+                            <option value="">
+                                -- Select Source Branch --
+                            </option>
+                            @foreach (var b in
+                            ViewBag.SourceBranches)
+                            {
+                                if (b.BranchID ==
+                                    userBranchID)
+                                {
+                                    <option value="@b.BranchID"
+                                            selected>
+                                        @b.Name
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@b.BranchID">
+                                        @b.Name
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold">
+                            Search Phones
+                        </label>
+                        <input type="text"
+                               id="phoneSearch"
+                               class="form-control"
+                               style="border-radius:10px;"
+                               placeholder="Type IMEI, brand or model..."
+                               autocomplete="off"
+                               oninput="searchPhones()" />
+                    </div>
+
+                    <div id="phoneResults"
+                         style="max-height:320px;
+                                overflow-y:auto;">
+                        <div class="text-muted text-center
+                                    py-4 small">
+                            Select a source branch above
+                            to see available phones
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT — Transfer Details -->
+        <div class="col-md-5">
+
+            <div class="card border-0 shadow-sm mb-4"
+                 style="border-radius:16px;
+                        overflow:hidden;">
+                <div class="card-header border-0 p-3"
+                     style="background:#0D1B2A;">
+                    <h6 class="text-white fw-bold mb-0">
+                        Step 2 — Set Destination
+                        and Confirm
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold">
+                            Transfer TO *
+                        </label>
+                        <select name="toBranchID"
+                                class="form-select"
+                                style="border-radius:10px;"
+                                required>
+                            <option value="">
+                                -- Select Destination --
+                            </option>
+                            @foreach (var b in
+                            ViewBag.Branches)
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label
+                                      fw-semibold">
+                            Notes
+                        </label>
+                        <textarea name="notes"
+                                  class="form-control"
+                                  style="border-radius:10px;"
+                                  rows="2"
+                                  placeholder="e.g. Customer requested, urgent transfer">
+                        </textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold">
+                            Selected Phones
+                            <span id="cartCount"
+                                  style="background:#007A3D;
+                                         color:white;
+                                         padding:2px 8px;
+                                         border-radius:20px;
+                                         font-size:0.75rem;
+                                         margin-left:6px;">
+                                0
+                            </span>
+                        </label>
+                        <div class="transfer-cart"
+                             id="transferCart">
+                            <div class="text-muted
+                                        text-center
+                                        small py-2">
+                                No phones selected yet.
+                                Click phones on the left
+                                to add them.
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            id="submitBtn"
+                            class="btn btn-lg w-100
+                                   fw-bold"
+                            style="background:#007A3D;
+                                   color:white;
+                                   border-radius:12px;"
+                            disabled>
+                        Create Transfer
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<script>
+    let selectedPhones = {};
+    let allPhones = [];
+    let searchTimer;
+
+    function loadPhones() {
+        const branchID = document.getElementById(
+            'fromBranch').value;
+        if (!branchID) {
+            document.getElementById('phoneResults')
+                .innerHTML =
+                '<div class="text-muted text-center' +
+                ' py-4 small">Select a source branch' +
+                ' above</div>';
+            return;
+        }
+        fetchPhones(branchID, '');
+    }
+
+    function searchPhones() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            const branchID = document.getElementById(
+                'fromBranch').value;
+            const q = document.getElementById(
+                'phoneSearch').value.trim();
+            if (!branchID) return;
+            fetchPhones(branchID, q);
+        }, 300);
+    }
+
+    async function fetchPhones(branchID, q) {
+        const res = await fetch(
+            '/Transfer/SearchPhones?branchID=' +
+            branchID + '&q=' + encodeURIComponent(q));
+        allPhones = await res.json();
+        renderPhones();
+    }
+
+    function renderPhones() {
+        const container = document.getElementById(
+            'phoneResults');
+        if (!allPhones.length) {
+            container.innerHTML =
+                '<div class="text-muted text-center' +
+                ' py-4 small">No in-stock phones' +
+                ' found in this branch</div>';
+            return;
+        }
+        container.innerHTML = allPhones.map(function (p) {
+            const isSelected = !!selectedPhones[p.stockID];
+            return '<div class="phone-card ' +
+                (isSelected ? 'selected' : '') +
+                '" onclick="togglePhone(' +
+                JSON.stringify(p).replace(/"/g, '&quot;') +
+                ')">' +
+                '<div>' +
+                '<div style="font-weight:700;' +
+                'font-size:0.88rem;">' +
+                p.phoneName + '</div>' +
+                '<div style="font-family:monospace;' +
+                'font-size:0.75rem;color:#888;">' +
+                'IMEI: ' + p.imei + '</div>' +
+                '</div>' +
+                '<div style="text-align:right;">' +
+                '<div style="font-weight:700;' +
+                'color:#007A3D;font-size:0.88rem;">KES ' +
+                p.sellingPrice.toLocaleString() + '</div>' +
+                (isSelected
+                    ? '<small style="color:#16a34a;' +
+                    'font-weight:600;">✓ Added</small>'
+                    : '<small style="color:#888;">' +
+                    'Click to add</small>') +
+                '</div></div>';
+        }).join('');
+    }
+
+    function togglePhone(phone) {
+        if (selectedPhones[phone.stockID]) {
+            delete selectedPhones[phone.stockID];
+        } else {
+            selectedPhones[phone.stockID] = phone;
+        }
+        renderPhones();
+        renderCart();
+    }
+
+    function removeFromCart(stockID) {
+        delete selectedPhones[stockID];
+        renderPhones();
+        renderCart();
+    }
+
+    function renderCart() {
+        const items = Object.values(selectedPhones);
+        const count = items.length;
+
+        document.getElementById('cartCount')
+            .textContent = count;
+        document.getElementById('submitBtn')
+            .disabled = count === 0;
+
+        // Remove old hidden inputs
+        document.querySelectorAll('.transfer-hidden')
+            .forEach(function (e) { e.remove(); });
+
+        const cart = document.getElementById(
+            'transferCart');
+
+        if (!items.length) {
+            cart.innerHTML =
+                '<div class="text-muted text-center' +
+                ' small py-2">No phones selected yet.' +
+                ' Click phones on the left to add them.' +
+                '</div>';
+            return;
+        }
+
+        cart.innerHTML = items.map(function (p) {
+            return '<div class="cart-phone">' +
+                '<div>' +
+                '<div style="font-weight:600;">' +
+                p.phoneName + '</div>' +
+                '<div style="font-family:monospace;' +
+                'font-size:0.72rem;color:#888;">' +
+                p.imei + '</div>' +
+                '</div>' +
+                '<button type="button" ' +
+                'onclick="removeFromCart(' +
+                p.stockID + ')" ' +
+                'style="background:none;border:none;' +
+                'color:#dc2626;cursor:pointer;' +
+                'font-size:1rem;padding:0 4px;">x' +
+                '</button></div>';
+        }).join('');
+
+        // Add hidden inputs
+        const form = document.getElementById(
+            'transferForm');
+        items.forEach(function (p) {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'stockIDs';
+            inp.value = p.stockID;
+            inp.className = 'transfer-hidden';
+            form.appendChild(inp);
+        });
+    }
+
+    // Auto-load if manager is pre-assigned to a branch
+    window.addEventListener('load', function () {
+        const fromBranch = document.getElementById(
+            'fromBranch');
+        if (fromBranch.value) loadPhones();
+    });
+</script>

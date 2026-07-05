@@ -37,6 +37,10 @@ namespace BraysTech.Data
         // SIM Cards
         public DbSet<SimCard> SimCards { get; set; }
 
+        // Stock Transfers
+        public DbSet<StockTransfer> StockTransfers { get; set; }
+        public DbSet<StockTransferItem> StockTransferItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -53,6 +57,12 @@ namespace BraysTech.Data
             builder.Entity<Customer>()
                 .HasIndex(c => c.Phone)
                 .IsUnique();
+
+            builder.Entity<StockTransferItem>()
+                .HasOne(i => i.Phone)
+                .WithMany()
+                .HasForeignKey(i => i.StockID)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

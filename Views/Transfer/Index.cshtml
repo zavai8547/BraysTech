@@ -1,0 +1,335 @@
+﻿@model IEnumerable<BraysTech.Models.StockTransfer>
+@{
+    ViewData["Title"] = "Stock Transfers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int pending = ViewBag.PendingCount ?? 0;
+    int inTransit = ViewBag.InTransitCount ?? 0;
+    int completed = ViewBag.CompletedCount ?? 0;
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    int? userBranchID = ViewBag.UserBranchID;
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Stock Transfers</h4>
+        <small class="text-muted">
+            Move phones between branches
+        </small>
+    </div>
+    <a href="/Transfer/New"
+       class="btn fw-semibold rounded-pill px-4"
+       style="background:#007A3D;color:white;">
+        + New Transfer
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #f59e0b !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">
+                    Pending
+                </p>
+                <h3 class="fw-bold mb-0"
+                    style="color:#f59e0b;">
+                    @pending
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #2563eb !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">
+                    In Transit
+                </p>
+                <h3 class="fw-bold mb-0"
+                    style="color:#2563eb;">
+                    @inTransit
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">
+                    Completed
+                </p>
+                <h3 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    @completed
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #6b7280 !important;">
+            <div class="card-body text-center">
+                <p class="text-muted small mb-1">
+                    Total
+                </p>
+                <h3 class="fw-bold mb-0"
+                    style="color:#6b7280;">
+                    @Model.Count()
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3 p-3"
+     style="border-radius:16px;">
+    <form method="get" action="/Transfer/Index">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+
+                    <option value="Pending"
+                            selected="@(ViewBag.SelectedStatus?.ToString() == "Pending")">
+                        Pending
+                    </option>
+
+                    <option value="InTransit"
+                            selected="@(ViewBag.SelectedStatus?.ToString() == "InTransit")">
+                        In Transit
+                    </option>
+
+                    <option value="Completed"
+                            selected="@(ViewBag.SelectedStatus?.ToString() == "Completed")">
+                        Completed
+                    </option>
+
+                    <option value="Cancelled"
+                            selected="@(ViewBag.SelectedStatus?.ToString() == "Cancelled")">
+                        Cancelled
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="branchID"
+                        class="form-select">
+                    <option value="">All Branches</option>
+                    @foreach (var b in ViewBag.Branches)
+                    {
+                        if (b.BranchID ==
+                        ViewBag.SelectedBranch)
+                        {
+                            <option value="@b.BranchID"
+                                    selected>
+                                @b.Name
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@b.BranchID">
+                                @b.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn w-100 fw-semibold"
+                        style="background:#007A3D;
+                               color:white;
+                               border-radius:8px;">
+                    Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="/Transfer/Index"
+                   class="btn btn-outline-secondary w-100"
+                   style="border-radius:8px;">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm"
+     style="border-radius:16px;overflow:hidden;">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:3rem;">🔄</div>
+            <h5 class="fw-bold mt-3">
+                No transfers yet
+            </h5>
+            <p>
+                Create a transfer to move phones
+                between branches.
+            </p>
+            <a href="/Transfer/New"
+               class="btn mt-2 rounded-pill px-4"
+               style="background:#007A3D;color:white;">
+                New Transfer
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background:#007A3D;">
+                    <tr>
+                        @foreach (var h in new[]
+                       {
+                    "#","From","To",
+                    "Phones","Status",
+                    "Initiated By",
+                    "Date","Actions"
+                    })
+                        {
+                            <th style="color:white;
+                                       padding:12px 14px;
+                                       border:none;
+                                       font-size:0.82rem;
+                                       white-space:nowrap;">
+                                @h
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        string statusBg =
+                        t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.Pending
+                        ? "#fef3c7"
+                        : t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.InTransit
+                        ? "#dbeafe"
+                        : t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.Completed
+                        ? "#dcfce7"
+                        : "#f3f4f6";
+
+                        string statusColor =
+                        t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.Pending
+                        ? "#92400e"
+                        : t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.InTransit
+                        ? "#2563eb"
+                        : t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.Completed
+                        ? "#16a34a"
+                        : "#6b7280";
+
+                        bool needsAction =
+                        (t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.Pending
+                        || t.Status ==
+                        BraysTech.Models
+                        .TransferStatus.InTransit)
+                        && (isAdmin ||
+                        userBranchID ==
+                        t.ToBranchID);
+
+                        // FIXED: Format date with null check
+                        string formattedDate = "—";
+                        if (t.CreatedAt != null)
+                        {
+                            try
+                            {
+                                formattedDate = t.CreatedAt.ToString("dd MMM HH:mm");
+                            }
+                            catch
+                            {
+                                formattedDate = "—";
+                            }
+                        }
+
+                        <tr style="@(needsAction
+                            ? "background:#fffbeb;"
+                            : "")">
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;
+                                       color:#888;
+                                       font-weight:600;">
+                                #@t.TransferID
+                            </td>
+                            <!-- FIXED: From branch color changed to dark for visibility -->
+                            <td style="padding:12px 14px;
+                                       font-size:0.88rem;
+                                       font-weight:600;
+                                       color:#1a1a1a;">
+                                @(t.FromBranch?.Name ?? "—")
+                            </td>
+                            <!-- FIXED: To branch color changed to dark green for visibility -->
+                            <td style="padding:12px 14px;
+                                       font-size:0.88rem;
+                                       font-weight:600;
+                                       color:#007A3D;">
+                                @(t.ToBranch?.Name ?? "—")
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.88rem;">
+                                @t.Items.Count phone(s)
+                            </td>
+                            <td style="padding:12px 14px;">
+                                <span style="padding:3px 10px;
+                                              border-radius:20px;
+                                              font-size:0.75rem;
+                                              font-weight:700;
+                                              background:@statusBg;
+                                              color:@statusColor;">
+                                    @t.Status
+                                    @(needsAction
+                                        ? " ⚡" : "")
+                                </span>
+                            </td>
+                            <td style="padding:12px 14px;
+                                       font-size:0.85rem;">
+                                @(t.InitiatedBy?.FullName
+                                    ?? "—")
+                            </td>
+                            <!-- FIXED: Date display with null check -->
+                            <td style="padding:12px 14px;
+                                       font-size:0.82rem;
+                                       color:#444;
+                                       white-space:nowrap;">
+                                @formattedDate
+                            </td>
+                            <td style="padding:12px 14px;">
+                                <a href="/Transfer/Details/@t.TransferID"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background:#007A3D;
+                                          color:white;
+                                          border-radius:7px;
+                                          font-size:0.78rem;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

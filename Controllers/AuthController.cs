@@ -12,17 +12,20 @@ namespace BraysTech.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AuditService _audit;
+        private readonly IWebHostEnvironment _env;
 
         public AuthController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             RoleManager<IdentityRole> roleManager,
-            AuditService audit)
+            AuditService audit,
+            IWebHostEnvironment env)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _audit = audit;
+            _env = env;
         }
 
         // ── LOGIN ──────────────────────────────────────
@@ -189,6 +192,9 @@ namespace BraysTech.Controllers
         [HttpGet]
         public async Task<IActionResult> SeedAdmin()
         {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
             // ONLY RUN IF NO ADMIN EXISTS
             var adminExists =
                 await _userManager.GetUsersInRoleAsync("Admin");

@@ -1,0 +1,364 @@
+﻿@model BraysTech.Models.StockTransfer
+@{
+    ViewData["Title"] = "Transfer Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    bool canConfirm = ViewBag.CanConfirm ?? false;
+    bool canCancel = ViewBag.CanCancel ?? false;
+
+    string statusBg = Model.Status ==
+        BraysTech.Models.TransferStatus.Pending
+        ? "#fef3c7"
+        : Model.Status ==
+          BraysTech.Models.TransferStatus.InTransit
+        ? "#dbeafe"
+        : Model.Status ==
+          BraysTech.Models.TransferStatus.Completed
+        ? "#dcfce7" : "#f3f4f6";
+    string statusColor = Model.Status ==
+        BraysTech.Models.TransferStatus.Pending
+        ? "#92400e"
+        : Model.Status ==
+          BraysTech.Models.TransferStatus.InTransit
+        ? "#2563eb"
+        : Model.Status ==
+          BraysTech.Models.TransferStatus.Completed
+        ? "#16a34a" : "#6b7280";
+}
+
+<div class="d-flex justify-content-between
+            align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="/Transfer/Index"
+           class="btn btn-outline-secondary
+                  rounded-pill px-3">
+            Back
+        </a>
+        <div>
+            <h4 class="fw-bold mb-0">
+                Transfer #@Model.TransferID
+            </h4>
+            <small class="text-muted">
+                @Model.CreatedAt
+                    .ToString("dd MMMM yyyy HH:mm")
+            </small>
+        </div>
+    </div>
+    <span style="padding:6px 16px;
+                  border-radius:20px;
+                  font-size:0.85rem;
+                  font-weight:700;
+                  background:@statusBg;
+                  color:@statusColor;">
+        @Model.Status.ToString()
+    </span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #dc2626 !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    From Branch
+                </p>
+                <h5 class="fw-bold mb-0"
+                    style="color:#dc2626;">
+                    @(Model.FromBranch?.Name ?? "—")
+                </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #007A3D !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    To Branch
+                </p>
+                <h5 class="fw-bold mb-0"
+                    style="color:#007A3D;">
+                    @(Model.ToBranch?.Name ?? "—")
+                </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:14px;
+                    border-left:4px solid
+                        #2563eb !important;">
+            <div class="card-body">
+                <p class="text-muted small mb-1">
+                    Phones
+                </p>
+                <h5 class="fw-bold mb-0"
+                    style="color:#2563eb;">
+                    @Model.Items.Count device(s)
+                </h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm"
+             style="border-radius:16px;">
+            <div class="card-header bg-white border-0
+                         pt-3 fw-bold"
+                 style="color:#007A3D;">
+                Phones Being Transferred
+            </div>
+            <div class="card-body pt-0">
+                @foreach (var item in Model.Items)
+                {
+                    <div style="display:flex;
+                                 justify-content:space-between;
+                                 align-items:center;
+                                 padding:10px 0;
+                                 border-bottom:1px solid
+                                     var(--border-color);
+                                 font-size:0.88rem;">
+                        <div>
+                            <div class="fw-semibold">
+                                @item.PhoneName
+                            </div>
+                            <div style="font-family:
+                                         monospace;
+                                         color:#007A3D;
+                                         font-size:0.78rem;">
+                                IMEI: @item.IMEI
+                            </div>
+                        </div>
+                        @if (item.Phone != null)
+                        {
+                            <div style="text-align:right;">
+                                <div style="font-size:0.82rem;
+                                             color:#888;">
+                                    Currently at:
+                                </div>
+                                <div class="fw-semibold"
+                                     style="color:@(item.Phone.BranchID == Model.ToBranchID ? "#007A3D" : "#888");">
+                                    @(item.Phone.Branch?.Name
+                                        ?? "—")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm mb-3"
+             style="border-radius:16px;">
+            <div class="card-header bg-white border-0
+                         pt-3 fw-bold"
+                 style="color:#007A3D;">
+                Transfer Info
+            </div>
+            <div class="card-body pt-0">
+                @{
+                    void Row(string label, string val) {
+                        <div style="display:flex;
+                                     justify-content:
+                                         space-between;
+                                     padding:8px 0;
+                                     border-bottom:1px solid
+                                         var(--border-color);
+                                     font-size:0.85rem;">
+                            <span style="color:#888;">
+                                @label
+                            </span>
+                            <span class="fw-semibold">
+                                @val
+                            </span>
+                        </div>
+                    }
+                }
+                @{ Row("Initiated By",
+                    Model.InitiatedBy?.FullName ?? "—"); }
+                @{ Row("Created",
+                    Model.CreatedAt
+                        .ToString("dd MMM yyyy HH:mm")); }
+                @if (Model.ReceivedBy != null)
+                {
+                    Row("Received By",
+                        Model.ReceivedBy.FullName);
+                }
+                @if (Model.CompletedAt.HasValue)
+                {
+                    Row("Completed",
+                        Model.CompletedAt.Value
+                            .ToString("dd MMM yyyy HH:mm"));
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div style="padding:8px 0;
+                                 font-size:0.85rem;">
+                        <div style="color:#888;
+                                     margin-bottom:4px;">
+                            Notes
+                        </div>
+                        <div>@Model.Notes</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(
+                    Model.CancellationReason))
+                {
+                    <div style="padding:8px 0;
+                                 font-size:0.85rem;
+                                 color:#dc2626;">
+                        <div style="font-weight:600;
+                                     margin-bottom:4px;">
+                            Cancellation Reason
+                        </div>
+                        <div>@Model.CancellationReason</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.Status !=
+            BraysTech.Models.TransferStatus.Completed &&
+            Model.Status !=
+            BraysTech.Models.TransferStatus.Cancelled)
+        {
+            <div class="card border-0 shadow-sm"
+                 style="border-radius:16px;">
+                <div class="card-header bg-white border-0
+                             pt-3 fw-bold"
+                     style="color:#007A3D;">
+                    Actions
+                </div>
+                <div class="card-body pt-0 pb-3">
+
+                    @if (Model.Status ==
+                        BraysTech.Models.TransferStatus
+                            .Pending && canCancel)
+                    {
+                        <p class="text-muted small mb-3">
+                            Mark as In Transit once the
+                            phones have left the source
+                            branch.
+                        </p>
+                        <form method="post"
+                              action="/Transfer/MarkInTransit"
+                              class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.TransferID" />
+                            <button type="submit"
+                                    class="btn btn-primary
+                                           w-100 fw-semibold"
+                                    style="border-radius:10px;">
+                                Mark as In Transit
+                            </button>
+                        </form>
+                    }
+
+                    @if (canConfirm)
+                    {
+                        <p class="text-muted small mb-2">
+                            Confirm receipt once the phones
+                            arrive at
+                            @Model.ToBranch?.Name.
+                            This will move the phones to
+                            this branch in the system.
+                        </p>
+                        <form method="post"
+                              action="/Transfer/Confirm"
+                              class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.TransferID" />
+                            <button type="submit"
+                                    class="btn w-100
+                                           fw-semibold"
+                                    style="background:#007A3D;
+                                           color:white;
+                                           border-radius:10px;">
+                                ✅ Confirm Receipt
+                            </button>
+                        </form>
+                    }
+
+                    @if (canCancel)
+                    {
+                        <button type="button"
+                                class="btn btn-outline-danger
+                                       w-100 fw-semibold"
+                                style="border-radius:10px;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#cancelModal">
+                            Cancel Transfer
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="modal fade"
+                 id="cancelModal" tabindex="-1">
+                <div class="modal-dialog
+                             modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header border-0"
+                             style="background:#dc2626;
+                                    color:white;">
+                            <h5 class="modal-title">
+                                Cancel Transfer #@Model.TransferID
+                            </h5>
+                            <button type="button"
+                                    class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal">
+                            </button>
+                        </div>
+                        <form method="post"
+                              action="/Transfer/Cancel">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.TransferID" />
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label
+                                                  fw-semibold">
+                                        Reason for
+                                        cancellation
+                                    </label>
+                                    <textarea name="reason"
+                                              class="form-control"
+                                              style="border-radius:10px;"
+                                              rows="2"
+                                              placeholder="e.g. Phone was sold at source branch">
+                                    </textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">
+                                    Back
+                                </button>
+                                <button type="submit"
+                                        class="btn btn-danger fw-semibold"
+                                        style="border-radius:8px;">
+                                    Confirm Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

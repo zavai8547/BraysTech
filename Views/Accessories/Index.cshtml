@@ -138,7 +138,7 @@
 <div class="acc-card mb-3 p-3">
     <form method="get" action="/Accessories/Index">
         <div class="row g-2 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input name="search"
                        class="form-control"
                        placeholder="Search by name or brand..."
@@ -166,6 +166,32 @@
                     }
                 </select>
             </div>
+            <div class="col-md-3">
+                <select name="branchID"
+                        class="form-select">
+                    <option value="">All Branches</option>
+                    @if (ViewBag.Branches != null)
+                    {
+                        foreach (var b in ViewBag.Branches)
+                        {
+                            if (b.BranchID ==
+                                ViewBag.SelectedBranch)
+                            {
+                                <option value="@b.BranchID"
+                                        selected>
+                                    @b.Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@b.BranchID">
+                                    @b.Name
+                                </option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
             <div class="col-md-2">
                 <button type="submit"
                         class="btn w-100 fw-semibold"
@@ -175,7 +201,7 @@
                     Filter
                 </button>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <a href="/Accessories/Index"
                    class="btn btn-outline-secondary w-100"
                    style="border-radius:8px;">

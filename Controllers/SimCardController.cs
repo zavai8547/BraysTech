@@ -118,6 +118,7 @@ namespace BraysTech.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(
             SimNetwork network,
             int quantity,
@@ -175,6 +176,7 @@ namespace BraysTech.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             int simCardID,
             SimNetwork network,
@@ -236,6 +238,7 @@ namespace BraysTech.Controllers
         // ── DELETE SIM CARD ─────────────────────────────
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var sim = await _db.SimCards.FindAsync(id);
@@ -268,10 +271,11 @@ namespace BraysTech.Controllers
 
         // ── SELL / REPLACE ─────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Sell(
             int simCardID,
-            string customerName,
-            string customerPhone,
+            string? customerName,
+            string? customerPhone,
             string? customerIDNumber,
             bool isReplacement,
             string? oldSimNumber,
@@ -293,13 +297,23 @@ namespace BraysTech.Controllers
 
             var staffID = User.FindFirstValue(
                 ClaimTypes.NameIdentifier);
+            var cleanedCustomerName =
+                string.IsNullOrWhiteSpace(customerName)
+                    ? null
+                    : customerName.Trim();
+            var cleanedCustomerPhone =
+                string.IsNullOrWhiteSpace(customerPhone)
+                    ? null
+                    : customerPhone.Trim();
+            var displayCustomerName =
+                cleanedCustomerName ?? "Walk-in";
 
             // ── BUG FIX: update ALL fields before
             // SaveChangesAsync ─────────────────────────
             sim.Status = SimCardStatus.Sold;
             sim.DateSold = DateTime.Now;
-            sim.SoldToName = customerName.Trim();
-            sim.SoldToPhone = customerPhone.Trim();
+            sim.SoldToName = cleanedCustomerName;
+            sim.SoldToPhone = cleanedCustomerPhone;
             sim.CustomerIDNumber =
                 customerIDNumber?.Trim();
             sim.IsReplacement = isReplacement;
@@ -312,12 +326,11 @@ namespace BraysTech.Controllers
                 : null;
 
             // Auto-create or update customer
-            var phone = customerPhone.Trim();
-            if (!string.IsNullOrEmpty(phone))
+            if (!string.IsNullOrEmpty(cleanedCustomerPhone))
             {
                 var existing = await _db.Customers
                     .FirstOrDefaultAsync(c =>
-                        c.Phone == phone);
+                        c.Phone == cleanedCustomerPhone);
                 if (existing != null)
                 {
                     existing.TotalPurchases++;
@@ -325,12 +338,12 @@ namespace BraysTech.Controllers
                         sim.SellingPrice;
                 }
                 else if (!string.IsNullOrEmpty(
-                    customerName))
+                    cleanedCustomerName))
                 {
                     _db.Customers.Add(new Customer
                     {
-                        FullName = customerName.Trim(),
-                        Phone = phone,
+                        FullName = cleanedCustomerName,
+                        Phone = cleanedCustomerPhone,
                         TotalPurchases = 1,
                         TotalSpent = sim.SellingPrice,
                         CreatedAt = DateTime.Now
@@ -349,9 +362,9 @@ namespace BraysTech.Controllers
                         StaffID = staffID!,
                         BranchID = branchID,
                         CustomerName =
-                            customerName.Trim(),
+                            displayCustomerName,
                         CustomerPhone =
-                            customerPhone.Trim(),
+                            cleanedCustomerPhone ?? "N/A",
                         CustomerIDNumber =
                             customerIDNumber?.Trim(),
                         OldSimNumber =
@@ -373,7 +386,7 @@ namespace BraysTech.Controllers
                 "SimCards",
                 $"{sim.Network} SIM " +
                 $"{(isReplacement ? "replacement" : "sale")} " +
-                $"to {customerName}. " +
+                $"to {displayCustomerName}. " +
                 $"KES {sim.SellingPrice:N0}.",
                 recordType: "SimCard",
                 recordID: sim.SimCardID.ToString());
@@ -381,7 +394,7 @@ namespace BraysTech.Controllers
             TempData["Success"] =
                 $"{sim.Network} SIM " +
                 $"{(isReplacement ? "replacement" : "sold")} " +
-                $"to {customerName.Trim()}. " +
+                $"to {displayCustomerName}. " +
                 $"KES {sim.SellingPrice:N0}";
             return RedirectToAction("Index");
         }
